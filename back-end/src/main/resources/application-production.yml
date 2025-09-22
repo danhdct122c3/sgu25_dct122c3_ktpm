@@ -1,0 +1,47 @@
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  datasource:
+    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/shop_shoe_superteam?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+    username: ${DBMS_USERNAME:root}
+    password: ${DBMS_PASSWORD:root}
+#    url: jdbc:mysql://206.189.42.99/shop_shoe_superteam?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+#    username: root
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+jwt:
+    signerKey: "1cLc5GX0Em888Eol5qUD7MmqprRtdyV7mFEBWftpuHDlmdbSZdXrTa74uv5q9/rD"
+    validDuration: 3600
+    refreshableDuration: 36000
+
+
+vnPay:
+  version: "2.1.0"
+  command: "pay"
+  orderType: "other"
+  currCode: "VND"
+  hash-secret: "ANAIDKYHLTU5HVKRMUM4NVRMLCN0SJU1"
+  tmn-code: "8VWZT7KJ"
+  payment-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  return-url: "http://localhost:5173/checkout/payment-callback"
+
+mail:
+  apiKey: ""
+
+ai:
+  openai:
+    endpoint: ${AI_OPENAI_ENDPOINT:https://api.openai.com/v1/chat/completions}
+    api-key: ${AI_OPENAI_APIKEY}
+
+
