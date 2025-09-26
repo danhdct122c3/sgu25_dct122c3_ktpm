@@ -42,3 +42,14 @@ ai:
   openai:
     endpoint: "https://api.openai.com/v1/chat/completions"
     api-key: ""
+
+# Thêm cấu hình swagger
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs   # đường dẫn JSON docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html   # đường dẫn UI
+    operations-sorter: method
+    tags-sorter: alpha
