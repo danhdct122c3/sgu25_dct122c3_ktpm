@@ -1,6 +1,6 @@
 package fpl.sd.backend.exception;
 
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,8 +12,8 @@ import java.util.Objects;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = RuntimeException.class)
-    ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException e) {
-        ApiResponse<Object> apiResponse = ApiResponse.builder()
+    ResponseEntity<APIResponse<Object>> handleRuntimeException(RuntimeException e) {
+        APIResponse<Object> apiResponse = APIResponse.builder()
                 .message(e.getMessage())
                 .flag(false)
                 .code(400)
@@ -23,8 +23,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        ApiResponse<Object> apiResponse = ApiResponse.builder()
+    ResponseEntity<APIResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        APIResponse<Object> apiResponse = APIResponse.builder()
                 .message(Objects.requireNonNull(e.getFieldError()).getDefaultMessage())
                 .flag(false)
                 .code(400)

@@ -13,15 +13,17 @@ import java.util.Map;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponse<T> {
+public class APIResponse<T> {
     boolean flag;
     @Builder.Default
     int code = 200;
     String message;
     Map<String, Object> additionalData;
     T result;
-    public static class ApiResponseBuilder<T> {
-        public ApiResponseBuilder<T> additionalData(Map<String, Object> additionalData) {
+    public static class APIResponseBuilder<T> {
+        private Map<String, Object> additionalData;
+
+        public APIResponseBuilder<T> additionalData(Map<String, Object> additionalData) {
             this.additionalData = additionalData;
             return this;
         }

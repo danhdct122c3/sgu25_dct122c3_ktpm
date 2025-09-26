@@ -1,6 +1,6 @@
 package fpl.sd.backend.controller;
 
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.response.SizeResponse;
 import fpl.sd.backend.service.SizeService;
 import lombok.AccessLevel;
@@ -18,8 +18,8 @@ public class ShoeVariantController {
     SizeService sizeService;
 
     @GetMapping("/sizes")
-    public ApiResponse<List<SizeResponse>> sizes() {
-        return ApiResponse.<List<SizeResponse>>builder()
+    public APIResponse<List<SizeResponse>> sizes() {
+        return APIResponse.<List<SizeResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -28,9 +28,9 @@ public class ShoeVariantController {
     }
 
     @PostMapping("/sizes/init")
-    public ApiResponse<String> initializeSizes() {
+    public APIResponse<String> initializeSizes() {
         sizeService.initializeDefaultSizes();
-        return ApiResponse.<String>builder()
+        return APIResponse.<String>builder()
                 .flag(true)
                 .code(200)
                 .message("Sizes initialized successfully")

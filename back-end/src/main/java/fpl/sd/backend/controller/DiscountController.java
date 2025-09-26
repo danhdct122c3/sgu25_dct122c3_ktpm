@@ -1,15 +1,12 @@
 package fpl.sd.backend.controller;
 
 import fpl.sd.backend.constant.DiscountConstants;
-import fpl.sd.backend.constant.OrderConstants;
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.PageResponse;
 import fpl.sd.backend.dto.request.DiscountCreateRequest;
 import fpl.sd.backend.dto.request.DiscountUpdateRequest;
 import fpl.sd.backend.dto.response.DiscountResponse;
 import fpl.sd.backend.dto.response.EnumResponse;
-import fpl.sd.backend.dto.response.OrderDetailResponse;
-import fpl.sd.backend.dto.response.ShoeResponse;
 import fpl.sd.backend.service.DiscountService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -31,8 +28,8 @@ public class DiscountController {
 
 
     @PostMapping
-    public ApiResponse<DiscountResponse> addDiscount(@RequestBody @Valid DiscountCreateRequest discount) {
-        return ApiResponse.<DiscountResponse>builder()
+    public APIResponse<DiscountResponse> addDiscount(@RequestBody @Valid DiscountCreateRequest discount) {
+        return APIResponse.<DiscountResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully added discount")
@@ -41,8 +38,8 @@ public class DiscountController {
     }
 
     @GetMapping
-    public ApiResponse<List<DiscountResponse>> GetAllDiscounts() {
-        return ApiResponse.<List<DiscountResponse>>builder()
+    public APIResponse<List<DiscountResponse>> GetAllDiscounts() {
+        return APIResponse.<List<DiscountResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully loaded")
@@ -51,8 +48,8 @@ public class DiscountController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<DiscountResponse> GetDiscountByID(@PathVariable Integer id) {
-        return ApiResponse.<DiscountResponse>builder()
+    public APIResponse<DiscountResponse> GetDiscountByID(@PathVariable Integer id) {
+        return APIResponse.<DiscountResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully")
@@ -61,9 +58,9 @@ public class DiscountController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<DiscountResponse> updateDiscount(@PathVariable Integer id, @RequestBody @Valid DiscountUpdateRequest request) {
+    public APIResponse<DiscountResponse> updateDiscount(@PathVariable Integer id, @RequestBody @Valid DiscountUpdateRequest request) {
         DiscountResponse discountResponse = discountService.updateDiscount(id, request);
-        return ApiResponse.<DiscountResponse>builder()
+        return APIResponse.<DiscountResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Discount updated successfully")
@@ -72,8 +69,8 @@ public class DiscountController {
     }
 
     @GetMapping("/isActive")
-    public ApiResponse<List<DiscountResponse>> getDiscountByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
-        return ApiResponse.<List<DiscountResponse>>builder()
+    public APIResponse<List<DiscountResponse>> getDiscountByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
+        return APIResponse.<List<DiscountResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -82,8 +79,8 @@ public class DiscountController {
     }
 
     @GetMapping("/discountType")
-    public ApiResponse<List<EnumResponse>> getDiscountByDiscountType() {
-        return ApiResponse.<List<EnumResponse>>builder()
+    public APIResponse<List<EnumResponse>> getDiscountByDiscountType() {
+        return APIResponse.<List<EnumResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -92,7 +89,7 @@ public class DiscountController {
     }
 
     @GetMapping("/list-discount")
-    public ApiResponse<PageResponse<DiscountResponse>> getDiscountPaging(
+    public APIResponse<PageResponse<DiscountResponse>> getDiscountPaging(
             @RequestParam(required = false) String discountType,
             @RequestParam(required = false) String code,
 //            @RequestParam(required = false) boolean isActive,
@@ -101,7 +98,7 @@ public class DiscountController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "8") int size
     ) {
-        return ApiResponse.<PageResponse<DiscountResponse>>builder()
+        return APIResponse.<PageResponse<DiscountResponse>>builder()
                 .flag(true)
                 .message("OK")
                 .result(discountService.getDiscountPaging( discountType, code, isActive, page, size, sortOrder))

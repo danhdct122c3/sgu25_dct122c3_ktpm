@@ -1,17 +1,16 @@
 package fpl.sd.backend.controller;
 
 
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;  // ✅ annotation
+import io.swagger.v3.oas.annotations.responses.ApiResponses; // ✅ annotation container
 import fpl.sd.backend.dto.PageResponse;
 import fpl.sd.backend.dto.request.AdminCreateRequest;
-import fpl.sd.backend.dto.request.PasswordChangeRequest;
 import fpl.sd.backend.dto.request.UserCreateRequest;
-import fpl.sd.backend.dto.response.DiscountResponse;
-import fpl.sd.backend.dto.response.ShoeResponse;
 import fpl.sd.backend.dto.response.UserResponse;
 import fpl.sd.backend.dto.request.UserUpdateRequest;
 import fpl.sd.backend.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +27,17 @@ import java.util.List;
 public class UserController {
     UserService userService;
     AuthenticationService authenticationService;
-    
+//    @Operation(
+//            summary = "Lấy danh sách sản phẩm",
+//            description = "API này trả về toàn bộ danh sách sản phẩm trong hệ thống"
+//    )
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Thành công"),
+//            @ApiResponse(responseCode = "404", description = "Không tìm thấy user")
+//    })
     @PostMapping("/register")
-    public ApiResponse<UserResponse> addUser(@RequestBody @Valid UserCreateRequest user) {
-        return ApiResponse.<UserResponse>builder()
+    public APIResponse<UserResponse> addUser(@RequestBody @Valid UserCreateRequest user) {
+        return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully added user")
@@ -40,8 +46,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ApiResponse<List<UserResponse>> getAllUsers() {
-        return ApiResponse.<List<UserResponse>>builder()
+    public APIResponse<List<UserResponse>> getAllUsers() {
+        return APIResponse.<List<UserResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully loaded")
@@ -49,8 +55,8 @@ public class UserController {
                 .build();
     }
     @GetMapping("/{userId}")
-    public ApiResponse<UserResponse> getUserById(@PathVariable String userId) {
-        return ApiResponse.<UserResponse>builder()
+    public APIResponse<UserResponse> getUserById(@PathVariable String userId) {
+        return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully")
@@ -59,9 +65,9 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    public ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest user) {
+    public APIResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest user) {
         UserResponse updateUser = userService.updateUser(userId,user);
-        return ApiResponse.<UserResponse>builder()
+        return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("User updated successfully")
@@ -70,8 +76,8 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ApiResponse<UserResponse> getUserByUsername(@RequestParam(value = "username", required = true) String username) {
-        return ApiResponse.<UserResponse>builder()
+    public APIResponse<UserResponse> getUserByUsername(@RequestParam(value = "username", required = true) String username) {
+        return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully")
@@ -80,8 +86,8 @@ public class UserController {
     }
 
     @GetMapping("/role")
-    public ApiResponse<List<UserResponse>> getUserByRole(@RequestParam(value = "role", required = false) String roleName) {
-        return ApiResponse.<List<UserResponse>>builder()
+    public APIResponse<List<UserResponse>> getUserByRole(@RequestParam(value = "role", required = false) String roleName) {
+        return APIResponse.<List<UserResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -90,8 +96,8 @@ public class UserController {
     }
 
     @GetMapping("/isActive")
-    public ApiResponse<List<UserResponse>> getUserByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
-        return ApiResponse.<List<UserResponse>>builder()
+    public APIResponse<List<UserResponse>> getUserByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
+        return APIResponse.<List<UserResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -99,7 +105,7 @@ public class UserController {
                 .build();
     }
     @GetMapping("/list-user")
-    public ApiResponse<PageResponse<UserResponse>> getUserPaging(
+    public APIResponse<PageResponse<UserResponse>> getUserPaging(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String roleName,  // Thay roleId bằng roleName
             @RequestParam(required = false) Boolean isActive,
@@ -107,7 +113,7 @@ public class UserController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "8") int size
     ) {
-        return ApiResponse.<PageResponse<UserResponse>>builder()
+        return APIResponse.<PageResponse<UserResponse>>builder()
                 .flag(true)
                 .message("OK")
                 .result(userService.getUserPaging(username, roleName, isActive, page, size, sortOrder))
@@ -115,14 +121,14 @@ public class UserController {
     }
 
     @PostMapping("/create-admin")
-    public ApiResponse<UserResponse> createAdmin(
+    public APIResponse<UserResponse> createAdmin(
             @RequestParam String username,
             @RequestParam String email,
             @RequestParam String password,
             @RequestParam String fullName) {
 
         UserResponse adminUser = userService.createAdminUser(username, email, password, fullName);
-        return ApiResponse.<UserResponse>builder()
+        return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Admin user created successfully")
@@ -131,14 +137,14 @@ public class UserController {
     }
 
     @PostMapping("/create-admin-json")
-    public ApiResponse<UserResponse> createAdminJson(@RequestBody @Valid AdminCreateRequest request) {
+    public APIResponse<UserResponse> createAdminJson(@RequestBody @Valid AdminCreateRequest request) {
         UserResponse adminUser = userService.createAdminUser(
                 request.getUsername(),
                 request.getEmail(),
                 request.getPassword(),
                 request.getFullName()
         );
-        return ApiResponse.<UserResponse>builder()
+        return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Admin user created successfully")
@@ -147,9 +153,9 @@ public class UserController {
     }
 
     @GetMapping("/check-admin")
-    public ApiResponse<Boolean> checkAdminExists() {
+    public APIResponse<Boolean> checkAdminExists() {
         boolean hasAdmin = userService.hasAdminUser();
-        return ApiResponse.<Boolean>builder()
+        return APIResponse.<Boolean>builder()
                 .flag(true)
                 .code(200)
                 .message(hasAdmin ? "Admin user exists" : "No admin user found")

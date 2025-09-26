@@ -2,7 +2,7 @@ package fpl.sd.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fpl.sd.backend.ai.chat.dto.ContentMessageRequest;
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.request.BrandCreateRequest;
 import fpl.sd.backend.dto.response.BrandResponse;
 import fpl.sd.backend.service.BrandService;
@@ -39,10 +39,10 @@ public class BrandController {
     }
 
     @PostMapping
-    public ApiResponse<BrandResponse> createBrand(@RequestBody @Valid BrandCreateRequest request, HttpServletRequest req) {
+    public APIResponse<BrandResponse> createBrand(@RequestBody @Valid BrandCreateRequest request, HttpServletRequest req) {
         BrandResponse created = brandService.createBrand(request);
         created.setLogoUrl(toAbsoluteUrl(req, created.getLogoUrl()));
-        return ApiResponse.<BrandResponse>builder()
+        return APIResponse.<BrandResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully created brand")
@@ -51,10 +51,10 @@ public class BrandController {
     }
 
     @GetMapping
-    public ApiResponse<List<BrandResponse>> getAllBrands(HttpServletRequest req) {
+    public APIResponse<List<BrandResponse>> getAllBrands(HttpServletRequest req) {
         List<BrandResponse> list = brandService.getBrands();
         list.forEach(b -> b.setLogoUrl(toAbsoluteUrl(req, b.getLogoUrl())));
-        return ApiResponse.<List<BrandResponse>>builder()
+        return APIResponse.<List<BrandResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully retrieved all brands")
@@ -63,10 +63,10 @@ public class BrandController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<BrandResponse> getBrandById(@PathVariable int id, HttpServletRequest req) {
+    public APIResponse<BrandResponse> getBrandById(@PathVariable int id, HttpServletRequest req) {
         BrandResponse resp = brandService.getBrandById(id);
         resp.setLogoUrl(toAbsoluteUrl(req, resp.getLogoUrl()));
-        return ApiResponse.<BrandResponse>builder()
+        return APIResponse.<BrandResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully retrieved brand")
@@ -75,14 +75,14 @@ public class BrandController {
     }
 
     @PostMapping(value = "/{id}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<BrandResponse> updateBrandLogo(
+    public APIResponse<BrandResponse> updateBrandLogo(
             @PathVariable("id") int id,
             @RequestPart("logoFile") MultipartFile logoFile,
             HttpServletRequest req
     ) throws IOException {
         BrandResponse updated = brandService.updateBrandLogo(id, logoFile);
         updated.setLogoUrl(toAbsoluteUrl(req, updated.getLogoUrl()));
-        return ApiResponse.<BrandResponse>builder()
+        return APIResponse.<BrandResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully updated brand logo")
@@ -91,7 +91,7 @@ public class BrandController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<BrandResponse> createBrandWithLogo(
+    public APIResponse<BrandResponse> createBrandWithLogo(
             @RequestParam("brandName") String brandName,
             @RequestParam(value = "description", required = false) String description,
             @RequestPart("logoFile") MultipartFile logoFile,
@@ -103,7 +103,7 @@ public class BrandController {
 
         BrandResponse created = brandService.createBrandWithLogo(request, logoFile);
         created.setLogoUrl(toAbsoluteUrl(req, created.getLogoUrl()));
-        return ApiResponse.<BrandResponse>builder()
+        return APIResponse.<BrandResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Successfully created brand with uploaded logo")
@@ -112,10 +112,10 @@ public class BrandController {
     }
 
     @GetMapping("/summary")
-    public ApiResponse<String> summarizeBrands(@RequestBody ContentMessageRequest contentMessageRequest) throws JsonProcessingException {
+    public APIResponse<String> summarizeBrands(@RequestBody ContentMessageRequest contentMessageRequest) throws JsonProcessingException {
         List<BrandResponse> brands = brandService.getBrands();
         String brandsSummary = this.brandService.summarize(brands, contentMessageRequest.getContent());
-        return ApiResponse.<String>builder()
+        return APIResponse.<String>builder()
                 .flag(true)
                 .message("OK")
                 .result(brandsSummary)
@@ -124,9 +124,9 @@ public class BrandController {
     }
 
     @PostMapping("/init")
-    public ApiResponse<String> initializeBrands() {
+    public APIResponse<String> initializeBrands() {
         brandService.initializeDefaultBrands();
-        return ApiResponse.<String>builder()
+        return APIResponse.<String>builder()
                 .flag(true)
                 .code(200)
                 .message("Brands initialized successfully")
@@ -135,9 +135,9 @@ public class BrandController {
     }
 
     @PostMapping("/fix-logos")
-    public ApiResponse<String> fixBrandLogos() {
+    public APIResponse<String> fixBrandLogos() {
         brandService.fixBrandLogos();
-        return ApiResponse.<String>builder()
+        return APIResponse.<String>builder()
                 .flag(true)
                 .code(200)
                 .message("Brand logos fixed (normalized)")

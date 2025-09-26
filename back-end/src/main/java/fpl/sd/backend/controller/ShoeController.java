@@ -1,7 +1,7 @@
 package fpl.sd.backend.controller;
 
 import fpl.sd.backend.constant.ShoeConstants;
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.PageResponse;
 import fpl.sd.backend.dto.request.ShoeCreateRequest;
 import fpl.sd.backend.dto.request.ShoeUpdateRequest;
@@ -24,8 +24,8 @@ public class ShoeController {
     ShoeService shoeService;
 
     @GetMapping
-    public ApiResponse<List<ShoeResponse>> getAllShoes() {
-        return ApiResponse.<List<ShoeResponse>>builder()
+    public APIResponse<List<ShoeResponse>> getAllShoes() {
+        return APIResponse.<List<ShoeResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -34,9 +34,9 @@ public class ShoeController {
     }
 
     @GetMapping("/by-gender")
-    public ApiResponse<List<ShoeResponse>> getShoesByGender(@RequestParam(value = "gender", required = false) String gender) {
+    public APIResponse<List<ShoeResponse>> getShoesByGender(@RequestParam(value = "gender", required = false) String gender) {
         List<ShoeResponse> shoes = shoeService.getShoesByGender(gender);
-        return ApiResponse.<List<ShoeResponse>>builder()
+        return APIResponse.<List<ShoeResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -45,8 +45,8 @@ public class ShoeController {
     }
 
     @GetMapping("/by-brand")
-    public ApiResponse<List<ShoeResponse>> getShoesByBrand(@RequestParam(value = "brand", required = false) Integer brand) {
-        return ApiResponse.<List<ShoeResponse>>builder()
+    public APIResponse<List<ShoeResponse>> getShoesByBrand(@RequestParam(value = "brand", required = false) Integer brand) {
+        return APIResponse.<List<ShoeResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -55,8 +55,8 @@ public class ShoeController {
     }
 
     @GetMapping("/by-category")
-    public ApiResponse<List<ShoeResponse>> getShoesByCategory(@RequestParam(value = "category", required = false) String category) {
-        return ApiResponse.<List<ShoeResponse>>builder()
+    public APIResponse<List<ShoeResponse>> getShoesByCategory(@RequestParam(value = "category", required = false) String category) {
+        return APIResponse.<List<ShoeResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -65,8 +65,8 @@ public class ShoeController {
     }
 
     @PostMapping
-    public ApiResponse<ShoeResponse> createShoe(@RequestBody @Valid ShoeCreateRequest request) {
-        return ApiResponse.<ShoeResponse>builder()
+    public APIResponse<ShoeResponse> createShoe(@RequestBody @Valid ShoeCreateRequest request) {
+        return APIResponse.<ShoeResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -75,8 +75,8 @@ public class ShoeController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ShoeResponse> getShoeById(@PathVariable("id") int id) {
-        return ApiResponse.<ShoeResponse>builder()
+    public APIResponse<ShoeResponse> getShoeById(@PathVariable("id") int id) {
+        return APIResponse.<ShoeResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -86,8 +86,8 @@ public class ShoeController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<ShoeResponse> updateShoe(@PathVariable("id") int id, @RequestBody ShoeUpdateRequest request) {
-        return ApiResponse.<ShoeResponse>builder()
+    public APIResponse<ShoeResponse> updateShoe(@PathVariable("id") int id, @RequestBody ShoeUpdateRequest request) {
+        return APIResponse.<ShoeResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -96,8 +96,8 @@ public class ShoeController {
     }
 
     @GetMapping("/shop")
-    public ApiResponse<List<ShoeResponse>> getShoesByName(@RequestParam(value = "name", required = false) String name) {
-        return ApiResponse.<List<ShoeResponse>>builder()
+    public APIResponse<List<ShoeResponse>> getShoesByName(@RequestParam(value = "name", required = false) String name) {
+        return APIResponse.<List<ShoeResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -106,8 +106,8 @@ public class ShoeController {
     }
 
     @GetMapping("/categories")
-    public ApiResponse<List<EnumResponse>> getShoeCategories() {
-        return ApiResponse.<List<EnumResponse>>builder()
+    public APIResponse<List<EnumResponse>> getShoeCategories() {
+        return APIResponse.<List<EnumResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -116,8 +116,8 @@ public class ShoeController {
     }
 
     @GetMapping("/genders")
-    public ApiResponse<List<EnumResponse>> getShoeGenders() {
-        return ApiResponse.<List<EnumResponse>>builder()
+    public APIResponse<List<EnumResponse>> getShoeGenders() {
+        return APIResponse.<List<EnumResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -126,7 +126,7 @@ public class ShoeController {
     }
 
     @GetMapping("/list-shoes")
-    public ApiResponse<PageResponse<ShoeResponse>> getShoePaging(
+    public APIResponse<PageResponse<ShoeResponse>> getShoePaging(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long minPrice,
             @RequestParam(required = false) Long maxPrice,
@@ -138,7 +138,7 @@ public class ShoeController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "8") int size
             ) {
-        return ApiResponse.<PageResponse<ShoeResponse>>builder()
+        return APIResponse.<PageResponse<ShoeResponse>>builder()
                 .flag(true)
                 .message("OK")
                 .result(shoeService.getShoePaging(name, minPrice, maxPrice, brandId, gender, category, page, size, sortOrder, status))

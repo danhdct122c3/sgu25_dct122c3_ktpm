@@ -1,16 +1,12 @@
 package fpl.sd.backend.controller;
 
 import fpl.sd.backend.constant.OrderConstants;
-import fpl.sd.backend.constant.ShoeConstants;
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.PageResponse;
-import fpl.sd.backend.dto.request.DiscountUpdateRequest;
 import fpl.sd.backend.dto.request.OrderUpdateRequest;
 
 import fpl.sd.backend.dto.response.EnumResponse;
 import fpl.sd.backend.dto.response.OrderDetailResponse;
-import fpl.sd.backend.dto.response.ShoeResponse;
-import fpl.sd.backend.entity.OrderDetail;
 import fpl.sd.backend.service.OrderDetailService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -29,8 +25,8 @@ public class OrderDetailController {
     OrderDetailService orderDetailService;
 
     @GetMapping("/user/{userId}")
-    public ApiResponse<List<OrderDetailResponse>> getOrderDetailsByUserId(@PathVariable String userId) {
-        return ApiResponse.<List<OrderDetailResponse>>builder()
+    public APIResponse<List<OrderDetailResponse>> getOrderDetailsByUserId(@PathVariable String userId) {
+        return APIResponse.<List<OrderDetailResponse>>builder()
                 .code(200)
                 .flag(true)
                 .message("Successfully loaded")
@@ -39,8 +35,8 @@ public class OrderDetailController {
     }
 
     @GetMapping
-    public ApiResponse<List<OrderDetailResponse>> getOrderDetails() {
-        return ApiResponse.<List<OrderDetailResponse>>builder()
+    public APIResponse<List<OrderDetailResponse>> getOrderDetails() {
+        return APIResponse.<List<OrderDetailResponse>>builder()
                 .code(200)
                 .flag(true)
                 .message("Successfully loaded")
@@ -50,8 +46,8 @@ public class OrderDetailController {
 
 
     @GetMapping("/order/{orderId}")
-    public ApiResponse<OrderDetailResponse> getOrderDetailByOrderId(@PathVariable String orderId) {
-        return ApiResponse.<OrderDetailResponse>builder()
+    public APIResponse<OrderDetailResponse> getOrderDetailByOrderId(@PathVariable String orderId) {
+        return APIResponse.<OrderDetailResponse>builder()
                 .code(200)
                 .flag(true)
                 .message("Successfully loaded")
@@ -63,9 +59,9 @@ public class OrderDetailController {
 
 
     @PutMapping("/order/{orderId}")
-    public ApiResponse<OrderDetailResponse> updateOrderDetail(@PathVariable String orderId, @RequestBody @Valid OrderUpdateRequest request) {
+    public APIResponse<OrderDetailResponse> updateOrderDetail(@PathVariable String orderId, @RequestBody @Valid OrderUpdateRequest request) {
         OrderDetailResponse orderDetailResponse = orderDetailService.updateOrderDetail(orderId, request);
-        return ApiResponse.<OrderDetailResponse>builder()
+        return APIResponse.<OrderDetailResponse>builder()
                 .flag(true)
                 .code(200)
                 .message("Order updated successfully")
@@ -75,8 +71,8 @@ public class OrderDetailController {
 
 
     @GetMapping("/order/{orderId}/user/{userId}")
-    public ApiResponse<OrderDetailResponse> getOrderDetailByOrderIdAndUserId(@PathVariable String orderId, @PathVariable String userId) {
-        return ApiResponse.<OrderDetailResponse>builder()
+    public APIResponse<OrderDetailResponse> getOrderDetailByOrderIdAndUserId(@PathVariable String orderId, @PathVariable String userId) {
+        return APIResponse.<OrderDetailResponse>builder()
                 .code(200)
                 .flag(true)
                 .message("Successfully loaded")
@@ -85,8 +81,8 @@ public class OrderDetailController {
     }
 
     @GetMapping("/orderStatus")
-    public ApiResponse<List<EnumResponse>> getByOrderStatus() {
-        return ApiResponse.<List<EnumResponse>>builder()
+    public APIResponse<List<EnumResponse>> getByOrderStatus() {
+        return APIResponse.<List<EnumResponse>>builder()
                 .flag(true)
                 .code(200)
                 .message("OK")
@@ -96,7 +92,7 @@ public class OrderDetailController {
 
 
     @GetMapping("/list-order")
-    public ApiResponse<PageResponse<OrderDetailResponse>> getOrderPaging(
+    public APIResponse<PageResponse<OrderDetailResponse>> getOrderPaging(
             @RequestParam(required = false) String orderStatus,
             @RequestParam(defaultValue = "date") String sortOrder,
             @RequestParam(defaultValue = "1") int page,
@@ -105,7 +101,7 @@ public class OrderDetailController {
         PageResponse<OrderDetailResponse> pageResponse = orderDetailService.getOrderPaging(orderStatus, page, size, sortOrder);
         Map<OrderConstants.OrderStatus, Long> orderStatusCount = orderDetailService.getOrderStatusCounts();
 
-        return ApiResponse.<PageResponse<OrderDetailResponse>>builder()
+        return APIResponse.<PageResponse<OrderDetailResponse>>builder()
                 .flag(true)
                 .message("OK")
                 .result(pageResponse)

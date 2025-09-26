@@ -1,15 +1,13 @@
 package fpl.sd.backend.controller;
 
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.request.ApplyDiscountRequest;
 import fpl.sd.backend.dto.request.OrderRequest;
 import fpl.sd.backend.dto.response.ApplyDiscountResponse;
-import fpl.sd.backend.dto.response.OrderDto;
 import fpl.sd.backend.dto.response.OrderResponse;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.service.OrderService;
 import jakarta.validation.Valid;
-import jakarta.validation.ValidationException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,8 +21,8 @@ public class OrderController {
     OrderService orderService;
 
     @PostMapping("/create")
-    public ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request) {
-        return ApiResponse.<OrderResponse>builder()
+    public APIResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request) {
+        return APIResponse.<OrderResponse>builder()
                 .code(200)
                 .flag(true)
                 .message("Order created")
@@ -85,17 +83,17 @@ public class OrderController {
 //    }
 
     @PostMapping("/apply-discount")
-    public ApiResponse<?> applyDiscount(@RequestBody @Valid ApplyDiscountRequest request) {
+    public APIResponse<?> applyDiscount(@RequestBody @Valid ApplyDiscountRequest request) {
         try {
             ApplyDiscountResponse applyDiscountResponse = orderService.applyDiscount(request.getDiscount());
-            return ApiResponse.<ApplyDiscountResponse>builder()
+            return APIResponse.<ApplyDiscountResponse>builder()
                     .code(200)
                     .flag(true)
                     .message("Apply successfully")
                     .result(applyDiscountResponse)
                     .build();
         } catch (AppException ex) {
-            return ApiResponse.builder()
+            return APIResponse.builder()
                     .code(404)
                     .flag(false)
                     .message(ex.getMessage())

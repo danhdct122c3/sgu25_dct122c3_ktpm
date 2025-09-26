@@ -1,13 +1,12 @@
 package fpl.sd.backend.controller;
 
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.response.report.*;
 import fpl.sd.backend.service.ReportService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,8 +20,8 @@ public class ReportController {
     ReportService reportService;
 
     @GetMapping("/daily-report")
-    public ApiResponse<List<DailyRevenueReportDTO>> getDailyRevenueReport() {
-        return ApiResponse.<List<DailyRevenueReportDTO>>builder()
+    public APIResponse<List<DailyRevenueReportDTO>> getDailyRevenueReport() {
+        return APIResponse.<List<DailyRevenueReportDTO>>builder()
                 .flag(true)
                 .message("OK")
                 .result(reportService.getDailyRevenueReports())
@@ -31,8 +30,8 @@ public class ReportController {
 
 
     @GetMapping("/top-seller")
-    public ApiResponse<List<ProductPerformanceDTO>> getProductPerformance() {
-        return ApiResponse.<List<ProductPerformanceDTO>>builder()
+    public APIResponse<List<ProductPerformanceDTO>> getProductPerformance() {
+        return APIResponse.<List<ProductPerformanceDTO>>builder()
                 .flag(true)
                 .message("OK")
                 .result(reportService.getProductPerformances())
@@ -41,8 +40,8 @@ public class ReportController {
 
 
     @GetMapping("/inventory-status")
-    public ApiResponse<List<InventoryStatusDTO>> getInventoryStatus() {
-        return ApiResponse.<List<InventoryStatusDTO>>builder()
+    public APIResponse<List<InventoryStatusDTO>> getInventoryStatus() {
+        return APIResponse.<List<InventoryStatusDTO>>builder()
                 .flag(true)
                 .message("OK")
                 .result(reportService.getInventoryStatus())
@@ -51,8 +50,8 @@ public class ReportController {
 
 
     @GetMapping("/top-customer")
-    public ApiResponse<List<CustomerSegmentationDTO>> getTopCustomer() {
-        return ApiResponse.<List<CustomerSegmentationDTO>>builder()
+    public APIResponse<List<CustomerSegmentationDTO>> getTopCustomer() {
+        return APIResponse.<List<CustomerSegmentationDTO>>builder()
                 .flag(true)
                 .message("OK")
                 .result(reportService.getCustomerSegmentation())
@@ -60,10 +59,10 @@ public class ReportController {
     }
 
     @GetMapping("/daily-totals")
-    public ApiResponse<List<DailyTotalDTO>> getDailyTotals(
+    public APIResponse<List<DailyTotalDTO>> getDailyTotals(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ApiResponse.<List<DailyTotalDTO>>builder()
+        return APIResponse.<List<DailyTotalDTO>>builder()
                 .flag(true)
                 .message("OK")
                 .result(reportService.getDailyTotals(startDate, endDate))
@@ -71,10 +70,10 @@ public class ReportController {
     }
 
     @GetMapping("/monthly-totals")
-    public ApiResponse<List<MonthlyTotalDTO>> getMonthlyTotals(
+    public APIResponse<List<MonthlyTotalDTO>> getMonthlyTotals(
             @RequestParam(value = "year") int year
     ) {
-        return ApiResponse.<List<MonthlyTotalDTO>>builder()
+        return APIResponse.<List<MonthlyTotalDTO>>builder()
                 .flag(true)
                 .message("OK")
                 .result(reportService.getMonthlyTotals(year))

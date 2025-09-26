@@ -2,7 +2,7 @@ package fpl.sd.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fpl.sd.backend.ai.chat.dto.ContentMessageRequest;
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.service.DiscountService;
 import fpl.sd.backend.service.ShoeService;
 import lombok.AccessLevel;
@@ -20,8 +20,8 @@ public class ChatController {
     DiscountService discountService;
 
     @PostMapping("/shoe-data")
-    public ApiResponse<String> promptShoe(@RequestBody ContentMessageRequest messageRequest) throws JsonProcessingException {
-        return ApiResponse.<String>builder()
+    public APIResponse<String> promptShoe(@RequestBody ContentMessageRequest messageRequest) throws JsonProcessingException {
+        return APIResponse.<String>builder()
                 .flag(true)
                 .message("OK")
                 .result(shoeService.shoeData(messageRequest.getContent()))
@@ -30,8 +30,8 @@ public class ChatController {
     }
 
     @PostMapping("/discount-data")
-    public ApiResponse<String> promptDiscount(@RequestBody ContentMessageRequest messageRequest) throws JsonProcessingException {
-        return ApiResponse.<String>builder()
+    public APIResponse<String> promptDiscount(@RequestBody ContentMessageRequest messageRequest) throws JsonProcessingException {
+        return APIResponse.<String>builder()
                 .flag(true)
                 .message("OK")
                 .result(discountService.discountData(messageRequest.getContent()))

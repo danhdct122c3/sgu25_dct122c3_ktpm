@@ -2,7 +2,7 @@ package fpl.sd.backend.controller;
 
 
 import com.nimbusds.jose.JOSEException;
-import fpl.sd.backend.dto.ApiResponse;
+import fpl.sd.backend.dto.APIResponse;
 import fpl.sd.backend.dto.request.*;
 import fpl.sd.backend.dto.response.AuthenticationResponse;
 import fpl.sd.backend.dto.response.IntrospectResponse;
@@ -29,9 +29,9 @@ public class AuthenticationController {
 
 
     @PostMapping("/token")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest) {
+    APIResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest) {
         var rs = authenticationService.authenticate(authenticationRequest);
-        return ApiResponse.<AuthenticationResponse>builder()
+        return APIResponse.<AuthenticationResponse>builder()
                 .result(rs)
                 .flag(true)
                 .message("Login successful")
@@ -39,26 +39,26 @@ public class AuthenticationController {
     }
 
     @PostMapping("/introspect")
-    ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
+    APIResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
         var rs = authenticationService.introspect(request);
-        return ApiResponse.<IntrospectResponse>builder()
+        return APIResponse.<IntrospectResponse>builder()
                 .result(rs)
                 .build();
     }
 
     @PostMapping("/change-password")
-    public ApiResponse<Void> changePassword(@Valid @RequestBody PasswordChangeRequest request) {
+    public APIResponse<Void> changePassword(@Valid @RequestBody PasswordChangeRequest request) {
         userService.changePassword(request);
-        return ApiResponse.<Void>builder()
+        return APIResponse.<Void>builder()
                 .flag(true)
                 .message("Password changed successfully")
                 .build();
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException {
+    public APIResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException {
         authenticationService.logout(request);
-        return ApiResponse.<Void>builder()
+        return APIResponse.<Void>builder()
                 .code(200)
                 .message("Successfully logged out.")
                 .result(null)
@@ -66,9 +66,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/email/send")
-    public ApiResponse<Void> sendEmail(@RequestBody PasswordResetRequest email) {
+    public APIResponse<Void> sendEmail(@RequestBody PasswordResetRequest email) {
         emailService.requestPasswordReset(email);
-        return ApiResponse.<Void>builder()
+        return APIResponse.<Void>builder()
                 .flag(true)
                 .message("Successfully send email.")
                 .result(null)
@@ -76,15 +76,15 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-otp")
-    public ApiResponse<Void> verifyOtp(@RequestBody OTPVerificationRequest request) {
+    public APIResponse<Void> verifyOtp(@RequestBody OTPVerificationRequest request) {
         boolean isVerified = userService.verifyOtp(request.getEmail(), request.getOtpCode());
         if (isVerified) {
-            return ApiResponse.<Void>builder()
+            return APIResponse.<Void>builder()
                     .flag(true)
                     .message("Successfully verified OTP.")
                     .build();
         } else {
-            return ApiResponse.<Void>builder()
+            return APIResponse.<Void>builder()
                     .flag(false)
                     .message("Invalid or expired OTP.")
                     .code(400)
@@ -93,15 +93,15 @@ public class AuthenticationController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Void> resetPassword(@RequestBody OTPVerificationRequest request) {
+    public APIResponse<Void> resetPassword(@RequestBody OTPVerificationRequest request) {
         boolean isReset = userService.resetPassword(request.getEmail(), request.getNewPassword(), request.getConfirmPassword());
         if (isReset) {
-            return ApiResponse.<Void>builder()
+            return APIResponse.<Void>builder()
                     .flag(true)
                     .message("Reset password successful.")
                     .build();
         } else {
-            return ApiResponse.<Void>builder()
+            return APIResponse.<Void>builder()
                     .flag(false)
                     .message("Reset password failed.")
                     .code(400)

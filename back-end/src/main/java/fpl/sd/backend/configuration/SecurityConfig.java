@@ -54,6 +54,13 @@ public class SecurityConfig {
                 .requestMatchers("/orders/apply-discount").permitAll()
                 .requestMatchers("/chat/**").permitAll()
                 .requestMatchers("/brands/init").permitAll()
+                    .requestMatchers(
+                            "/swagger-ui.html",
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/webjars/**"
+                    ).permitAll()
                 .anyRequest().authenticated()
             );
 
