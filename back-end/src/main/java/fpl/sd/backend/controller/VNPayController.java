@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class VNPayController {
     PaymentService paymentService;
 
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create-payment")
     public APIResponse<String> createPayment(@RequestBody PaymentRequest paymentRequest) {
         return APIResponse.<String>builder()

@@ -204,4 +204,124 @@ public class BrandService {
         }
         brandRepository.saveAll(brands);
     }
+
+    /**
+     * Update a brand
+     */
+    public BrandResponse updateBrand(int id, BrandCreateRequest request) {
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+
+        // Check if new name already exists (but not same brand)
+        if (request.getBrandName() != null && 
+            !request.getBrandName().equals(brand.getBrandName()) &&
+            brandRepository.existsByBrandName(request.getBrandName())) {
+            throw new AppException(ErrorCode.BRAND_ALREADY_EXISTS);
+        }
+
+        if (request.getBrandName() != null) {
+            brand.setBrandName(request.getBrandName());
+        }
+        if (request.getDescription() != null) {
+            brand.setDescription(request.getDescription());
+        }
+        if (request.getLogoUrl() != null) {
+            brand.setLogoUrl(request.getLogoUrl());
+        }
+        
+        brandRepository.save(brand);
+        
+        return brandMapper.toBrandResponse(brand);
+    }
+
+    /**
+     * Update brand with logo file
+     */
+    public BrandResponse updateBrandWithLogo(int id, BrandCreateRequest request, MultipartFile logoFile) throws IOException {
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+
+        // Check if new name already exists (but not same brand)
+        if (request.getBrandName() != null && 
+            !request.getBrandName().equals(brand.getBrandName()) &&
+            brandRepository.existsByBrandName(request.getBrandName())) {
+            throw new AppException(ErrorCode.BRAND_ALREADY_EXISTS);
+        }
+
+        if (request.getBrandName() != null) {
+            brand.setBrandName(request.getBrandName());
+        }
+        if (request.getDescription() != null) {
+            brand.setDescription(request.getDescription());
+        }
+
+        // Handle file upload
+        if (logoFile != null && !logoFile.isEmpty()) {
+            // Delete old logo file if exists
+            if (brand.getLogoUrl() != null && !brand.getLogoUrl().isBlank()) {
+                String oldFilename = brand.getLogoUrl().substring(brand.getLogoUrl().lastIndexOf('/') + 1);
+                Path oldFilePath = Paths.get("uploads/brands", oldFilename);
+                try {
+                    Files.deleteIfExists(oldFilePath);
+                } catch (IOException e) {
+                    // Log but don't fail if old file deletion fails
+                }
+            }
+
+            // Save new logo
+            String uploadDir = "uploads/brands";
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String originalFilename = logoFile.getOriginalFilename();
+            String fileExtension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String filename = UUID.randomUUID().toString() + fileExtension;
+            Path filePath = uploadPath.resolve(filename);
+
+            try {
+                Files.copy(logoFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
+
+            String logoUrl = "/uploads/brands/" + filename;
+            brand.setLogoUrl(logoUrl);
+        }
+
+        brandRepository.save(brand);
+        
+        return brandMapper.toBrandResponse(brand);
+    }
+
+    /**
+     * Delete a brand
+     * Will fail if brand is used by any shoes
+     */
+    public void deleteBrand(int id) {
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+
+        // Check if brand is used by any shoes
+        if (brand.getShoeList() != null && !brand.getShoeList().isEmpty()) {
+            throw new AppException(ErrorCode.BRAND_IN_USE);
+        }
+
+        // Delete logo file if exists
+        if (brand.getLogoUrl() != null && !brand.getLogoUrl().isBlank()) {
+            String filename = brand.getLogoUrl().substring(brand.getLogoUrl().lastIndexOf('/') + 1);
+            Path filePath = Paths.get("uploads/brands", filename);
+            try {
+                Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+                // Log but don't fail deletion
+            }
+        }
+
+        brandRepository.delete(brand);
+    }
 }

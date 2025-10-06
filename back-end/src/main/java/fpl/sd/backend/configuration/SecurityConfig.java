@@ -3,6 +3,7 @@ package fpl.sd.backend.configuration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -44,23 +46,34 @@ public class SecurityConfig {
                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
             )
             .authorizeHttpRequests(authz -> authz
+                // Public endpoints - không cần đăng nhập
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/users/register").permitAll()
                 .requestMatchers("/users/create-admin").permitAll()
                 .requestMatchers("/users/create-admin-json").permitAll()
                 .requestMatchers("/users/check-admin").permitAll()
+                
+                // Brands & Shoes - công khai để xem, nhưng quản lý cần role ADMIN (dùng @PreAuthorize ở controller)
                 .requestMatchers("/brands/**").permitAll()
                 .requestMatchers("/shoes/**").permitAll()
+                .requestMatchers("/shoe-images/**").permitAll() // Shoe images - công khai để xem
+                
+                // Orders - người dùng đã đăng nhập mới tạo được
                 .requestMatchers("/orders/apply-discount").permitAll()
+                
+                // Chat - công khai
                 .requestMatchers("/chat/**").permitAll()
-                .requestMatchers("/brands/init").permitAll()
-                    .requestMatchers(
-                            "/swagger-ui.html",
-                            "/swagger-ui/**",
-                            "/v3/api-docs/**",
-                            "/swagger-resources/**",
-                            "/webjars/**"
-                    ).permitAll()
+                
+                // Swagger UI - công khai cho development
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()
+                
+                // Tất cả các endpoint còn lại yêu cầu đăng nhập
                 .anyRequest().authenticated()
             );
 

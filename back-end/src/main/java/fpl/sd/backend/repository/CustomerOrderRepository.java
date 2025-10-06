@@ -20,11 +20,14 @@ import java.util.Optional;
 
 @Repository
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, String> {
+    // Query theo User ID (UUID)
     Optional<CustomerOrder> findByIdAndUserIdAndOrderStatus(String orderId, String userId, OrderConstants.OrderStatus orderStatus);
-
-    List<CustomerOrder> findByUserIdOrderByOrderDateDesc(String userId);
-
     Optional<CustomerOrder> findByIdAndUserId(String orderId, String userId);
+
+    // ✅ Query theo USERNAME (string username, không phải UUID id)
+    // Spring Data JPA sẽ tự động join với User entity và tìm theo user.username
+    List<CustomerOrder> findByUserUsernameOrderByOrderDateDesc(String username);
+    Optional<CustomerOrder> findByIdAndUserUsername(String orderId, String username);
     List<CustomerOrder> findByOrderStatus(OrderConstants.OrderStatus orderStatus);
     @Query("""
     SELECT c FROM CustomerOrder c

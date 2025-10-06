@@ -11,6 +11,7 @@ import fpl.sd.backend.service.ShoeService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -23,6 +24,10 @@ import java.util.List;
 public class ShoeController {
     ShoeService shoeService;
 
+    /**
+     * Get all ACTIVE shoes (for customers)
+     * Public endpoint - only returns shoes with status=true
+     */
     @GetMapping
     public APIResponse<List<ShoeResponse>> getAllShoes() {
         return APIResponse.<List<ShoeResponse>>builder()
@@ -30,6 +35,21 @@ public class ShoeController {
                 .code(200)
                 .message("OK")
                 .result(shoeService.getAllShoes())
+                .build();
+    }
+    
+    /**
+     * Get ALL shoes including hidden ones (for admin)
+     * Admin only - returns all shoes regardless of status
+     */
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public APIResponse<List<ShoeResponse>> getAllShoesForAdmin() {
+        return APIResponse.<List<ShoeResponse>>builder()
+                .flag(true)
+                .code(200)
+                .message("OK")
+                .result(shoeService.getAllShoesForAdmin())
                 .build();
     }
 
@@ -64,6 +84,7 @@ public class ShoeController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public APIResponse<ShoeResponse> createShoe(@RequestBody @Valid ShoeCreateRequest request) {
         return APIResponse.<ShoeResponse>builder()
@@ -85,6 +106,7 @@ public class ShoeController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public APIResponse<ShoeResponse> updateShoe(@PathVariable("id") int id, @RequestBody ShoeUpdateRequest request) {
         return APIResponse.<ShoeResponse>builder()
@@ -145,5 +167,20 @@ public class ShoeController {
                 .build();
     }
 
+    /**
+     * Delete a shoe
+     * Protected endpoint - ADMIN only
+     * Uses soft delete to maintain data integrity
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public APIResponse<Void> deleteShoe(@PathVariable("id") int id) {
+        shoeService.deleteShoe(id);
+        return APIResponse.<Void>builder()
+                .flag(true)
+                .code(200)
+                .message("Successfully deleted shoe with ID " + id)
+                .build();
+    }
 
 }

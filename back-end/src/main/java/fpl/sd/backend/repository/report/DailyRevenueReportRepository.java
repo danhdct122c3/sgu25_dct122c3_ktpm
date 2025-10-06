@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface DailyRevenueReportRepository extends CrudRepository<DailyRevenueReport, Long> {
+public interface DailyRevenueReportRepository extends CrudRepository<DailyRevenueReport, java.time.Instant> {
 
     @Query(nativeQuery = true, value = "select * from daily_revenue_report limit 7")
     List<DailyRevenueReport> getDailyRevenueReport();

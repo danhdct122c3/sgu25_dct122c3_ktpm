@@ -19,6 +19,14 @@ public interface ShoeRepository extends JpaRepository<Shoe, Integer> {
     List<Shoe> findShoesByCategory(ShoeConstants.Category category);
 
     List<Shoe> findShoesByNameContainingIgnoreCase(String shoeName);
+    
+    // Query methods để lọc theo status (true = active, false = deleted/hidden)
+    List<Shoe> findByStatusTrue(); // Chỉ lấy shoes active
+    List<Shoe> findByStatusTrueOrderByCreatedAtDesc(); // Shoes active, sắp xếp theo ngày tạo
+    List<Shoe> findByStatusTrueAndGender(ShoeConstants.Gender gender);
+    List<Shoe> findByStatusTrueAndBrand(Brand brand);
+    List<Shoe> findByStatusTrueAndCategory(ShoeConstants.Category category);
+    List<Shoe> findByStatusTrueAndNameContainingIgnoreCase(String shoeName);
 
 
     @Query("""

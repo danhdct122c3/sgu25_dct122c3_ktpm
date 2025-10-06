@@ -62,7 +62,7 @@ public class UserService {
         user.setAddress("This field need to be updated");
 
         // Assign MEMBER role for regular user registration
-        Role memberRole = roleRepository.findByRoles(RoleConstants.Role.MEMBER)
+        Role memberRole = roleRepository.findByRoles(RoleConstants.Role.USER)
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
         user.setRole(memberRole);
 

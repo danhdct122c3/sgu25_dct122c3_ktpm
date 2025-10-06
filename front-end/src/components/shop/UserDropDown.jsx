@@ -37,7 +37,8 @@ export default function UserDropDown() {
         <DropdownMenuContent className="-translate-x-1/3">
           <DropdownMenuLabel>{name ? "Chào mừng, " + name : "Hồ sơ"}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {user && (userRole === "ROLE_ADMIN" || userRole === "ROLE_MANAGER") && (
+          {/* Chỉ ADMIN mới hiển thị menu quản trị (đã xóa MANAGER role) */}
+          {user && userRole === "ROLE_ADMIN" && (
             <div>
               <Link to={"/admin"}>
                 <DropdownMenuItem className="cursor-pointer">

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,16 +25,29 @@ import java.util.Map;
 public class OrderDetailController {
     OrderDetailService orderDetailService;
 
-    @GetMapping("/user/{userId}")
-    public APIResponse<List<OrderDetailResponse>> getOrderDetailsByUserId(@PathVariable String userId) {
+    /**
+     * Get all orders for a specific user by USERNAME
+     * 
+     * Security:
+     * - Admin can view orders of any user
+     * - Regular users can only view their own orders
+     * 
+     * @param username The USERNAME (not user ID!) from URL path
+     *                 Must match the username in JWT token for non-admin users
+     * @return List of orders for this user
+     */
+    @PreAuthorize("hasRole('ADMIN') or #username == authentication.principal.claims['sub']")
+    @GetMapping("/user/{username}")
+    public APIResponse<List<OrderDetailResponse>> getOrderDetailsByUserId(@PathVariable("username") String username) {
         return APIResponse.<List<OrderDetailResponse>>builder()
                 .code(200)
                 .flag(true)
                 .message("Successfully loaded")
-                .result(orderDetailService.getAllOrdersByUserId(userId))
+                .result(orderDetailService.getAllOrdersByUserId(username))
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public APIResponse<List<OrderDetailResponse>> getOrderDetails() {
         return APIResponse.<List<OrderDetailResponse>>builder()
@@ -45,6 +59,7 @@ public class OrderDetailController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/order/{orderId}")
     public APIResponse<OrderDetailResponse> getOrderDetailByOrderId(@PathVariable String orderId) {
         return APIResponse.<OrderDetailResponse>builder()
@@ -58,6 +73,7 @@ public class OrderDetailController {
 
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/order/{orderId}")
     public APIResponse<OrderDetailResponse> updateOrderDetail(@PathVariable String orderId, @RequestBody @Valid OrderUpdateRequest request) {
         OrderDetailResponse orderDetailResponse = orderDetailService.updateOrderDetail(orderId, request);
@@ -91,6 +107,7 @@ public class OrderDetailController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/list-order")
     public APIResponse<PageResponse<OrderDetailResponse>> getOrderPaging(
             @RequestParam(required = false) String orderStatus,

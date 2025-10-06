@@ -2,29 +2,23 @@ package fpl.sd.backend.service;
 
 import fpl.sd.backend.constant.DiscountConstants;
 import fpl.sd.backend.constant.OrderConstants;
-import fpl.sd.backend.dto.request.ApplyDiscountRequest;
 import fpl.sd.backend.dto.request.OrderRequest;
 import fpl.sd.backend.dto.response.ApplyDiscountResponse;
 import fpl.sd.backend.dto.response.CartItemResponse;
-import fpl.sd.backend.dto.response.OrderDto;
 import fpl.sd.backend.dto.response.OrderResponse;
 import fpl.sd.backend.entity.*;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.OrderMapper;
 import fpl.sd.backend.repository.*;
-import jakarta.validation.ValidationException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,7 +26,6 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderService {
 
-    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
     OrderMapper orderMapper;
     UserRepository userRepository;
     ShoeVariantRepository shoeVariantRepository;
@@ -121,17 +114,22 @@ public class OrderService {
     }
 
     public ApplyDiscountResponse applyDiscount(String code) {
-        Discount discount = discountRepository.findByCode(code)
-                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
+        // Validate input
+        if (code == null || code.trim().isEmpty()) {
+            throw new AppException(ErrorCode.COUPON_INVALID);
+        }
+
+        Discount discount = discountRepository.findByCode(code.trim())
+                .orElseThrow(() -> new AppException(ErrorCode.COUPON_INVALID));
 
         // Kiểm tra nếu mã giảm giá không hoạt động
         if (!discount.isActive()) {
-            throw new ValidationException("Discount is not active");
+            throw new AppException(ErrorCode.COUPON_INVALID);
         }
 
         // Kiểm tra nếu mã giảm giá đã hết hạn
         if (couponIsExpired(discount)) {
-            throw new ValidationException("Discount has expired");
+            throw new AppException(ErrorCode.COUPON_INVALID);
         }
 
 
@@ -165,5 +163,39 @@ public class OrderService {
         order.setUpdateDate(Instant.now());
 
         return orderRepository.save(order);
+    }
+
+    /**
+     * Cancel an order
+     * Only allows cancellation if order status is PENDING or RECEIVED
+     * User can only cancel their own orders (checked via authentication context)
+     */
+    public OrderResponse cancelOrder(int orderId) {
+        // Convert int to String for the order ID
+        String orderIdStr = String.valueOf(orderId);
+        
+        CustomerOrder order = orderRepository.findById(orderIdStr)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        // Check if order can be cancelled (only PENDING or RECEIVED status)
+        if (order.getOrderStatus() != OrderConstants.OrderStatus.PENDING && 
+            order.getOrderStatus() != OrderConstants.OrderStatus.RECEIVED) {
+            throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
+        }
+
+        // Update order status to CANCELED
+        order.setOrderStatus(OrderConstants.OrderStatus.CANCELED);
+        order.setUpdateDate(Instant.now());
+
+        // Restore inventory for all order items
+        List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(orderIdStr);
+        for (OrderDetail detail : orderDetails) {
+            ShoeVariant variant = detail.getVariant();
+            variant.setStockQuantity(variant.getStockQuantity() + detail.getQuantity());
+            shoeVariantRepository.save(variant);
+        }
+
+        CustomerOrder savedOrder = orderRepository.save(order);
+        return orderMapper.toOrderResponse(savedOrder);
     }
 }

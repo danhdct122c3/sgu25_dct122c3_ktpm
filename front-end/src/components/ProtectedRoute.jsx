@@ -6,36 +6,38 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   const user = useSelector(selectUser);
   const token = useSelector(selectToken);
 
-  console.log("ProtectedRoute - User:", user);
-  console.log("ProtectedRoute - Token:", token);
-  console.log("ProtectedRoute - Required Role:", requiredRole);
+  console.log("🔒 ProtectedRoute - User:", user);
+  console.log("🔒 ProtectedRoute - Token exists:", !!token);
+  console.log("🔒 ProtectedRoute - Required Role:", requiredRole);
 
-  // Kiểm tra xem user đã đăng nhập chưa
+  // QUAN TRỌNG: Kiểm tra xem user đã đăng nhập chưa
+  // Nếu không có token HOẶC không có user => chuyển về trang login
   if (!token || !user) {
-    console.log("No token or user, redirecting to login");
+    console.log("❌ No token or user found - redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
-  // Kiểm tra role nếu được yêu cầu
+  // QUAN TRỌNG: Kiểm tra role nếu được yêu cầu (chỉ có 2 role: USER và ADMIN)
   if (requiredRole) {
-    // Kiểm tra nhiều trường có thể chứa role
-    const userRoles = user.scope ? user.scope.split(' ') : 
-                     user.roles ? user.roles :
-                     user.authorities ? user.authorities :
-                     [];
+    // Lấy role từ JWT token (scope field)
+    // Backend trả về "ROLE_USER" hoặc "ROLE_ADMIN" trong scope
+    const userRole = user.scope || '';
     
-    console.log("User roles:", userRoles);
+    console.log("👤 User role from token:", userRole);
+    console.log("🎯 Required role:", requiredRole);
     
-    // Kiểm tra xem user có role ADMIN không
-    const hasAdminRole = userRoles.includes(requiredRole) || 
-                        userRoles.includes('ADMIN') ||
-                        userRoles.includes('ROLE_ADMIN') ||
-                        user.role === 'ADMIN' ||
-                        user.role === requiredRole;
+    // Chuẩn hóa role để so sánh
+    // Hỗ trợ cả 2 format: "ADMIN" và "ROLE_ADMIN"
+    const normalizedUserRole = userRole.replace('ROLE_', '');
+    const normalizedRequiredRole = requiredRole.replace('ROLE_', '');
     
-    console.log("Has required role:", hasAdminRole);
+    const hasRequiredRole = normalizedUserRole === normalizedRequiredRole;
     
-    if (!hasAdminRole) {
+    console.log("✅ Has required role:", hasRequiredRole);
+    
+    // Nếu KHÔNG có quyền => hiển thị trang lỗi
+    if (!hasRequiredRole) {
+      console.log("❌ Access denied - insufficient permissions");
       return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
           <div className="text-center max-w-md mx-auto p-8 bg-white rounded-lg shadow-lg">
@@ -48,8 +50,12 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
               🚫 Không có quyền truy cập
             </h1>
             <p className="text-gray-600 mb-6">
-              Bạn không có quyền Admin để truy cập vào trang quản trị này.
+              Bạn không có quyền <span className="font-bold">{requiredRole}</span> để truy cập vào trang này.
             </p>
+            <div className="text-sm text-gray-500 mb-6 bg-gray-100 p-3 rounded">
+              <p>Quyền của bạn: <span className="font-semibold text-blue-600">{normalizedUserRole}</span></p>
+              <p>Quyền yêu cầu: <span className="font-semibold text-red-600">{normalizedRequiredRole}</span></p>
+            </div>
             <div className="space-y-3">
               <Link 
                 to="/"
@@ -73,6 +79,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     }
   }
 
+  console.log("✅ Access granted - rendering protected content");
   return children;
 };
 

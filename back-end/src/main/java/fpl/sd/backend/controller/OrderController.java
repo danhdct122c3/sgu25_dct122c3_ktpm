@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     OrderService orderService;
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
     public APIResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request) {
         return APIResponse.<OrderResponse>builder()
@@ -99,5 +101,23 @@ public class OrderController {
                     .message(ex.getMessage())
                     .build();
         }
+    }
+
+    /**
+     * Cancel an order
+     * Protected endpoint - Authenticated users only
+     * Users can only cancel their own orders
+     * Orders can only be cancelled if status is PENDING or CONFIRMED (not SHIPPED, DELIVERED, or CANCELLED)
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{orderId}/cancel")
+    public APIResponse<OrderResponse> cancelOrder(@PathVariable int orderId) {
+        OrderResponse cancelledOrder = orderService.cancelOrder(orderId);
+        return APIResponse.<OrderResponse>builder()
+                .flag(true)
+                .code(200)
+                .message("Order cancelled successfully")
+                .result(cancelledOrder)
+                .build();
     }
 }

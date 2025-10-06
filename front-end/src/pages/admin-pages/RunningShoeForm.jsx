@@ -33,12 +33,28 @@ const schema = z.object({
 export default function RunningShoeForm() {
   const navigate = useNavigate();
   const [brands, setBrands] = useState([]);
+  const [sizes, setSizes] = useState([]);
 
   const [formData, setFormData] = useState({
     selectedFiles: [],
     images: [],
     variants: [],
   });
+
+  // Fetch sizes from API
+  useEffect(() => {
+    const fetchSizes = async () => {
+      try {
+        const response = await api.get("/shoes/sizes");
+        if (response.data.flag && response.data.result) {
+          setSizes(response.data.result);
+        }
+      } catch (error) {
+        console.error("Failed to fetch sizes:", error);
+      }
+    };
+    fetchSizes();
+  }, []);
 
   // Fetch brands on component mount
   useEffect(() => {
@@ -85,7 +101,13 @@ export default function RunningShoeForm() {
               {brandId: 1, brandName: "Nike"},
               {brandId: 2, brandName: "Adidas"},
               {brandId: 3, brandName: "Puma"},
-              {brandId: 4, brandName: "Reebok"}
+              {brandId: 4, brandName: "Converse"},
+              {brandId: 5, brandName: "Vans"},
+              {brandId: 6, brandName: "New Balance"},
+              {brandId: 7, brandName: "Reebok"},
+              {brandId: 8, brandName: "Fila"},
+              {brandId: 9, brandName: "Skechers"},
+              {brandId: 10, brandName: "Under Armour"}
             ]);
           }
         } else {
@@ -103,7 +125,13 @@ export default function RunningShoeForm() {
           {brandId: 1, brandName: "Nike"},
           {brandId: 2, brandName: "Adidas"},
           {brandId: 3, brandName: "Puma"},
-          {brandId: 4, brandName: "Reebok"}
+          {brandId: 4, brandName: "Converse"},
+          {brandId: 5, brandName: "Vans"},
+          {brandId: 6, brandName: "New Balance"},
+          {brandId: 7, brandName: "Reebok"},
+          {brandId: 8, brandName: "Fila"},
+          {brandId: 9, brandName: "Skechers"},
+          {brandId: 10, brandName: "Under Armour"}
         ]);
       }
     };
@@ -636,16 +664,11 @@ export default function RunningShoeForm() {
                 }}
               >
                 <option value="">Chọn size</option>
-                <option value="1">Size 36</option>
-                <option value="2">Size 37</option>
-                <option value="3">Size 38</option>
-                <option value="4">Size 39</option>
-                <option value="5">Size 40</option>
-                <option value="6">Size 41</option>
-                <option value="7">Size 42</option>
-                <option value="8">Size 43</option>
-                <option value="9">Size 44</option>
-                <option value="10">Size 45</option>
+                {sizes.map((size) => (
+                  <option key={size.id} value={size.id}>
+                    US {size.sizeNumber}
+                  </option>
+                ))}
               </select>
             </div>
             

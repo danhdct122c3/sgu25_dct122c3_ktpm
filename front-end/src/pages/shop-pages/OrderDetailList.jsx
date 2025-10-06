@@ -45,16 +45,27 @@ export default function OrderDetailList() {
 
   useEffect(() => {
     const fetchOrderInfo = async () => {
+      // Kiểm tra xem đã có username chưa (từ JWT token)
+      if (!userName) {
+        console.log("Waiting for username...");
+        return;
+      }
+      
       try {
-        const response = await api.get(`/order-details/user/${userData.id}`);
-        console.log(response.data.result);
+        // ✅ GỬI USERNAME thay vì userData.id
+        // Backend check quyền bằng username (authentication.principal.claims['sub'])
+        const response = await api.get(`/order-details/user/${userName}`);
+        console.log("📦 Order history:", response.data.result);
         setOrderList(response.data.result);
       } catch (error) {
-        console.error(error);
+        console.error("❌ Error fetching orders:", error);
+        if (error.response?.status === 403) {
+          console.error("🚫 Access denied - không có quyền xem đơn hàng này");
+        }
       }
     };
     fetchOrderInfo();
-  }, [userData.id]);
+  }, [userName]); // ✅ Đổi dependency từ userData.id sang userName
 
   console.log(orderList);
   console.log(userData);

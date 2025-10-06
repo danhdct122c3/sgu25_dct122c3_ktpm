@@ -28,26 +28,23 @@ public class DBInitialize {
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
         log.info("Initializing DB");
         return args -> {
-            // Initialize roles first
+            // Initialize roles first - Only 2 roles: USER and ADMIN
             if (roleRepository.count() == 0) {
-                Role guestRole = Role.builder().roles(RoleConstants.Role.GUEST).build();
-                Role memberRole = Role.builder().roles(RoleConstants.Role.MEMBER).build();
-                Role managerRole = Role.builder().roles(RoleConstants.Role.MANAGER).build();
+                Role userRole = Role.builder().roles(RoleConstants.Role.USER).build();
                 Role adminRole = Role.builder().roles(RoleConstants.Role.ADMIN).build();
 
-                roleRepository.save(guestRole);
-                roleRepository.save(memberRole);
-                roleRepository.save(managerRole);
+                roleRepository.save(userRole);
                 roleRepository.save(adminRole);
 
-                log.info("Default roles have been created");
+                log.info("Default roles (USER, ADMIN) have been created");
             }
 
+            // Create default admin user
             if (userRepository.findByUsername("admin").isEmpty()) {
                 Role adminRole = roleRepository.findByRoles(RoleConstants.Role.ADMIN)
                         .orElseThrow(() -> new RuntimeException("Admin Role not found"));
 
-                User user = User.builder()
+                User admin = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin123"))
                         .createdAt(Instant.now())
@@ -58,27 +55,28 @@ public class DBInitialize {
                         .isActive(true)
                         .build();
 
-                userRepository.save(user);
-                log.warn("Default admin user has been created with password admin123");
+                userRepository.save(admin);
+                log.warn("Default admin user has been created with username: admin, password: admin123");
             }
 
-            if (userRepository.findByUsername("manager").isEmpty()) {
-                Role managerRole = roleRepository.findByRoles(RoleConstants.Role.MANAGER)
-                        .orElseThrow(() -> new RuntimeException("Manager Role not found"));
+            // Create default regular user for testing
+            if (userRepository.findByUsername("user").isEmpty()) {
+                Role userRole = roleRepository.findByRoles(RoleConstants.Role.USER)
+                        .orElseThrow(() -> new RuntimeException("User Role not found"));
 
-                User manager = User.builder()
-                        .username("manager")
-                        .password(passwordEncoder.encode("manager123"))
+                User user = User.builder()
+                        .username("user")
+                        .password(passwordEncoder.encode("user123"))
                         .createdAt(Instant.now())
-                        .email("manager123@yopmail.com")
-                        .address("789 Main St, Springfield")
+                        .email("user@gmail.com")
+                        .address("456 Main St, Springfield")
                         .phone("0987654321")
-                        .role(managerRole)
+                        .role(userRole)
                         .isActive(true)
                         .build();
 
-                userRepository.save(manager);
-                log.warn("Default manager user has been created with password manager123");
+                userRepository.save(user);
+                log.warn("Default user has been created with username: user, password: user123");
             }
         };
     }

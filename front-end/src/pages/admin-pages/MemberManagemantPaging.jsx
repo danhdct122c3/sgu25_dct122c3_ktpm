@@ -17,10 +17,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, TableCellsMerge } from "lucide-react";
 import { formatterToVND } from "@/utils/formatter";
-// UpdateMemberForm previously rendered in-table; to safely hide the edit UI without
-// removing the component file (which can cause build errors if other modules import it),
-// we render a harmless disabled button here. If you want the full dialog back later,
-// re-import UpdateMemberForm and render it instead of the button.
+import UpdateMemberForm from "./UpdateMemberForm";
 import { IoIosAddCircleOutline } from "react-icons/io";
 // import { Link, useNavigate } from "react-router-dom";
 import { Pagination } from "@/components/ui/pagination";
@@ -107,8 +104,7 @@ const MemberManagemantPaging = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="MANAGER">Quản Lý</SelectItem>
-            <SelectItem value="MEMBER">Thành Viên</SelectItem>
+            <SelectItem value="USER">User</SelectItem>
           </SelectContent>
         </Select>
 
@@ -159,14 +155,11 @@ const MemberManagemantPaging = () => {
             {userData.data.map((user) => (
               <TableRow key={user.id} className="hover:bg-gray-50">
                 <TableCell className="p-3 text-yellow-500 cursor-pointer">
-                  {/* Only show edit control for non-admin users */}
-                  {user.roleName !== "ADMIN" ? (
-                    // If you want to enable the full dialog later, replace this with <UpdateMemberForm userId={user.id} />
-                    <Button variant="outline" size="sm" className="text-yellow-500">
-                      Chỉnh sửa
-                    </Button>
+                  {/* Chỉ cho phép chỉnh sửa tài khoản USER, không được sửa ADMIN */}
+                  {user.roleName === "USER" ? (
+                    <UpdateMemberForm userId={user.id} />
                   ) : (
-                    <span className="text-gray-400">-</span>
+                    <span className="text-gray-400">Không thể sửa</span>
                   )}
                 </TableCell>
                 <TableCell className="p-3">{user.username}</TableCell>

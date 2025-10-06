@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class DiscountController {
     DiscountService discountService;
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public APIResponse<DiscountResponse> addDiscount(@RequestBody @Valid DiscountCreateRequest discount) {
         return APIResponse.<DiscountResponse>builder()
@@ -37,6 +39,7 @@ public class DiscountController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public APIResponse<List<DiscountResponse>> GetAllDiscounts() {
         return APIResponse.<List<DiscountResponse>>builder()
@@ -57,6 +60,7 @@ public class DiscountController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public APIResponse<DiscountResponse> updateDiscount(@PathVariable Integer id, @RequestBody @Valid DiscountUpdateRequest request) {
         DiscountResponse discountResponse = discountService.updateDiscount(id, request);
@@ -68,6 +72,7 @@ public class DiscountController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/isActive")
     public APIResponse<List<DiscountResponse>> getDiscountByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
         return APIResponse.<List<DiscountResponse>>builder()
@@ -88,6 +93,7 @@ public class DiscountController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/list-discount")
     public APIResponse<PageResponse<DiscountResponse>> getDiscountPaging(
             @RequestParam(required = false) String discountType,
@@ -102,6 +108,21 @@ public class DiscountController {
                 .flag(true)
                 .message("OK")
                 .result(discountService.getDiscountPaging( discountType, code, isActive, page, size, sortOrder))
+                .build();
+    }
+
+    /**
+     * Delete a discount
+     * Protected endpoint - ADMIN only
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public APIResponse<Void> deleteDiscount(@PathVariable Integer id) {
+        discountService.deleteDiscount(id);
+        return APIResponse.<Void>builder()
+                .flag(true)
+                .code(200)
+                .message("Successfully deleted discount")
                 .build();
     }
 }

@@ -26,9 +26,6 @@ import Terms from "./pages/shop-pages/Terms";
 import Privacy from "./pages/shop-pages/Privacy";
 import CheckOut from "./pages/shop-pages/CheckOut";
 import OrderDetailList from "./pages/shop-pages/OrderDetailList";
-import { useDispatch } from "react-redux";
-import { authActions } from "./store/index";
-import { useEffect } from "react";
 import AddDiscountPage from "./pages/admin-pages/AddDiscountPage";
 import PaymentCallbackPage from "./pages/shop-pages/PaymentCallbackPage";
 import ProfileUser from "./pages/shop-pages/ProfileUser";
@@ -100,14 +97,9 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      dispatch(authActions.loginSuccess(token));
-    }
-  }, [dispatch]);
+  // Không cần useEffect để khôi phục token nữa
+  // Vì đã được xử lý trong initialState của auth.js (getUserFromToken)
+  // Điều này tránh việc decode token 2 lần và đảm bảo user được khôi phục ngay từ đầu
 
   return <RouterProvider router={router}></RouterProvider>;
 }

@@ -281,6 +281,19 @@ public PageResponse<DiscountResponse> getDiscountPaging(
         return chatResponse.getChoices().getFirst().getMessage().getContent();
     }
 
+    /**
+     * Delete a discount
+     * Protected endpoint - ADMIN only
+     */
+    public void deleteDiscount(Integer id) {
+        Discount discount = discountRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
+        
+        // Can optionally check if discount is being used by any orders here
+        // For now, just delete it
+        discountRepository.delete(discount);
+    }
+
 }
 
 

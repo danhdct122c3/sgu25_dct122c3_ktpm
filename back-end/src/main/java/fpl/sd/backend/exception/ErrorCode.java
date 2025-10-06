@@ -31,6 +31,7 @@ public enum ErrorCode {
     BRAND_DESCRIPTION_TOO_LONG(400, "Brand description is too long", HttpStatus.BAD_REQUEST),
     BRAND_LOGO_INVALID(400, "Invalid Brand Logo URL", HttpStatus.BAD_REQUEST),
     BRAND_INACTIVE(403, "This brand is inactive", HttpStatus.FORBIDDEN),
+    BRAND_IN_USE(409, "Cannot delete brand as it is being used by shoes", HttpStatus.CONFLICT),
     SKU_ALREADY_EXISTS(500, "Sku Already Exists", HttpStatus.CONFLICT),
     FILE_UPLOAD_FAILED(500, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
@@ -50,8 +51,8 @@ public enum ErrorCode {
     INVALID_DATE_RANGE (400, "Invalid Date Range", HttpStatus.BAD_REQUEST),
     //Order-related errors
     ORDER_SAVE_ERROR(500, "Order Save Error", HttpStatus.INTERNAL_SERVER_ERROR),
-
     ORDER_NOT_FOUND(404,"Order not found" ,HttpStatus.NOT_FOUND),
+    ORDER_CANNOT_BE_CANCELLED(400, "Order cannot be cancelled. Only PENDING or RECEIVED orders can be cancelled.", HttpStatus.BAD_REQUEST),
 
     //Quantity-related errors
     INSUFFICIENT_INVENTORY(404, "Insufficient inventory", HttpStatus.SERVICE_UNAVAILABLE),

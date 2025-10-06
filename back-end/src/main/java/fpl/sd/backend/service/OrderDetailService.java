@@ -65,8 +65,15 @@ public class OrderDetailService {
     }
 
 
-    public OrderDetailResponse getOrderByIdAndUserId(String orderId, String userId) {
-        CustomerOrder customerOrder = orderRepository.findByIdAndUserId(orderId, userId)
+    /**
+     * Get order by ID and USERNAME
+     * @param orderId The order ID
+     * @param username The username from JWT token
+     * @return Order details
+     */
+    public OrderDetailResponse getOrderByIdAndUserId(String orderId, String username) {
+        // ✅ Query by USERNAME instead of user ID
+        CustomerOrder customerOrder = orderRepository.findByIdAndUserUsername(orderId, username)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         return mapToOrderDetailResponse(customerOrder);
@@ -81,8 +88,18 @@ public class OrderDetailService {
 //        return mapToOrderDetailResponse(customerOrder);
 //    }
 
-        public List<OrderDetailResponse> getAllOrdersByUserId(String userId) {
-            List<CustomerOrder> customerOrders = orderRepository.findByUserIdOrderByOrderDateDesc(userId);
+        /**
+         * Get all orders by USERNAME (not user ID)
+         * @param username The username from JWT token (e.g., "test", "admin")
+         * @return List of orders for this user, sorted by order date descending
+         */
+        public List<OrderDetailResponse> getAllOrdersByUserId(String username) {
+            // ✅ Query by USERNAME instead of user ID
+            // Spring Data JPA will automatically join with User and filter by user.username
+            List<CustomerOrder> customerOrders = orderRepository.findByUserUsernameOrderByOrderDateDesc(username);
+            
+            System.out.println("🔍 Finding orders for username: " + username);
+            System.out.println("📦 Found " + customerOrders.size() + " orders");
 
             return customerOrders.stream()
                     .map(this::mapToOrderDetailResponse)

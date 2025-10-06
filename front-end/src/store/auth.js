@@ -2,8 +2,31 @@ import { createSlice } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 import api from "@/config/axios";
 
+// Hàm helper để khôi phục user từ token trong localStorage
+const getUserFromToken = () => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      // Kiểm tra token còn hạn không
+      if (decoded.exp * 1000 > Date.now()) {
+        return decoded;
+      } else {
+        // Token hết hạn, xóa khỏi localStorage
+        localStorage.removeItem("token");
+        return null;
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+      localStorage.removeItem("token");
+      return null;
+    }
+  }
+  return null;
+};
+
 const initialState = {
-  user: null,
+  user: getUserFromToken(), // Khôi phục user từ token khi khởi tạo
   token: localStorage.getItem("token") || null,
   isLoading: false,
   error: null,

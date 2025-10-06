@@ -12,7 +12,7 @@ import fpl.sd.backend.dto.request.ShoeCreateRequest;
 import fpl.sd.backend.dto.request.ShoeUpdateRequest;
 import fpl.sd.backend.dto.request.VariantUpdateRequest;
 import fpl.sd.backend.dto.response.ShoeResponse;
-import fpl.sd.backend.dto.response.VariantResponse;
+
 import fpl.sd.backend.entity.*;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
@@ -59,8 +59,24 @@ public class ShoeService {
     ChatClient chatClient;
     ObjectMapper objectMapper;
 
-    public List<ShoeResponse> getAllShoes() {
+    /**
+     * Get all shoes for ADMIN (includes hidden/deleted shoes)
+     * Used in admin dashboard to manage all shoes
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<ShoeResponse> getAllShoesForAdmin() {
         List<Shoe> shoes = shoeRepository.findAll();
+        return shoes.stream()
+                .map(shoeHelper::getShoeResponse)
+                .toList();
+    }
+    
+    /**
+     * Get all ACTIVE shoes for customers (status = true)
+     * This is the public API for shop pages
+     */
+    public List<ShoeResponse> getAllShoes() {
+        List<Shoe> shoes = shoeRepository.findByStatusTrue();
         return shoes.stream()
                 .map(shoeHelper::getShoeResponse)
                 .toList();
@@ -73,11 +89,10 @@ public class ShoeService {
     }
 
     public List<ShoeResponse> getShoesByGender(String gender) {
-        ShoeConstants.Gender genderEnum = ShoeConstants.getGenderFromString(gender);
-        if (genderEnum == null) {
-            throw new IllegalArgumentException("Invalid gender provided");
-        }
-        List<Shoe> shoes = shoeRepository.findShoesByGender(genderEnum);
+        // Only return active shoes (status = true)
+        List<Shoe> shoes = shoeRepository.findByStatusTrueAndGender(
+                ShoeConstants.Gender.valueOf(gender.toUpperCase())
+        );
         return shoes.stream()
                 .map(shoeHelper::getShoeResponse)
                 .toList();
@@ -87,7 +102,8 @@ public class ShoeService {
         Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
 
-        List<Shoe> shoes = shoeRepository.findShoesByBrand(brand);
+        // Only return active shoes (status = true)
+        List<Shoe> shoes = shoeRepository.findByStatusTrueAndBrand(brand);
         return shoes.stream()
                 .map(shoeHelper::getShoeResponse)
                 .toList();
@@ -99,7 +115,8 @@ public class ShoeService {
             throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        List<Shoe> shoes = shoeRepository.findShoesByCategory(categoryEnum);
+        // Only return active shoes (status = true)
+        List<Shoe> shoes = shoeRepository.findByStatusTrueAndCategory(categoryEnum);
 
         return shoes.stream()
                 .map(shoeHelper::getShoeResponse)
@@ -167,7 +184,8 @@ public class ShoeService {
 
 
     public List<ShoeResponse> getShoesByName(String name) {
-        List<Shoe> shoes = shoeRepository.findShoesByNameContainingIgnoreCase(name);
+        // Only return active shoes (status = true)
+        List<Shoe> shoes = shoeRepository.findByStatusTrueAndNameContainingIgnoreCase(name);
         return shoes.stream()
                 .map(shoeHelper::getShoeResponse)
                 .toList();
@@ -268,7 +286,28 @@ public class ShoeService {
         return chatResponse.getChoices().getFirst().getMessage().getContent();
     }
 
-
-
+    /**
+     * Delete a shoe
+     * Uses soft delete by marking the shoe as inactive/deleted
+     * This maintains referential integrity with orders and other related data
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteShoe(int id) {
+        Shoe shoe = shoeRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        
+        // Soft delete: just mark as inactive/deleted
+        shoe.setStatus(false); // Set status to false (inactive)
+        shoe.setUpdatedAt(Instant.now());
+        shoeRepository.save(shoe);
+        
+        // Optionally, also soft delete all variants
+        List<ShoeVariant> variants = shoeVariantRepository.findShoeVariantByShoeId(id);
+        variants.forEach(variant -> {
+            variant.setUpdatedAt(Instant.now());
+            // If ShoeVariant has status field, set it to false here
+        });
+        shoeVariantRepository.saveAll(variants);
+    }
 
 }

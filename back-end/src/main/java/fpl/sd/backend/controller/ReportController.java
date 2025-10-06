@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import java.util.List;
 public class ReportController {
     ReportService reportService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/daily-report")
     public APIResponse<List<DailyRevenueReportDTO>> getDailyRevenueReport() {
         return APIResponse.<List<DailyRevenueReportDTO>>builder()
@@ -29,6 +31,7 @@ public class ReportController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/top-seller")
     public APIResponse<List<ProductPerformanceDTO>> getProductPerformance() {
         return APIResponse.<List<ProductPerformanceDTO>>builder()
@@ -39,6 +42,7 @@ public class ReportController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/inventory-status")
     public APIResponse<List<InventoryStatusDTO>> getInventoryStatus() {
         return APIResponse.<List<InventoryStatusDTO>>builder()
@@ -49,6 +53,7 @@ public class ReportController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/top-customer")
     public APIResponse<List<CustomerSegmentationDTO>> getTopCustomer() {
         return APIResponse.<List<CustomerSegmentationDTO>>builder()
@@ -58,6 +63,7 @@ public class ReportController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/daily-totals")
     public APIResponse<List<DailyTotalDTO>> getDailyTotals(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -69,6 +75,7 @@ public class ReportController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/monthly-totals")
     public APIResponse<List<MonthlyTotalDTO>> getMonthlyTotals(
             @RequestParam(value = "year") int year

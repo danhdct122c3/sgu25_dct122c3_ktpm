@@ -82,13 +82,21 @@ function CheckOut() {
   const createOrder = async () => {
     const toastId = toast.loading("Creating order...");
     try {
+      // Map cart items to match backend CartItemRequest format
+      const orderItems = items.map(item => ({
+        variantId: item.variantId,
+        quantity: item.quantity,
+        price: item.price,
+        productId: item.productId
+      }));
+
       const response = await api.post("/orders/create", {
         originalTotal: originalPrice,
         discountAmount: discountAmount || 0,
         finalTotal: total,
         discountId: discountId || null,
         userId: userData.id,
-        items: items,
+        items: orderItems,
       });
 
       if (response.data.flag) {
@@ -212,19 +220,28 @@ function CheckOut() {
           <Card>
             <CardHeader>
               <CardTitle>Thông tin khách hàng</CardTitle>
+              <CardDescription>
+                <Button variant="link" onClick={() => navigate("/profile/me")}>
+                  Cập nhật thông tin
+                </Button>
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullname">Họ và tên</Label>
-                <Input id="fullname" placeholder={userData.fullName} readOnly />
+                <Input 
+                  id="fullname" 
+                  value={userData.fullName || ''} 
+                  onChange={(e) => setUserData({...userData, fullName: e.target.value})}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder={userData.email}
-                  readOnly
+                  value={userData.email || ''}
+                  onChange={(e) => setUserData({...userData, email: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
@@ -232,13 +249,17 @@ function CheckOut() {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder={userData.phone}
-                  readOnly
+                  value={userData.phone || ''}
+                  onChange={(e) => setUserData({...userData, phone: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Địa chỉ giao hàng</Label>
-                <Input id="address" placeholder={userData.address} readOnly />
+                <Input 
+                  id="address" 
+                  value={userData.address || ''} 
+                  onChange={(e) => setUserData({...userData, address: e.target.value})}
+                />
               </div>
             </CardContent>
           </Card>

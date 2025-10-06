@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -46,6 +47,7 @@ public class AuthenticationController {
                 .build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public APIResponse<Void> changePassword(@Valid @RequestBody PasswordChangeRequest request) {
         userService.changePassword(request);
@@ -55,6 +57,7 @@ public class AuthenticationController {
                 .build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
     public APIResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException {
         authenticationService.logout(request);

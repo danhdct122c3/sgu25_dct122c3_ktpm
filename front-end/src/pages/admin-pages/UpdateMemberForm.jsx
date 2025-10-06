@@ -22,6 +22,10 @@ import api from "@/config/axios";
 
 const schema = z.object({
   username: z.string().min(2, { message: "Yêu cầu nhập tên người dùng" }),
+  fullName: z.string().min(2, { message: "Yêu cầu nhập họ tên" }),
+  email: z.string().email({ message: "Email không hợp lệ" }),
+  phone: z.string().min(10, { message: "Số điện thoại phải có ít nhất 10 số" }),
+  address: z.string().min(5, { message: "Địa chỉ quá ngắn" }),
   isActive: z.boolean(),
 });
 
@@ -66,7 +70,13 @@ export default function UpdateMemberForm({ userId }) {
   };
 
   const onSubmit = async (formData) => {
-    const updateData = { ...formData, isActive };
+    const updateData = { 
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      isActive 
+    };
     const toastId = toast.loading("Đang cập nhật...");
 
     try {
@@ -82,13 +92,15 @@ export default function UpdateMemberForm({ userId }) {
           autoClose: 2000,
         });
         setDialogOpen(false);
+        // Reload page để cập nhật danh sách
+        window.location.reload();
       } else {
         throw new Error(response.data.message || "Cập nhật thất bại");
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật người dùng:", error);
       toast.update(toastId, {
-        render: "Lỗi trong quá trình cập nhật.",
+        render: error.response?.data?.message || "Lỗi trong quá trình cập nhật.",
         type: "error",
         isLoading: false,
         autoClose: 2000,
@@ -109,7 +121,7 @@ export default function UpdateMemberForm({ userId }) {
             Thực hiện thay đổi trạng thái tài khoản. Nhấn lưu khi bạn hoàn tất.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="username">Tên người dùng</Label>
             <Input
@@ -118,8 +130,58 @@ export default function UpdateMemberForm({ userId }) {
               defaultValue={user.username}
               {...register("username")}
               disabled
+              className="bg-gray-100"
             />
-            {errors.username?.message && <p className="text-red-600">{errors.username?.message}</p>}
+            {errors.username?.message && <p className="text-red-600 text-sm">{errors.username?.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Họ và tên</Label>
+            <Input
+              id="fullName"
+              name="fullName"
+              defaultValue={user.fullName}
+              {...register("fullName")}
+              placeholder="Nhập họ và tên"
+            />
+            {errors.fullName?.message && <p className="text-red-600 text-sm">{errors.fullName?.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={user.email}
+              {...register("email")}
+              placeholder="Nhập email"
+            />
+            {errors.email?.message && <p className="text-red-600 text-sm">{errors.email?.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Số điện thoại</Label>
+            <Input
+              id="phone"
+              name="phone"
+              defaultValue={user.phone}
+              {...register("phone")}
+              placeholder="Nhập số điện thoại"
+            />
+            {errors.phone?.message && <p className="text-red-600 text-sm">{errors.phone?.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="address">Địa chỉ</Label>
+            <Input
+              id="address"
+              name="address"
+              defaultValue={user.address}
+              {...register("address")}
+              placeholder="Nhập địa chỉ"
+            />
+            {errors.address?.message && <p className="text-red-600 text-sm">{errors.address?.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -136,10 +198,7 @@ export default function UpdateMemberForm({ userId }) {
           <Separator className="my-4" />
 
           <DialogFooter>
-            {/* <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Hủy
-            </Button> */}
-            <Button type="submit" disabled={!isChanged}>
+            <Button type="submit">
               Lưu thay đổi
             </Button>
           </DialogFooter>

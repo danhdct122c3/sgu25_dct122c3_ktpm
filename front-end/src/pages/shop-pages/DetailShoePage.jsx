@@ -230,14 +230,21 @@ export default function DetailShoePage() {
                         `w-10 h-10 border rounded-md transition-all duration-200` +
                         (selectedVariant?.id === variant.id
                           ? " bg-black text-white"
-                          : " border-gray-200")
+                          : " border-gray-200") +
+                        (variant.stockQuantity === 0 ? " opacity-50 cursor-not-allowed" : "")
                       }
                       disabled={variant.stockQuantity === 0}
+                      title={`Còn ${variant.stockQuantity} sản phẩm`}
                     >
                       {variant.sku.split("-").pop()}
                     </button>
                   ))}
                 </div>
+                {selectedVariant && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Còn lại: <span className="font-semibold text-green-600">{selectedVariant.stockQuantity}</span> sản phẩm
+                  </p>
+                )}
               </div>
               <div>
                 <p className="font-medium mb-2">Số lượng:</p>

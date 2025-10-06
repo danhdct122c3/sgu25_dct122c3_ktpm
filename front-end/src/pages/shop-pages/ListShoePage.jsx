@@ -268,19 +268,13 @@ export default function ListShoePage() {
                     </p>
                   </div>
                 </CardContent>
-                <CardFooter className="justify-between">
-                  <Link to={`/shoes/${shoe.id}`}>
-                    <Button className="cursor-pointer hover:bg-slate-500 hover:text-slate-950">
-                      <BiSolidDetail className="w-6 h-6" />
+                <CardFooter className="flex justify-center">
+                  <Link to={`/shoes/${shoe.id}`} className="w-full">
+                    <Button className="w-full cursor-pointer hover:bg-slate-500 hover:text-slate-950">
+                      <BiSolidDetail className="w-6 h-6 mr-2" />
+                      Xem chi tiết
                     </Button>
                   </Link>
-                  <Button
-                    variant="destructive"
-                    className="cursor-pointer hover:text-stone-950"
-                    onClick={() => handleAddToCart(shoe)}
-                  >
-                    <FiShoppingBag className="w-6 h-6" />
-                  </Button>
                 </CardFooter>
               </Card>
             ))}

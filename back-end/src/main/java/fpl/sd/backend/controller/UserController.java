@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import fpl.sd.backend.service.AuthenticationService;
 
@@ -45,6 +46,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public APIResponse<List<UserResponse>> getAllUsers() {
         return APIResponse.<List<UserResponse>>builder()
@@ -54,6 +56,7 @@ public class UserController {
                 .result(userService.getAllUsers())
                 .build();
     }
+    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.claims['sub']")
     @GetMapping("/{userId}")
     public APIResponse<UserResponse> getUserById(@PathVariable String userId) {
         return APIResponse.<UserResponse>builder()
@@ -64,6 +67,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.claims['sub']")
     @PutMapping("/{userId}")
     public APIResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest user) {
         UserResponse updateUser = userService.updateUser(userId,user);
@@ -85,6 +89,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/role")
     public APIResponse<List<UserResponse>> getUserByRole(@RequestParam(value = "role", required = false) String roleName) {
         return APIResponse.<List<UserResponse>>builder()
@@ -95,6 +100,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/isActive")
     public APIResponse<List<UserResponse>> getUserByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
         return APIResponse.<List<UserResponse>>builder()
@@ -104,6 +110,7 @@ public class UserController {
                 .result(userService.getUserByIsActive(isActive))
                 .build();
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/list-user")
     public APIResponse<PageResponse<UserResponse>> getUserPaging(
             @RequestParam(required = false) String username,
@@ -120,12 +127,26 @@ public class UserController {
                 .build();
     }
 
+    /**
+     * Endpoint để tạo admin user đầu tiên trong hệ thống
+     * CHỈ cho phép tạo khi chưa có admin nào
+     * Sau khi có admin, endpoint này sẽ trả về lỗi
+     */
     @PostMapping("/create-admin")
     public APIResponse<UserResponse> createAdmin(
             @RequestParam String username,
             @RequestParam String email,
             @RequestParam String password,
             @RequestParam String fullName) {
+
+        // Kiểm tra xem đã có admin chưa
+        if (userService.hasAdminUser()) {
+            return APIResponse.<UserResponse>builder()
+                    .flag(false)
+                    .code(403)
+                    .message("Admin user already exists. Cannot create another admin through this endpoint.")
+                    .build();
+        }
 
         UserResponse adminUser = userService.createAdminUser(username, email, password, fullName);
         return APIResponse.<UserResponse>builder()
@@ -136,8 +157,22 @@ public class UserController {
                 .build();
     }
 
+    /**
+     * Endpoint để tạo admin user đầu tiên trong hệ thống (JSON format)
+     * CHỈ cho phép tạo khi chưa có admin nào
+     * Sau khi có admin, endpoint này sẽ trả về lỗi
+     */
     @PostMapping("/create-admin-json")
     public APIResponse<UserResponse> createAdminJson(@RequestBody @Valid AdminCreateRequest request) {
+        // Kiểm tra xem đã có admin chưa
+        if (userService.hasAdminUser()) {
+            return APIResponse.<UserResponse>builder()
+                    .flag(false)
+                    .code(403)
+                    .message("Admin user already exists. Cannot create another admin through this endpoint.")
+                    .build();
+        }
+
         UserResponse adminUser = userService.createAdminUser(
                 request.getUsername(),
                 request.getEmail(),

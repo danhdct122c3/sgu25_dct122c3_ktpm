@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,6 +39,7 @@ public class BrandController {
         return base + logoUrl;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public APIResponse<BrandResponse> createBrand(@RequestBody @Valid BrandCreateRequest request, HttpServletRequest req) {
         BrandResponse created = brandService.createBrand(request);
@@ -74,6 +76,7 @@ public class BrandController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/{id}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<BrandResponse> updateBrandLogo(
             @PathVariable("id") int id,
@@ -90,6 +93,7 @@ public class BrandController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<BrandResponse> createBrandWithLogo(
             @RequestParam("brandName") String brandName,
@@ -123,6 +127,7 @@ public class BrandController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/init")
     public APIResponse<String> initializeBrands() {
         brandService.initializeDefaultBrands();
@@ -134,6 +139,7 @@ public class BrandController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/fix-logos")
     public APIResponse<String> fixBrandLogos() {
         brandService.fixBrandLogos();
@@ -142,6 +148,69 @@ public class BrandController {
                 .code(200)
                 .message("Brand logos fixed (normalized)")
                 .result("OK")
+                .build();
+    }
+
+    /**
+     * Update a brand
+     * Protected endpoint - ADMIN only
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public APIResponse<BrandResponse> updateBrand(
+            @PathVariable int id,
+            @RequestBody @Valid BrandCreateRequest request,
+            HttpServletRequest req) {
+        BrandResponse updated = brandService.updateBrand(id, request);
+        updated.setLogoUrl(toAbsoluteUrl(req, updated.getLogoUrl()));
+        return APIResponse.<BrandResponse>builder()
+                .flag(true)
+                .code(200)
+                .message("Successfully updated brand")
+                .result(updated)
+                .build();
+    }
+
+    /**
+     * Update brand with logo file
+     * Protected endpoint - ADMIN only
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(value = "/{id}/with-logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public APIResponse<BrandResponse> updateBrandWithLogo(
+            @PathVariable int id,
+            @RequestParam(value = "brandName", required = false) String brandName,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestPart("logoFile") MultipartFile logoFile,
+            HttpServletRequest req
+    ) throws IOException {
+        BrandCreateRequest request = new BrandCreateRequest();
+        request.setBrandName(brandName);
+        request.setDescription(description);
+
+        BrandResponse updated = brandService.updateBrandWithLogo(id, request, logoFile);
+        updated.setLogoUrl(toAbsoluteUrl(req, updated.getLogoUrl()));
+        return APIResponse.<BrandResponse>builder()
+                .flag(true)
+                .code(200)
+                .message("Successfully updated brand with logo")
+                .result(updated)
+                .build();
+    }
+
+    /**
+     * Delete a brand
+     * Protected endpoint - ADMIN only
+     * Will fail if brand is in use by any shoes
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public APIResponse<Void> deleteBrand(@PathVariable int id) {
+        brandService.deleteBrand(id);
+        return APIResponse.<Void>builder()
+                .flag(true)
+                .code(200)
+                .message("Successfully deleted brand")
                 .build();
     }
 }
