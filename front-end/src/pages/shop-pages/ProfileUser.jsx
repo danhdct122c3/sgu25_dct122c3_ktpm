@@ -209,9 +209,11 @@ export default function ProfileUser() {
 
       console.log(`🔄 Updating user via PUT /users/${userData.id}`);
       const response = await api.put(`/users/${userData.id}`, payload);
-      console.log("API Response:", response.data);
+      console.log("✅ API Response status:", response.status);
+      console.log("✅ API Response data:", response.data);
       
-      if (response && (response.data.flag || response.status === 200)) {
+      // Success if status 200 or response has flag=true
+      if (response.status === 200 || response?.data?.flag === true) {
         toast.update(toastId, {
           render: `✅ Cập nhật thông tin thành công!`,
           type: "success",
@@ -221,8 +223,13 @@ export default function ProfileUser() {
         
         console.log("🎉 Profile update completed successfully!");
         
-        // Refresh user data
-        fetchUser();
+        // Refresh user data (wrap in try-catch to avoid breaking success flow)
+        try {
+          await fetchUser();
+        } catch (fetchError) {
+          console.warn("Failed to refresh user data:", fetchError);
+          // Don't show error toast, update already succeeded
+        }
         
       } else {
         toast.update(toastId, {
