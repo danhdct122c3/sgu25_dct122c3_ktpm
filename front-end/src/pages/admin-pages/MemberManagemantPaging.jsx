@@ -157,7 +157,7 @@ const MemberManagemantPaging = () => {
                 <TableCell className="p-3 text-yellow-500 cursor-pointer">
                   {/* Chỉ cho phép chỉnh sửa tài khoản USER, không được sửa ADMIN */}
                   {user.roleName === "USER" ? (
-                    <UpdateMemberForm userId={user.id} />
+                    <UpdateMemberForm userId={user.username} />
                   ) : (
                     <span className="text-gray-400">Không thể sửa</span>
                   )}

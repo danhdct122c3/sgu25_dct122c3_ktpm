@@ -49,7 +49,10 @@ export default function UpdateMemberForm({ userId }) {
     if (dialogOpen) {
       const fetchUser = async () => {
         try {
-          const { data } = await api.get(`users/${userId}`);
+          // Dùng endpoint /profile?username để lấy user bằng username
+          const { data } = await api.get(`users/profile`, {
+            params: { username: userId }
+          });
           setUser(data.result);
           setIsActive(data.result.active);
           reset(data.result);
@@ -80,7 +83,10 @@ export default function UpdateMemberForm({ userId }) {
     const toastId = toast.loading("Đang cập nhật...");
 
     try {
-      const response = await api.put(`users/${userId}`, updateData, {
+      console.log("🔍 Updating user with username:", userId);
+      console.log("📦 Update data:", updateData);
+      
+      const response = await api.put(`/users/update/${userId}`, updateData, {
         headers: { "Content-Type": "application/json" },
       });
 

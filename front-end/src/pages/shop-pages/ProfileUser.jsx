@@ -196,65 +196,24 @@ export default function ProfileUser() {
       
       console.log("Payload to send:", payload);
 
-      // Try multiple API approaches in order
-      let response;
-      let successEndpoint = null;
-      
-      const apiApproaches = [
-        // Approach 1: Update current authenticated user profile
-        { 
-          endpoint: `/users/profile`,
-          method: 'PUT',
-          description: 'Update current user profile'
-        },
-        // Approach 2: Update with username
-        { 
-          endpoint: `/users/update/${userName}`,
-          method: 'PUT',
-          description: 'Update by username'
-        },
-        // Approach 3: Update with user ID if available
-        ...(userData && userData.id ? [{
-          endpoint: `/users/${userData.id}`,
-          method: 'PUT',
-          description: 'Update by user ID'
-        }] : []),
-        // Approach 4: PATCH current profile
-        { 
-          endpoint: `/users/profile`,
-          method: 'PATCH',
-          description: 'PATCH current user profile'
-        }
-      ];
-
-      for (const approach of apiApproaches) {
-        try {
-          console.log(`🔄 Trying: ${approach.description} - ${approach.method} ${approach.endpoint}`);
-          
-          if (approach.method === 'PATCH') {
-            response = await api.patch(approach.endpoint, payload);
-          } else {
-            response = await api.put(approach.endpoint, payload);
-          }
-          
-          successEndpoint = approach.endpoint;
-          console.log(`✅ SUCCESS with ${approach.description}`);
-          break;
-          
-        } catch (err) {
-          console.log(`❌ FAILED ${approach.description}:`, err.response?.status, err.response?.data?.message);
-          
-          if (approach === apiApproaches[apiApproaches.length - 1]) {
-            // Last approach failed, throw error
-            throw err;
-          }
-        }
+      // Dùng endpoint PUT /users/{userId} với UUID
+      if (!userData || !userData.id) {
+        toast.update(toastId, {
+          render: "❌ Không thể cập nhật: Thiếu thông tin user ID",
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+        });
+        return;
       }
+
+      console.log(`🔄 Updating user via PUT /users/${userData.id}`);
+      const response = await api.put(`/users/${userData.id}`, payload);
       console.log("API Response:", response.data);
       
       if (response && (response.data.flag || response.status === 200)) {
         toast.update(toastId, {
-          render: `✅ Profile updated successfully via ${successEndpoint}`,
+          render: `✅ Cập nhật thông tin thành công!`,
           type: "success",
           isLoading: false,
           autoClose: 3000,
@@ -262,9 +221,12 @@ export default function ProfileUser() {
         
         console.log("🎉 Profile update completed successfully!");
         
+        // Refresh user data
+        fetchUser();
+        
       } else {
         toast.update(toastId, {
-          render: response?.data?.message || "Update failed - unknown response",
+          render: response?.data?.message || "Cập nhật thất bại",
           type: "error",
           isLoading: false,
           autoClose: 5000,
