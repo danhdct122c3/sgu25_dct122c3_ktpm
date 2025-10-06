@@ -50,8 +50,7 @@ public class User {
     Role role;
 
 
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    List<CustomerOrder> customerOrders = new ArrayList<>();
+   
 
     String otpCode;
 

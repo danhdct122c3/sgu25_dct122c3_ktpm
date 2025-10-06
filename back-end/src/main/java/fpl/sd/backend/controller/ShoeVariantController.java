@@ -28,17 +28,17 @@ public class ShoeVariantController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/sizes/init")
-    public APIResponse<String> initializeSizes() {
-        sizeService.initializeDefaultSizes();
-        return APIResponse.<String>builder()
-                .flag(true)
-                .code(200)
-                .message("Sizes initialized successfully")
-                .result("Default shoe sizes have been created")
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PostMapping("/sizes/init")
+    // public APIResponse<String> initializeSizes() {
+    //     sizeService.initializeDefaultSizes();
+    //     return APIResponse.<String>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Sizes initialized successfully")
+    //             .result("Default shoe sizes have been created")
+    //             .build();
+    // }
 
     /**
      * Get all variants for a specific shoe
@@ -74,52 +74,52 @@ public class ShoeVariantController {
      * Create a new variant for a shoe
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/{shoeId}/variants")
-    public APIResponse<fpl.sd.backend.dto.response.VariantResponse> createVariant(
-            @PathVariable int shoeId,
-            @RequestBody fpl.sd.backend.dto.request.VariantRequest request) {
-        request.setShoeId(shoeId);
-        fpl.sd.backend.dto.response.VariantResponse variant = sizeService.createVariant(request);
-        return APIResponse.<fpl.sd.backend.dto.response.VariantResponse>builder()
-                .flag(true)
-                .code(201)
-                .message("Successfully created variant")
-                .result(variant)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PostMapping("/{shoeId}/variants")
+    // public APIResponse<fpl.sd.backend.dto.response.VariantResponse> createVariant(
+    //         @PathVariable int shoeId,
+    //         @RequestBody fpl.sd.backend.dto.request.VariantRequest request) {
+    //     request.setShoeId(shoeId);
+    //     fpl.sd.backend.dto.response.VariantResponse variant = sizeService.createVariant(request);
+    //     return APIResponse.<fpl.sd.backend.dto.response.VariantResponse>builder()
+    //             .flag(true)
+    //             .code(201)
+    //             .message("Successfully created variant")
+    //             .result(variant)
+    //             .build();
+    // }
 
     /**
      * Update a variant (stock quantity, etc.)
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/variants/{variantId}")
-    public APIResponse<fpl.sd.backend.dto.response.VariantResponse> updateVariant(
-            @PathVariable String variantId,
-            @RequestBody fpl.sd.backend.dto.request.VariantRequest request) {
-        request.setVariantId(variantId);
-        fpl.sd.backend.dto.response.VariantResponse variant = sizeService.updateVariant(request);
-        return APIResponse.<fpl.sd.backend.dto.response.VariantResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully updated variant")
-                .result(variant)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PutMapping("/variants/{variantId}")
+    // public APIResponse<fpl.sd.backend.dto.response.VariantResponse> updateVariant(
+    //         @PathVariable String variantId,
+    //         @RequestBody fpl.sd.backend.dto.request.VariantRequest request) {
+    //     request.setVariantId(variantId);
+    //     fpl.sd.backend.dto.response.VariantResponse variant = sizeService.updateVariant(request);
+    //     return APIResponse.<fpl.sd.backend.dto.response.VariantResponse>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Successfully updated variant")
+    //             .result(variant)
+    //             .build();
+    // }
 
     /**
      * Delete a variant
      * Protected endpoint - ADMIN only
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/variants/{variantId}")
-    public APIResponse<Void> deleteVariant(@PathVariable String variantId) {
-        sizeService.deleteVariant(variantId);
-        return APIResponse.<Void>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully deleted variant")
-                .build();
-    }
+    //  */
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @DeleteMapping("/variants/{variantId}")
+    // public APIResponse<Void> deleteVariant(@PathVariable String variantId) {
+    //     sizeService.deleteVariant(variantId);
+    //     return APIResponse.<Void>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Successfully deleted variant")
+    //             .build();
+    // }
 }

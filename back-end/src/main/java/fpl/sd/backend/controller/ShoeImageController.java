@@ -59,65 +59,65 @@ public class ShoeImageController {
      * Add a new image to a shoe
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/shoe/{shoeId}")
-    public APIResponse<ImageResponse> addImageToShoe(
-            @PathVariable int shoeId,
-            @RequestBody @Valid ImageRequest request) {
-        ImageResponse image = shoeImageService.addImageToShoe(shoeId, request);
-        return APIResponse.<ImageResponse>builder()
-                .flag(true)
-                .code(201)
-                .message("Successfully added image to shoe")
-                .result(image)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PostMapping("/shoe/{shoeId}")
+    // public APIResponse<ImageResponse> addImageToShoe(
+    //         @PathVariable int shoeId,
+    //         @RequestBody @Valid ImageRequest request) {
+    //     ImageResponse image = shoeImageService.addImageToShoe(shoeId, request);
+    //     return APIResponse.<ImageResponse>builder()
+    //             .flag(true)
+    //             .code(201)
+    //             .message("Successfully added image to shoe")
+    //             .result(image)
+    //             .build();
+    // }
 
     /**
      * Update an existing image
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public APIResponse<ImageResponse> updateImage(
-            @PathVariable int id,
-            @RequestBody @Valid ImageRequest request) {
-        ImageResponse image = shoeImageService.updateImage(id, request);
-        return APIResponse.<ImageResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully updated image")
-                .result(image)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PutMapping("/{id}")
+    // public APIResponse<ImageResponse> updateImage(
+    //         @PathVariable int id,
+    //         @RequestBody @Valid ImageRequest request) {
+    //     ImageResponse image = shoeImageService.updateImage(id, request);
+    //     return APIResponse.<ImageResponse>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Successfully updated image")
+    //             .result(image)
+    //             .build();
+    // }
 
     /**
      * Delete an image
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public APIResponse<Void> deleteImage(@PathVariable int id) {
-        shoeImageService.deleteImage(id);
-        return APIResponse.<Void>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully deleted image")
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @DeleteMapping("/{id}")
+    // public APIResponse<Void> deleteImage(@PathVariable int id) {
+    //     shoeImageService.deleteImage(id);
+    //     return APIResponse.<Void>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Successfully deleted image")
+    //             .build();
+    // }
 
     /**
      * Delete all images for a specific shoe
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/shoe/{shoeId}")
-    public APIResponse<Void> deleteAllImagesByShoeId(@PathVariable int shoeId) {
-        shoeImageService.deleteAllImagesByShoeId(shoeId);
-        return APIResponse.<Void>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully deleted all images for shoe ID " + shoeId)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @DeleteMapping("/shoe/{shoeId}")
+    // public APIResponse<Void> deleteAllImagesByShoeId(@PathVariable int shoeId) {
+    //     shoeImageService.deleteAllImagesByShoeId(shoeId);
+    //     return APIResponse.<Void>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Successfully deleted all images for shoe ID " + shoeId)
+    //             .build();
+    // }
 }

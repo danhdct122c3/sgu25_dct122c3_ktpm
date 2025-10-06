@@ -50,6 +50,4 @@ public class ShoeVariant {
     @ManyToOne
     SizeChart sizeChart;
 
-    @OneToMany(mappedBy = "variant")
-    List<OrderDetail> orderDetails = new ArrayList<>();
 }

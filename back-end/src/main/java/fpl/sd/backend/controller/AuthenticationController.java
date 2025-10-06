@@ -7,7 +7,7 @@ import fpl.sd.backend.dto.request.*;
 import fpl.sd.backend.dto.response.AuthenticationResponse;
 import fpl.sd.backend.dto.response.IntrospectResponse;
 import fpl.sd.backend.service.AuthenticationService;
-import fpl.sd.backend.service.EmailService;
+
 import fpl.sd.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -26,7 +26,7 @@ import java.text.ParseException;
 public class AuthenticationController {
     AuthenticationService authenticationService;
     UserService userService;
-    EmailService emailService;
+
 
 
     @PostMapping("/token")
@@ -68,15 +68,7 @@ public class AuthenticationController {
                 .build();
     }
 
-    @PostMapping("/email/send")
-    public APIResponse<Void> sendEmail(@RequestBody PasswordResetRequest email) {
-        emailService.requestPasswordReset(email);
-        return APIResponse.<Void>builder()
-                .flag(true)
-                .message("Successfully send email.")
-                .result(null)
-                .build();
-    }
+    
 
     @PostMapping("/verify-otp")
     public APIResponse<Void> verifyOtp(@RequestBody OTPVerificationRequest request) {
