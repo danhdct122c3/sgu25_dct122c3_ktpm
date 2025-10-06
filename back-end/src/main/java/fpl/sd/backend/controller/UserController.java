@@ -46,16 +46,16 @@ public class UserController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public APIResponse<List<UserResponse>> getAllUsers() {
-        return APIResponse.<List<UserResponse>>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully loaded")
-                .result(userService.getAllUsers())
-                .build();
-    }
+//     @PreAuthorize("hasRole('ADMIN')")
+//     @GetMapping
+//     public APIResponse<List<UserResponse>> getAllUsers() {
+//         return APIResponse.<List<UserResponse>>builder()
+//                 .flag(true)
+//                 .code(200)
+//                 .message("Successfully loaded")
+//                 .result(userService.getAllUsers())
+//                 .build();
+//     }
     @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.claims['sub']")
     @GetMapping("/{userId}")
     public APIResponse<UserResponse> getUserById(@PathVariable String userId) {
@@ -80,17 +80,17 @@ public class UserController {
     }
 
     // Endpoint mới: Update user bằng username (cho admin)
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/update/{username}")
-    public APIResponse<UserResponse> updateUserByUsername(@PathVariable String username, @RequestBody @Valid UserUpdateRequest user) {
-        UserResponse updateUser = userService.updateUserByUsername(username, user);
-        return APIResponse.<UserResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("User updated successfully")
-                .result(updateUser)
-                .build();
-    }
+//     @PreAuthorize("hasRole('ADMIN')")
+//     @PutMapping("/update/{username}")
+//     public APIResponse<UserResponse> updateUserByUsername(@PathVariable String username, @RequestBody @Valid UserUpdateRequest user) {
+//         UserResponse updateUser = userService.updateUserByUsername(username, user);
+//         return APIResponse.<UserResponse>builder()
+//                 .flag(true)
+//                 .code(200)
+//                 .message("User updated successfully")
+//                 .result(updateUser)
+//                 .build();
+//     }
 
     @GetMapping("/profile")
     public APIResponse<UserResponse> getUserByUsername(@RequestParam(value = "username", required = true) String username) {
@@ -102,43 +102,43 @@ public class UserController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/role")
-    public APIResponse<List<UserResponse>> getUserByRole(@RequestParam(value = "role", required = false) String roleName) {
-        return APIResponse.<List<UserResponse>>builder()
-                .flag(true)
-                .code(200)
-                .message("OK")
-                .result(userService.getUserByRole(roleName))  // Cập nhật tham số thành roleName
-                .build();
-    }
+//     @PreAuthorize("hasRole('ADMIN')")
+//     @GetMapping("/role")
+//     public APIResponse<List<UserResponse>> getUserByRole(@RequestParam(value = "role", required = false) String roleName) {
+//         return APIResponse.<List<UserResponse>>builder()
+//                 .flag(true)
+//                 .code(200)
+//                 .message("OK")
+//                 .result(userService.getUserByRole(roleName))  // Cập nhật tham số thành roleName
+//                 .build();
+//     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/isActive")
-    public APIResponse<List<UserResponse>> getUserByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
-        return APIResponse.<List<UserResponse>>builder()
-                .flag(true)
-                .code(200)
-                .message("OK")
-                .result(userService.getUserByIsActive(isActive))
-                .build();
-    }
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/list-user")
-    public APIResponse<PageResponse<UserResponse>> getUserPaging(
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) String roleName,  // Thay roleId bằng roleName
-            @RequestParam(required = false) Boolean isActive,
-            @RequestParam(defaultValue = "date") String sortOrder,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "8") int size
-    ) {
-        return APIResponse.<PageResponse<UserResponse>>builder()
-                .flag(true)
-                .message("OK")
-                .result(userService.getUserPaging(username, roleName, isActive, page, size, sortOrder))
-                .build();
-    }
+//     @PreAuthorize("hasRole('ADMIN')")
+//     @GetMapping("/isActive")
+//     public APIResponse<List<UserResponse>> getUserByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
+//         return APIResponse.<List<UserResponse>>builder()
+//                 .flag(true)
+//                 .code(200)
+//                 .message("OK")
+//                 .result(userService.getUserByIsActive(isActive))
+//                 .build();
+//     }
+//     @PreAuthorize("hasRole('ADMIN')")
+//     @GetMapping("/list-user")
+//     public APIResponse<PageResponse<UserResponse>> getUserPaging(
+//             @RequestParam(required = false) String username,
+//             @RequestParam(required = false) String roleName,  // Thay roleId bằng roleName
+//             @RequestParam(required = false) Boolean isActive,
+//             @RequestParam(defaultValue = "date") String sortOrder,
+//             @RequestParam(defaultValue = "1") int page,
+//             @RequestParam(defaultValue = "8") int size
+//     ) {
+//         return APIResponse.<PageResponse<UserResponse>>builder()
+//                 .flag(true)
+//                 .message("OK")
+//                 .result(userService.getUserPaging(username, roleName, isActive, page, size, sortOrder))
+//                 .build();
+//     }
 
     /**
      * Endpoint để tạo admin user đầu tiên trong hệ thống

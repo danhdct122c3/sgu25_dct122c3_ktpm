@@ -42,16 +42,16 @@ public class ShoeController {
      * Get ALL shoes including hidden ones (for admin)
      * Admin only - returns all shoes regardless of status
      */
-    @GetMapping("/admin/all")
-    @PreAuthorize("hasRole('ADMIN')")
-    public APIResponse<List<ShoeResponse>> getAllShoesForAdmin() {
-        return APIResponse.<List<ShoeResponse>>builder()
-                .flag(true)
-                .code(200)
-                .message("OK")
-                .result(shoeService.getAllShoesForAdmin())
-                .build();
-    }
+    // @GetMapping("/admin/all")
+    // @PreAuthorize("hasRole('ADMIN')")
+    // public APIResponse<List<ShoeResponse>> getAllShoesForAdmin() {
+    //     return APIResponse.<List<ShoeResponse>>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("OK")
+    //             .result(shoeService.getAllShoesForAdmin())
+    //             .build();
+    // }
 
     @GetMapping("/by-gender")
     public APIResponse<List<ShoeResponse>> getShoesByGender(@RequestParam(value = "gender", required = false) String gender) {
@@ -84,16 +84,16 @@ public class ShoeController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public APIResponse<ShoeResponse> createShoe(@RequestBody @Valid ShoeCreateRequest request) {
-        return APIResponse.<ShoeResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("OK")
-                .result(shoeService.createShoe(request))
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PostMapping
+    // public APIResponse<ShoeResponse> createShoe(@RequestBody @Valid ShoeCreateRequest request) {
+    //     return APIResponse.<ShoeResponse>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("OK")
+    //             .result(shoeService.createShoe(request))
+    //             .build();
+    // }
 
     @GetMapping("/{id}")
     public APIResponse<ShoeResponse> getShoeById(@PathVariable("id") int id) {
@@ -106,16 +106,16 @@ public class ShoeController {
 
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public APIResponse<ShoeResponse> updateShoe(@PathVariable("id") int id, @RequestBody ShoeUpdateRequest request) {
-        return APIResponse.<ShoeResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("OK")
-                .result(shoeService.updateShoe(request, id))
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PutMapping("/{id}")
+    // public APIResponse<ShoeResponse> updateShoe(@PathVariable("id") int id, @RequestBody ShoeUpdateRequest request) {
+    //     return APIResponse.<ShoeResponse>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("OK")
+    //             .result(shoeService.updateShoe(request, id))
+    //             .build();
+    // }
 
     @GetMapping("/shop")
     public APIResponse<List<ShoeResponse>> getShoesByName(@RequestParam(value = "name", required = false) String name) {
@@ -172,15 +172,15 @@ public class ShoeController {
      * Protected endpoint - ADMIN only
      * Uses soft delete to maintain data integrity
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public APIResponse<Void> deleteShoe(@PathVariable("id") int id) {
-        shoeService.deleteShoe(id);
-        return APIResponse.<Void>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully deleted shoe with ID " + id)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @DeleteMapping("/{id}")
+    // public APIResponse<Void> deleteShoe(@PathVariable("id") int id) {
+    //     shoeService.deleteShoe(id);
+    //     return APIResponse.<Void>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Successfully deleted shoe with ID " + id)
+    //             .build();
+    // }
 
 }
