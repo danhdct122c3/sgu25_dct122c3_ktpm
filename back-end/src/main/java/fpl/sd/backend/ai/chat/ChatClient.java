@@ -5,5 +5,5 @@ import fpl.sd.backend.ai.chat.dto.ChatResponse;
 
 public interface ChatClient {
 
-    ChatResponse generate(ChatRequest chatRequest);
+      ChatResponse generate(ChatRequest chatRequest);
 }
