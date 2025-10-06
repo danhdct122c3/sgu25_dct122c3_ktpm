@@ -98,10 +98,22 @@ public class UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
+    // Check if user owns this userId (compare username from token with user's username)
+    public boolean isUserOwner(String userId, String usernameFromToken) {
+        try {
+            User user = userRepository.findById(userId).orElse(null);
+            return user != null && user.getUsername().equals(usernameFromToken);
+        } catch (Exception e) {
+            log.error("Error checking user ownership: {}", e.getMessage());
+            return false;
+        }
+    }
+
     public UserResponse updateUser(String id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        // Username validation - skip if updating own record
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername()) &&
                 userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
@@ -136,6 +148,47 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
+    // Update user bằng username (cho admin)
+    public UserResponse updateUserByUsername(String username, UserUpdateRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        
+        // Kiểm tra trùng username (nếu đổi username)
+        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername()) &&
+                userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
+        }
+
+        // Kiểm tra trùng email
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
+        // Cập nhật các field
+        if (request.getUsername() != null) {
+            user.setUsername(request.getUsername());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getIsActive() != null) {
+            user.setActive(request.getIsActive());
+        }
+
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+        return userMapper.toUserResponse(user);
+    }
 
     public UserResponse getUserByUserName(String username) {
         Optional<User> existingUser = userRepository.findByUsername(username);

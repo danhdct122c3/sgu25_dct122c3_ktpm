@@ -67,10 +67,23 @@ public class UserController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.claims['sub']")
+    @PreAuthorize("hasRole('ADMIN') or @userService.isUserOwner(#userId, authentication.principal.claims['sub'])")
     @PutMapping("/{userId}")
     public APIResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest user) {
         UserResponse updateUser = userService.updateUser(userId,user);
+        return APIResponse.<UserResponse>builder()
+                .flag(true)
+                .code(200)
+                .message("User updated successfully")
+                .result(updateUser)
+                .build();
+    }
+
+    // Endpoint mới: Update user bằng username (cho admin)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/update/{username}")
+    public APIResponse<UserResponse> updateUserByUsername(@PathVariable String username, @RequestBody @Valid UserUpdateRequest user) {
+        UserResponse updateUser = userService.updateUserByUsername(username, user);
         return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)

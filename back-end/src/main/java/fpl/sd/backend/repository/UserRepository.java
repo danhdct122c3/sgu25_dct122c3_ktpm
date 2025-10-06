@@ -1,7 +1,7 @@
 package fpl.sd.backend.repository;
 
 import fpl.sd.backend.constant.DiscountConstants;
-import fpl.sd.backend.entity.Discount;
+
 import fpl.sd.backend.entity.Role;
 import fpl.sd.backend.entity.User;
 import org.springframework.data.domain.Page;
