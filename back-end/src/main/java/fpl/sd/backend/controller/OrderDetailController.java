@@ -47,43 +47,43 @@ public class OrderDetailController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public APIResponse<List<OrderDetailResponse>> getOrderDetails() {
-        return APIResponse.<List<OrderDetailResponse>>builder()
-                .code(200)
-                .flag(true)
-                .message("Successfully loaded")
-                .result(orderDetailService.getAllOrderDetails())
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @GetMapping
+    // public APIResponse<List<OrderDetailResponse>> getOrderDetails() {
+    //     return APIResponse.<List<OrderDetailResponse>>builder()
+    //             .code(200)
+    //             .flag(true)
+    //             .message("Successfully loaded")
+    //             .result(orderDetailService.getAllOrderDetails())
+    //             .build();
+    // }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/order/{orderId}")
-    public APIResponse<OrderDetailResponse> getOrderDetailByOrderId(@PathVariable String orderId) {
-        return APIResponse.<OrderDetailResponse>builder()
-                .code(200)
-                .flag(true)
-                .message("Successfully loaded")
-                .result(orderDetailService.getOrderById(orderId))
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @GetMapping("/order/{orderId}")
+    // public APIResponse<OrderDetailResponse> getOrderDetailByOrderId(@PathVariable String orderId) {
+    //     return APIResponse.<OrderDetailResponse>builder()
+    //             .code(200)
+    //             .flag(true)
+    //             .message("Successfully loaded")
+    //             .result(orderDetailService.getOrderById(orderId))
+    //             .build();
+    // }
 
 
 
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/order/{orderId}")
-    public APIResponse<OrderDetailResponse> updateOrderDetail(@PathVariable String orderId, @RequestBody @Valid OrderUpdateRequest request) {
-        OrderDetailResponse orderDetailResponse = orderDetailService.updateOrderDetail(orderId, request);
-        return APIResponse.<OrderDetailResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("Order updated successfully")
-                .result(orderDetailResponse)
-                .build();
-    }
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @PutMapping("/order/{orderId}")
+    // public APIResponse<OrderDetailResponse> updateOrderDetail(@PathVariable String orderId, @RequestBody @Valid OrderUpdateRequest request) {
+    //     OrderDetailResponse orderDetailResponse = orderDetailService.updateOrderDetail(orderId, request);
+    //     return APIResponse.<OrderDetailResponse>builder()
+    //             .flag(true)
+    //             .code(200)
+    //             .message("Order updated successfully")
+    //             .result(orderDetailResponse)
+    //             .build();
+    // }
 
 
     @GetMapping("/order/{orderId}/user/{userId}")
@@ -107,22 +107,22 @@ public class OrderDetailController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/list-order")
-    public APIResponse<PageResponse<OrderDetailResponse>> getOrderPaging(
-            @RequestParam(required = false) String orderStatus,
-            @RequestParam(defaultValue = "date") String sortOrder,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "8") int size
-    ) {
-        PageResponse<OrderDetailResponse> pageResponse = orderDetailService.getOrderPaging(orderStatus, page, size, sortOrder);
-        Map<OrderConstants.OrderStatus, Long> orderStatusCount = orderDetailService.getOrderStatusCounts();
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @GetMapping("/list-order")
+    // public APIResponse<PageResponse<OrderDetailResponse>> getOrderPaging(
+    //         @RequestParam(required = false) String orderStatus,
+    //         @RequestParam(defaultValue = "date") String sortOrder,
+    //         @RequestParam(defaultValue = "1") int page,
+    //         @RequestParam(defaultValue = "8") int size
+    // ) {
+    //     PageResponse<OrderDetailResponse> pageResponse = orderDetailService.getOrderPaging(orderStatus, page, size, sortOrder);
+    //     Map<OrderConstants.OrderStatus, Long> orderStatusCount = orderDetailService.getOrderStatusCounts();
 
-        return APIResponse.<PageResponse<OrderDetailResponse>>builder()
-                .flag(true)
-                .message("OK")
-                .result(pageResponse)
-                .additionalData(Map.of("statusCounts", orderStatusCount))
-                .build();
-    }
+    //     return APIResponse.<PageResponse<OrderDetailResponse>>builder()
+    //             .flag(true)
+    //             .message("OK")
+    //             .result(pageResponse)
+    //             .additionalData(Map.of("statusCounts", orderStatusCount))
+    //             .build();
+    // }
 }

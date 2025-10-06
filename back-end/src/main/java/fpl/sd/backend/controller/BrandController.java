@@ -175,42 +175,42 @@ public class BrandController {
      * Update brand with logo file
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping(value = "/{id}/with-logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public APIResponse<BrandResponse> updateBrandWithLogo(
-            @PathVariable int id,
-            @RequestParam(value = "brandName", required = false) String brandName,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestPart("logoFile") MultipartFile logoFile,
-            HttpServletRequest req
-    ) throws IOException {
-        BrandCreateRequest request = new BrandCreateRequest();
-        request.setBrandName(brandName);
-        request.setDescription(description);
-
-        BrandResponse updated = brandService.updateBrandWithLogo(id, request, logoFile);
-        updated.setLogoUrl(toAbsoluteUrl(req, updated.getLogoUrl()));
-        return APIResponse.<BrandResponse>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully updated brand with logo")
-                .result(updated)
-                .build();
-    }
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @PutMapping(value = "/{id}/with-logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public APIResponse<BrandResponse> updateBrandWithLogo(
+//            @PathVariable int id,
+//            @RequestParam(value = "brandName", required = false) String brandName,
+//            @RequestParam(value = "description", required = false) String description,
+//            @RequestPart("logoFile") MultipartFile logoFile,
+//            HttpServletRequest req
+//    ) throws IOException {
+//        BrandCreateRequest request = new BrandCreateRequest();
+//        request.setBrandName(brandName);
+//        request.setDescription(description);
+//
+//        BrandResponse updated = brandService.updateBrandWithLogo(id, request, logoFile);
+//        updated.setLogoUrl(toAbsoluteUrl(req, updated.getLogoUrl()));
+//        return APIResponse.<BrandResponse>builder()
+//                .flag(true)
+//                .code(200)
+//                .message("Successfully updated brand with logo")
+//                .result(updated)
+//                .build();
+//    }
 
     /**
      * Delete a brand
      * Protected endpoint - ADMIN only
      * Will fail if brand is in use by any shoes
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public APIResponse<Void> deleteBrand(@PathVariable int id) {
-        brandService.deleteBrand(id);
-        return APIResponse.<Void>builder()
-                .flag(true)
-                .code(200)
-                .message("Successfully deleted brand")
-                .build();
-    }
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @DeleteMapping("/{id}")
+//    public APIResponse<Void> deleteBrand(@PathVariable int id) {
+//        brandService.deleteBrand(id);
+//        return APIResponse.<Void>builder()
+//                .flag(true)
+//                .code(200)
+//                .message("Successfully deleted brand")
+//                .build();
+//    }
 }
