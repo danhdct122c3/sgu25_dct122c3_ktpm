@@ -1,51 +1,128 @@
+version: '3.8'
+
 services:
+  # MySQL Database
   mysql:
     image: mysql:8.0
-    container_name: mysql-db
+    container_name: shoe-shop-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: capstone_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password
     ports:
-      - "3308:3306" # Thay đổi cổng host từ 3306 sang 3308
+      - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d
     networks:
-      - app-network
+      - shoe-shop-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
+  # Backend Service
   backend:
     build:
       context: ./back-end
       dockerfile: Dockerfile
-    container_name: spring-backend
-    depends_on:
-      - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/capstone_db
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+    container_name: shoe-shop-backend
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - DBMS_CONNECTION=jdbc:mysql://mysql:3306/capstone_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      - DBMS_USERNAME=root
+      - DBMS_PASSWORD=root
+      - AI_OPENAI_ENDPOINT=https://api.openai.com/v1/chat/completions
+      - AI_OPENAI_APIKEY=${AI_OPENAI_APIKEY:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
-      - app-network
+      - shoe-shop-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
+  # Frontend Service (using serve)
   frontend:
     build:
       context: ./front-end
       dockerfile: Dockerfile
-    container_name: react-frontend
+    container_name: shoe-shop-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - shoe-shop-network
+
+  # Frontend Service (using nginx) - Alternative
+  frontend-nginx:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile.nginx
+    container_name: shoe-shop-frontend-nginx
+    restart: unless-stopped
+    ports:
+      - "81:8080"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - shoe-shop-network
+    profiles:
+      - nginx
+
+  # Nginx Reverse Proxy (optional)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: shoe-shop-proxy
+    restart: unless-stopped
+    ports:
+      - "81:80"
+      - "444:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
-    ports:
-      - "3000:80"
+      - frontend
     networks:
-      - app-network
+      - shoe-shop-network
+    profiles:
+      - proxy
+
+  # PhpMyAdmin for database management (optional)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: shoe-shop-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: khang141204
+    depends_on:
+      - mysql
+    networks:
+      - shoe-shop-network
+    profiles:
+      - tools
 
 volumes:
   mysql_data:
+    driver: local
 
 networks:
-  app-network:
+  shoe-shop-network:
     driver: bridge
