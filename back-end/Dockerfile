@@ -1,17 +1,25 @@
-FROM openjdk:21-jdk-slim
+# Stage 1: build
+# Start with a Maven image that includes JDK 21
+FROM maven:3.9.8-amazoncorretto-21 AS build
 
+# Copy source code and pom.xml file to /app folder
 WORKDIR /app
-
 COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
-
-RUN ./mvnw dependency:go-offline
-
 COPY src ./src
 
-RUN ./mvnw clean package -DskipTests
+# Build source code with maven
+RUN mvn package -DskipTests
 
-EXPOSE 8080
+#Stage 2: create image
+# Start with Amazon Correto JDK 21
+FROM amazoncorretto:21.0.5
 
-CMD ["java", "-jar", "target/back-end-0.0.1-SNAPSHOT.jar"]
+# Set working folder to App and copy complied file from above step
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+# Set the active profile to production
+ENV SPRING_PROFILES_ACTIVE=production
+
+# Command to run the application
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=production", "app.jar"]
