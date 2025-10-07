@@ -46,7 +46,7 @@ export default function Header() {
         <div className="flex gap-5">
           <UserDropDown />
           <Link to={"/cart"}>
-            <ShoppingBag />
+            {/* <ShoppingBag /> */}
           </Link>
         </div>
       </div>

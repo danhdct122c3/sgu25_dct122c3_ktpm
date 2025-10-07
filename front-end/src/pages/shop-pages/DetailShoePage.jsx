@@ -265,12 +265,12 @@ export default function DetailShoePage() {
                 </div>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button
+                {/* <Button
                   className="flex-1 "
                   onClick={() => handleAddToCart(shoe)}
                 >
                   Thêm vào giỏ hàng
-                </Button>
+                </Button> */}
                 <Button
                   variant="destructive"
                   className="flex-1"
