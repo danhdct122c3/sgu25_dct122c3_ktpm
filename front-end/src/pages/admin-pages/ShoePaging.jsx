@@ -33,6 +33,7 @@ import { set } from "date-fns";
 
 const ShoeManagement = () => {
   const [shoeData, setShoeData] = useState(null);
+  const [brands, setBrands] = useState([]);
   const [name, setName] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -80,6 +81,30 @@ const ShoeManagement = () => {
     size,
     status,
   ]);
+
+  // Fetch brands from API
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await api.get("/brands");
+        if (response.data.result && Array.isArray(response.data.result)) {
+          setBrands(response.data.result);
+        } else if (Array.isArray(response.data)) {
+          setBrands(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+        // Fallback brands nếu API fail
+        setBrands([
+          { brandId: 1, brandName: "Nike" },
+          { brandId: 2, brandName: "Adidas" },
+          { brandId: 3, brandName: "Puma" },
+          { brandId: 4, brandName: "Reebok" }
+        ]);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   useEffect(() => {
     fetchShoeData();
@@ -194,9 +219,9 @@ const ShoeManagement = () => {
             <SelectValue placeholder="Chọn thể loại" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="SPORT">Thể thao</SelectItem>
-            <SelectItem value="RUNNING">Chạy bộ</SelectItem>
-            <SelectItem value="CASUAL">Thời trang</SelectItem>
+            <SelectItem value="SPORT">Giày thể thao</SelectItem>
+            <SelectItem value="RUNNING">Giày chạy bộ</SelectItem>
+            <SelectItem value="CASUAL">Giày thường</SelectItem>
           </SelectContent>
         </Select>
         <Select value={brandId} onValueChange={setBrandId}>
@@ -204,10 +229,20 @@ const ShoeManagement = () => {
             <SelectValue placeholder="Chọn nhãn hiệu" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">Nike</SelectItem>
-            <SelectItem value="2">Adidas</SelectItem>
-            <SelectItem value="3">Puma</SelectItem>
-            <SelectItem value="4">Reebok</SelectItem>
+            {brands && brands.length > 0 ? (
+              brands.map((brand) => (
+                <SelectItem key={brand.brandId || brand.id} value={String(brand.brandId || brand.id)}>
+                  {brand.brandName || brand.name}
+                </SelectItem>
+              ))
+            ) : (
+              <>
+                <SelectItem value="1">Nike</SelectItem>
+                <SelectItem value="2">Adidas</SelectItem>
+                <SelectItem value="3">Puma</SelectItem>
+                <SelectItem value="4">Reebok</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
         <Select value={sortOrder} onValueChange={setSortOrder}>

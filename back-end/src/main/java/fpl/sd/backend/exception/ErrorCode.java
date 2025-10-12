@@ -64,6 +64,13 @@ public enum ErrorCode {
     //Email-related errors
     SEND_MAIL_ERROR(500, "Send mail error", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    //Cart-related errors
+    CART_NOT_FOUND(404, "Cart not found", HttpStatus.NOT_FOUND),
+    CART_ITEM_NOT_FOUND(404, "Cart item not found", HttpStatus.NOT_FOUND),
+    OUT_OF_STOCK(400, "Product is out of stock or quantity exceeds available stock", HttpStatus.BAD_REQUEST),
+    VARIANT_NOT_FOUND(404, "Product variant not found", HttpStatus.NOT_FOUND),
+    USER_NOT_EXISTED(404, "User not existed", HttpStatus.NOT_FOUND),
+
     ;
 
 

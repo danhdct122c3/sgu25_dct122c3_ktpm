@@ -32,6 +32,7 @@ const schema = z.object({
 
 export default function RunningShoeForm() {
   const navigate = useNavigate();
+  const [brands, setBrands] = useState([]);
 
   const [formData, setFormData] = useState({
     selectedFiles: [],
@@ -95,6 +96,30 @@ export default function RunningShoeForm() {
       };
     });
   };
+
+  // Fetch brands from API
+  React.useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await api.get("/brands");
+        if (response.data.result && Array.isArray(response.data.result)) {
+          setBrands(response.data.result);
+        } else if (Array.isArray(response.data)) {
+          setBrands(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+        // Fallback brands nếu API fail
+        setBrands([
+          { brandId: 1, brandName: "Nike" },
+          { brandId: 2, brandName: "Adidas" },
+          { brandId: 3, brandName: "Puma" },
+          { brandId: 4, brandName: "Reebok" }
+        ]);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const {
     register,
@@ -257,7 +282,7 @@ export default function RunningShoeForm() {
               {...register("category")}
               className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base"
             >
-              <option value="RUNNING">Giày chạy</option>
+              <option value="RUNNING">Giày chạy bộ</option>
               <option value="SPORT">Giày thể thao</option>
               <option value="CASUAL">Giày thường</option>
             </select>
@@ -271,10 +296,21 @@ export default function RunningShoeForm() {
               {...register("brandId", { valueAsNumber: true })}
               className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base"
             >
-              <option value="1">Nike</option>
-              <option value="2">Adidas</option>
-              <option value="3">Puma</option>
-              <option value="4">Reebok</option>
+              <option value="">-- Chọn thương hiệu --</option>
+              {brands && brands.length > 0 ? (
+                brands.map((brand) => (
+                  <option key={brand.brandId || brand.id} value={brand.brandId || brand.id}>
+                    {brand.brandName || brand.name}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="1">Nike</option>
+                  <option value="2">Adidas</option>
+                  <option value="3">Puma</option>
+                  <option value="4">Reebok</option>
+                </>
+              )}
             </select>
             {errors.brandId?.message && (
               <p className="text-red-600">{errors.brandId?.message}</p>

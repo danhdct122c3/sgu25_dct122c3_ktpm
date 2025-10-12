@@ -14,6 +14,7 @@ import fpl.sd.backend.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class OrderService {
 
     OrderMapper orderMapper;
@@ -174,28 +176,46 @@ public class OrderService {
         // Convert int to String for the order ID
         String orderIdStr = String.valueOf(orderId);
         
+        log.info("=== CANCELING ORDER {} ===", orderIdStr);
+        
         CustomerOrder order = orderRepository.findById(orderIdStr)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         // Check if order can be cancelled (only PENDING or RECEIVED status)
         if (order.getOrderStatus() != OrderConstants.OrderStatus.PENDING && 
             order.getOrderStatus() != OrderConstants.OrderStatus.RECEIVED) {
+            log.warn("Cannot cancel order {}. Current status: {}", orderIdStr, order.getOrderStatus());
             throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
         }
 
         // Update order status to CANCELED
         order.setOrderStatus(OrderConstants.OrderStatus.CANCELED);
         order.setUpdateDate(Instant.now());
+        
+        log.info("Order {} status changed to CANCELED", orderIdStr);
 
         // Restore inventory for all order items
         List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(orderIdStr);
+        log.info("Found {} order details to restore inventory", orderDetails.size());
+        
         for (OrderDetail detail : orderDetails) {
             ShoeVariant variant = detail.getVariant();
-            variant.setStockQuantity(variant.getStockQuantity() + detail.getQuantity());
+            int oldStock = variant.getStockQuantity();
+            int quantity = detail.getQuantity();
+            int newStock = oldStock + quantity;
+            
+            log.info("Restoring inventory for variant {}: {} + {} = {}", 
+                    variant.getId(), oldStock, quantity, newStock);
+            
+            variant.setStockQuantity(newStock);
             shoeVariantRepository.save(variant);
+            
+            log.info("Successfully restored stock for variant {}", variant.getId());
         }
 
         CustomerOrder savedOrder = orderRepository.save(order);
+        log.info("=== ORDER {} CANCELED SUCCESSFULLY ===", orderIdStr);
+        
         return orderMapper.toOrderResponse(savedOrder);
     }
 }

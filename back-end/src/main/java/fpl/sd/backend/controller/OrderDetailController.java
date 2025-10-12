@@ -7,6 +7,10 @@ import fpl.sd.backend.dto.request.OrderUpdateRequest;
 
 import fpl.sd.backend.dto.response.EnumResponse;
 import fpl.sd.backend.dto.response.OrderDetailResponse;
+import fpl.sd.backend.entity.User;
+import fpl.sd.backend.exception.AppException;
+import fpl.sd.backend.exception.ErrorCode;
+import fpl.sd.backend.repository.UserRepository;
 import fpl.sd.backend.service.OrderDetailService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -24,6 +28,7 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderDetailController {
     OrderDetailService orderDetailService;
+    UserRepository userRepository;
 
     /**
      * Get all orders for a specific user by USERNAME
@@ -86,13 +91,27 @@ public class OrderDetailController {
     }
 
 
+    /**
+     * Get order detail by orderId and userId
+     * Converts userId (UUID) to username before querying
+     * 
+     * @param orderId The order ID
+     * @param userId The user UUID (will be converted to username)
+     * @return Order details
+     */
     @GetMapping("/order/{orderId}/user/{userId}")
     public APIResponse<OrderDetailResponse> getOrderDetailByOrderIdAndUserId(@PathVariable String orderId, @PathVariable String userId) {
+        // ✅ Convert userId to username
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        String username = user.getUsername();
+        
         return APIResponse.<OrderDetailResponse>builder()
                 .code(200)
                 .flag(true)
                 .message("Successfully loaded")
-                .result(orderDetailService.getOrderByIdAndUserId(orderId, userId))
+                .result(orderDetailService.getOrderByIdAndUserId(orderId, username))
                 .build();
     }
 

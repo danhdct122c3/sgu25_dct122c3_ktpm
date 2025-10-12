@@ -594,7 +594,7 @@ export default function RunningShoeForm() {
               {...register("category")}
               className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base"
             >
-              <option value="RUNNING">Giày chạy</option>
+              <option value="RUNNING">Giày chạy bộ</option>
               <option value="SPORT">Giày thể thao</option>
               <option value="CASUAL">Giày thường</option>
             </select>

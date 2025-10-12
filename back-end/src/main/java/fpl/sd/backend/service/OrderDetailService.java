@@ -14,14 +14,17 @@ import fpl.sd.backend.entity.CustomerOrder;
 import fpl.sd.backend.entity.Discount;
 import fpl.sd.backend.entity.OrderDetail;
 import fpl.sd.backend.entity.Shoe;
+import fpl.sd.backend.entity.ShoeVariant;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.OrderMapper;
 import fpl.sd.backend.repository.CustomerOrderRepository;
 import fpl.sd.backend.repository.OrderDetailRepository;
+import fpl.sd.backend.repository.ShoeVariantRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,12 +39,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderDetailService {
     CustomerOrderRepository orderRepository;
     OrderDetailRepository orderDetailRepository;
+    ShoeVariantRepository shoeVariantRepository;
     OrderMapper orderMapper;
 
 
@@ -117,6 +122,8 @@ public class OrderDetailService {
         CustomerOrder customerOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+        // Store old status to check if it's changing to CANCELED
+        OrderConstants.OrderStatus oldStatus = customerOrder.getOrderStatus();
 
         if (request.getOrderDate() != null) {
             customerOrder.setOrderDate(request.getOrderDate());
@@ -127,6 +134,38 @@ public class OrderDetailService {
         }
         if (request.getFinalTotal() != null) {
             customerOrder.setFinalTotal(request.getFinalTotal());
+        }
+
+        // ✅ RESTORE INVENTORY when status changes to CANCELED
+        if (request.getOrderStatus() != null 
+                && request.getOrderStatus() == OrderConstants.OrderStatus.CANCELED
+                && oldStatus != OrderConstants.OrderStatus.CANCELED) {
+            
+            log.info("=== ORDER STATUS CHANGED TO CANCELED - RESTORING INVENTORY ===");
+            log.info("Order ID: {}, Previous Status: {}", orderId, oldStatus);
+            
+            // Get all order details for this order
+            List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(orderId);
+            log.info("Found {} order details to restore inventory", orderDetails.size());
+            
+            // Restore inventory for each item
+            for (OrderDetail detail : orderDetails) {
+                ShoeVariant variant = detail.getVariant();
+                int oldStock = variant.getStockQuantity();
+                int quantity = detail.getQuantity();
+                int newStock = oldStock + quantity;
+                
+                log.info("Restoring inventory for variant {}: {} + {} = {}", 
+                        variant.getId(), oldStock, quantity, newStock);
+                
+                variant.setStockQuantity(newStock);
+                shoeVariantRepository.save(variant);
+                
+                log.info("✅ Successfully restored stock for variant {} (Product: {})", 
+                        variant.getId(), variant.getShoe().getName());
+            }
+            
+            log.info("=== INVENTORY RESTORATION COMPLETED FOR ORDER {} ===", orderId);
         }
 
         orderRepository.save(customerOrder);
