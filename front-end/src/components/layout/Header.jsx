@@ -1,26 +1,27 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import UserDropDown from "../shop/UserDropDown";
 import ShoppingBag from "../shop/ShoppingBag";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuIndicator,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   NavigationMenuViewport,
 } from "@/components/ui/navigation-menu";
 
 export default function Header() {
+  // Đã đăng nhập khi có cả token & user trong Redux
+  const isLoggedIn = useSelector((s) => Boolean(s.auth?.token && s.auth?.user));
+
   return (
     <header className="fixed top-0 w-full z-50 bg-white shadow">
       <div className="container flex items-center justify-between mx-auto gap-5 h-24">
         <Link to={"/"}>
           <h1 className="text-red-800 text-4xl italic font-bold">SuperTeam</h1>
         </Link>
-        
+
         <NavigationMenu>
           <NavigationMenuList className="hidden lg:flex gap-6">
             <NavigationMenuItem>
@@ -42,12 +43,15 @@ export default function Header() {
           <NavigationMenuIndicator />
           <NavigationMenuViewport />
         </NavigationMenu>
-        
-        <div className="flex gap-5">
+
+        <div className="flex items-center gap-5">
           <UserDropDown />
-          <Link to={"/cart"}>
-            <ShoppingBag />
-          </Link>
+          {/* ✅ Chỉ hiển thị icon giỏ khi đã đăng nhập */}
+          {isLoggedIn && (
+            <Link to="/cart">
+              <ShoppingBag />
+            </Link>
+          )}
         </div>
       </div>
     </header>
