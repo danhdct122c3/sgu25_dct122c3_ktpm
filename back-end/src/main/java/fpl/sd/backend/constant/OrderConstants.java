@@ -8,6 +8,7 @@ import java.util.List;
 public class OrderConstants {
     public enum OrderStatus {
         PENDING, RECEIVED, CANCELED, PAID, PAYMENT_FAILED, SHIPPED
+//        PENDING, CANCELED, PAID
     }
     public static OrderConstants.OrderStatus getOrderStatusFromString(String orderStatusString) {
         for (OrderConstants.OrderStatus orderStatus : OrderConstants.OrderStatus.values()) {

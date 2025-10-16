@@ -95,7 +95,7 @@ public class OrderService {
         List<CartItemResponse> cartItemsResponse = savedOrder.getOrderDetails().stream()
                 .map(item -> CartItemResponse.builder()
                         .quantity(item.getQuantity())
-                        .productId(item.getQuantity())
+                        .productId(item.getVariant().getShoe().getId())
                         .price(item.getPrice())
                         .variantId(item.getVariant().getId())
                         .build())
@@ -182,8 +182,8 @@ public class OrderService {
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         // Check if order can be cancelled (only PENDING or RECEIVED status)
-        if (order.getOrderStatus() != OrderConstants.OrderStatus.PENDING && 
-            order.getOrderStatus() != OrderConstants.OrderStatus.RECEIVED) {
+        if (order.getOrderStatus() != OrderConstants.OrderStatus.PENDING
+                && order.getOrderStatus() != OrderConstants.OrderStatus.RECEIVED) {
             log.warn("Cannot cancel order {}. Current status: {}", orderIdStr, order.getOrderStatus());
             throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
         }

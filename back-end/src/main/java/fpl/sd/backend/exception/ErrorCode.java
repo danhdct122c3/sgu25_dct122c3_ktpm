@@ -13,6 +13,7 @@ public enum ErrorCode {
 
     // User-related errors
     USER_NOT_FOUND(404, "User Not Found", HttpStatus.NOT_FOUND),
+    USER_NOT_EXISTED(404, "User does not exist", HttpStatus.NOT_FOUND),
     USER_ALREADY_EXISTS(409, "User Already Exists", HttpStatus.CONFLICT),
     UNCAUGHT_EXCEPTION(500, "Uncaught Exception", HttpStatus.INTERNAL_SERVER_ERROR),
     USERNAME_INVALID(400, "Username must be at least 3 characters", HttpStatus.BAD_REQUEST),
@@ -31,7 +32,7 @@ public enum ErrorCode {
     BRAND_DESCRIPTION_TOO_LONG(400, "Brand description is too long", HttpStatus.BAD_REQUEST),
     BRAND_LOGO_INVALID(400, "Invalid Brand Logo URL", HttpStatus.BAD_REQUEST),
     BRAND_INACTIVE(403, "This brand is inactive", HttpStatus.FORBIDDEN),
-    BRAND_IN_USE(409, "Cannot delete brand as it is being used by shoes", HttpStatus.CONFLICT),
+    BRAND_IN_USE(409, "Cannot del    BRAND_IN_USE(409)  Cannot delete brand as it is being used by shoes",   HttpStatus.CONFLICT),
     SKU_ALREADY_EXISTS(500, "Sku Already Exists", HttpStatus.CONFLICT),
     FILE_UPLOAD_FAILED(500, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
@@ -42,6 +43,12 @@ public enum ErrorCode {
 
     //Product-related errors
     PRODUCT_NOT_FOUND(404, "Product Not Found", HttpStatus.NOT_FOUND),
+    VARIANT_NOT_FOUND(404, "Variant Not Found", HttpStatus.NOT_FOUND),
+    OUT_OF_STOCK(400, "Product is out of stock", HttpStatus.BAD_REQUEST),
+
+    //Cart-related errors
+    CART_NOT_FOUND(404, "Cart Not Found", HttpStatus.NOT_FOUND),
+    CART_ITEM_NOT_FOUND(404, "Cart Item Not Found", HttpStatus.NOT_FOUND),
 
     //Discount-related errors
     DISCOUNT_NOT_FOUND(404, "Discount Not Found", HttpStatus.NOT_FOUND),
@@ -53,25 +60,17 @@ public enum ErrorCode {
     ORDER_SAVE_ERROR(500, "Order Save Error", HttpStatus.INTERNAL_SERVER_ERROR),
     ORDER_NOT_FOUND(404,"Order not found" ,HttpStatus.NOT_FOUND),
     ORDER_CANNOT_BE_CANCELLED(400, "Order cannot be cancelled. Only PENDING or RECEIVED orders can be cancelled.", HttpStatus.BAD_REQUEST),
+    INSUFFICIENT_INVENTORY(400, "Insufficient inventory for this product", HttpStatus.BAD_REQUEST),
 
-    //Quantity-related errors
-    INSUFFICIENT_INVENTORY(404, "Insufficient inventory", HttpStatus.SERVICE_UNAVAILABLE),
 
     //Create Payment Url
     INTERNAL_SERVER_ERROR(500, "Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR),
     PAYMENT_ALREADY_PROCESSED(500, "Payment already processed", HttpStatus.CONFLICT),
 
     //Email-related errors
-    SEND_MAIL_ERROR(500, "Send mail error", HttpStatus.INTERNAL_SERVER_ERROR),
+    SEND_MAIL_ERROR(500, "Send mail error", HttpStatus.INTERNAL_SERVER_ERROR);
 
-    //Cart-related errors
-    CART_NOT_FOUND(404, "Cart not found", HttpStatus.NOT_FOUND),
-    CART_ITEM_NOT_FOUND(404, "Cart item not found", HttpStatus.NOT_FOUND),
-    OUT_OF_STOCK(400, "Product is out of stock or quantity exceeds available stock", HttpStatus.BAD_REQUEST),
-    VARIANT_NOT_FOUND(404, "Product variant not found", HttpStatus.NOT_FOUND),
-    USER_NOT_EXISTED(404, "User not existed", HttpStatus.NOT_FOUND),
 
-    ;
 
 
 
