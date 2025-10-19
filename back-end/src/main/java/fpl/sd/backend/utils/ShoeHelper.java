@@ -8,7 +8,7 @@ import fpl.sd.backend.entity.ShoeVariant;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.ShoeImageMapper;
-import fpl.sd.backend.mapper.ShoeMapper;
+// import fpl.sd.backend.mapper.ShoeMapper;  // Comment out
 import fpl.sd.backend.mapper.ShoeVariantMapper;
 import fpl.sd.backend.repository.ShoeImageRepository;
 import fpl.sd.backend.repository.ShoeVariantRepository;
@@ -28,14 +28,30 @@ public class ShoeHelper {
     ShoeVariantRepository shoeVariantRepository;
     ShoeImageMapper shoeImageMapper;
     ShoeVariantMapper shoeVariantMapper;
-    ShoeMapper shoeMapper;
+    // ShoeMapper shoeMapper;  // Comment out
 
     public ShoeResponse getShoeResponse(Shoe shoe) {
         if (shoe == null) {
             throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        ShoeResponse response = shoeMapper.toShoeResponse(shoe);
+        // Manual mapping instead of using ShoeMapper
+        ShoeResponse response = new ShoeResponse();
+        response.setId(String.valueOf(shoe.getId())); // Convert int to String
+        response.setName(shoe.getName());
+        response.setPrice(shoe.getPrice());
+        response.setDescription(shoe.getDescription());
+        response.setStatus(shoe.isStatus());
+        response.setFakePrice(shoe.getFakePrice());
+        response.setCreatedAt(shoe.getCreatedAt());
+        response.setUpdatedAt(shoe.getUpdatedAt());
+        response.setGender(shoe.getGender() != null ? shoe.getGender().name() : null);
+        response.setCategory(shoe.getCategory() != null ? shoe.getCategory().name() : null);
+        
+        // ⭐ Set brandId from Brand entity
+        if (shoe.getBrand() != null) {
+            response.setBrandId(shoe.getBrand().getId());
+        }
 
         if (shoeVariantRepository != null) {
             List<ShoeImage> images = shoeImageRepository.findAllByShoeId(shoe.getId());

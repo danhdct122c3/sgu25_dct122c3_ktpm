@@ -27,6 +27,7 @@ public class ShoeResponse {
     Instant updatedAt;
     String gender;
     String category;
+    Integer brandId;  // Add this field
 
     List<ImageResponse> images;
     List<VariantResponse> variants;

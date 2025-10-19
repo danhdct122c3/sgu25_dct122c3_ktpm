@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ShoeMapper {
 
+    @Mapping(target = "brandId", source = "brand.id")
     ShoeResponse toShoeResponse(Shoe shoe);
 
     Shoe toShoe(ShoeCreateRequest request);

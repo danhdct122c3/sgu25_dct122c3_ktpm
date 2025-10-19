@@ -111,7 +111,7 @@ public class OrderController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{orderId}/cancel")
-    public APIResponse<OrderResponse> cancelOrder(@PathVariable int orderId) {
+    public APIResponse<OrderResponse> cancelOrder(@PathVariable String orderId) {
         OrderResponse cancelledOrder = orderService.cancelOrder(orderId);
         return APIResponse.<OrderResponse>builder()
                 .flag(true)

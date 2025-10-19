@@ -172,19 +172,16 @@ public class OrderService {
      * Only allows cancellation if order status is PENDING or RECEIVED
      * User can only cancel their own orders (checked via authentication context)
      */
-    public OrderResponse cancelOrder(int orderId) {
-        // Convert int to String for the order ID
-        String orderIdStr = String.valueOf(orderId);
+    public OrderResponse cancelOrder(String orderId) {
+        log.info("=== CANCELING ORDER {} ===", orderId);
         
-        log.info("=== CANCELING ORDER {} ===", orderIdStr);
-        
-        CustomerOrder order = orderRepository.findById(orderIdStr)
+        CustomerOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         // Check if order can be cancelled (only PENDING or RECEIVED status)
         if (order.getOrderStatus() != OrderConstants.OrderStatus.PENDING
                 && order.getOrderStatus() != OrderConstants.OrderStatus.RECEIVED) {
-            log.warn("Cannot cancel order {}. Current status: {}", orderIdStr, order.getOrderStatus());
+            log.warn("Cannot cancel order {}. Current status: {}", orderId, order.getOrderStatus());
             throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
         }
 
@@ -192,10 +189,10 @@ public class OrderService {
         order.setOrderStatus(OrderConstants.OrderStatus.CANCELED);
         order.setUpdateDate(Instant.now());
         
-        log.info("Order {} status changed to CANCELED", orderIdStr);
+        log.info("Order {} status changed to CANCELED", orderId);
 
         // Restore inventory for all order items
-        List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(orderIdStr);
+        List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(orderId);
         log.info("Found {} order details to restore inventory", orderDetails.size());
         
         for (OrderDetail detail : orderDetails) {
@@ -214,7 +211,7 @@ public class OrderService {
         }
 
         CustomerOrder savedOrder = orderRepository.save(order);
-        log.info("=== ORDER {} CANCELED SUCCESSFULLY ===", orderIdStr);
+        log.info("=== ORDER {} CANCELED SUCCESSFULLY ===", orderId);
         
         return orderMapper.toOrderResponse(savedOrder);
     }

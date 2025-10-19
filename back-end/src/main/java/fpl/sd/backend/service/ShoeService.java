@@ -17,7 +17,7 @@ import fpl.sd.backend.entity.*;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.ShoeImageMapper;
-import fpl.sd.backend.mapper.ShoeMapper;
+// import fpl.sd.backend.mapper.ShoeMapper; // Commented out - not using MapStruct
 import fpl.sd.backend.mapper.ShoeVariantMapper;
 import fpl.sd.backend.repository.*;
 import fpl.sd.backend.utils.MessageUtil;
@@ -47,7 +47,7 @@ import java.util.List;
 public class ShoeService {
     private static final Logger log = LoggerFactory.getLogger(ShoeService.class);
     ShoeRepository shoeRepository;
-    ShoeMapper shoeMapper;
+    // ShoeMapper shoeMapper; // Commented out - not using MapStruct
     BrandRepository brandRepository;
     ShoeImageRepository shoeImageRepository;
     SKUGenerators skuGenerators;
@@ -131,7 +131,12 @@ public class ShoeService {
         }
 
         // Create and map Shoe
-        Shoe newShoe = shoeMapper.toShoe(request);
+        Shoe newShoe = new Shoe();
+        newShoe.setName(request.getName());
+        newShoe.setPrice(request.getPrice());
+        newShoe.setDescription(request.getDescription());
+        newShoe.setGender(ShoeConstants.Gender.valueOf(request.getGender().toUpperCase()));
+        newShoe.setStatus(request.isStatus());
         newShoe.setCreatedAt(Instant.now());
 
         // Retrieve Brand
@@ -179,7 +184,7 @@ public class ShoeService {
         }
 
         // Return ShoeResponse
-        return shoeMapper.toShoeResponse(newShoe);
+        return shoeHelper.getShoeResponse(newShoe);
     }
 
 
@@ -203,6 +208,33 @@ public class ShoeService {
         selectedShoe.setGender(ShoeConstants.getGenderFromString(request.getGender()));
         selectedShoe.setCategory(ShoeConstants.getCategoryFromString(request.getCategory()));
         selectedShoe.setStatus(request.isStatus());
+
+        // Update images if provided
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            // Delete old images from database explicitly
+            List<ShoeImage> oldImages = new ArrayList<>(selectedShoe.getShoeImages());
+            for (ShoeImage oldImage : oldImages) {
+                shoeImageRepository.delete(oldImage);
+            }
+            selectedShoe.getShoeImages().clear();
+            
+            // Add new images
+            List<ShoeImage> newImages = request.getImages().stream()
+                    .map(imageReq -> {
+                        ShoeImage shoeImage = new ShoeImage();
+                        // Generate unique public_id from URL filename
+                        String publicId = extractPublicIdFromUrl(imageReq.getUrl());
+                        shoeImage.setPublicId(publicId);
+                        shoeImage.setUrl(imageReq.getUrl());
+                        shoeImage.setShoe(selectedShoe);
+                        shoeImage.setCreatedAt(Instant.now());
+                        shoeImage.setUpdatedAt(Instant.now());
+                        return shoeImage;
+                    })
+                    .toList();
+            
+            selectedShoe.getShoeImages().addAll(newImages);
+        }
 
         List<ShoeVariant> updatedVariants = new ArrayList<>();
         for (VariantUpdateRequest variantRequest : request.getVariants()) {
@@ -308,6 +340,33 @@ public class ShoeService {
             // If ShoeVariant has status field, set it to false here
         });
         shoeVariantRepository.saveAll(variants);
+    }
+    
+    /**
+     * Extract public_id from image URL
+     * For URL like "/uploads/shoes/abc123.jpg", return "abc123.jpg"
+     * For Cloudinary URL, extract the public_id part
+     */
+    private String extractPublicIdFromUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            return java.util.UUID.randomUUID().toString();
+        }
+        
+        // For local uploads like "/uploads/shoes/filename.jpg"
+        if (url.startsWith("/uploads/")) {
+            String[] parts = url.split("/");
+            return parts[parts.length - 1]; // Return filename
+        }
+        
+        // For Cloudinary or other CDN URLs
+        // Extract filename from URL
+        try {
+            String[] urlParts = url.split("/");
+            String filenameWithExt = urlParts[urlParts.length - 1];
+            return filenameWithExt.split("\\?")[0]; // Remove query params if any
+        } catch (Exception e) {
+            return java.util.UUID.randomUUID().toString();
+        }
     }
 
 }

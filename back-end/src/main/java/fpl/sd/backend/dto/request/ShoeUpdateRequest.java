@@ -24,4 +24,13 @@ public class ShoeUpdateRequest {
     String category;
     String description;
     List<VariantUpdateRequest> variants;
+    List<ImageRequest> images; // Add this field for image updates
+    
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ImageRequest {
+        private String url;
+    }
 }
