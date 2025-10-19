@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { BiSolidDetail } from "react-icons/bi";
 import { FiShoppingBag } from "react-icons/fi";
 import { Input } from "@/components/ui/input";
+import { getImageUrl } from "@/utils/imageHelper";
 import ComboBoxOrderBy from "../../components/shop/ComboBoxOrderBy";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -258,7 +259,7 @@ export default function ListShoePage() {
                   <CardTitle className="capitalize">{shoe.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <img src={shoe.images[0].url} alt="" />
+                  <img src={getImageUrl(shoe.images[0].url)} alt="" />
                   <div className="flex justify-between">
                     <p className="text-xl font-bold mt-2">
                       {formatterToVND.format(shoe.price)}

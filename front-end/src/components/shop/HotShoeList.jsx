@@ -11,6 +11,7 @@ import { Button } from "../ui/button";
 import { BiSolidDetail } from "react-icons/bi";
 import { formatterToVND } from "@/utils/formatter";
 import { Link } from "react-router-dom";
+import { getImageUrl } from "@/utils/imageHelper";
 
 export default function HotShoeList({ shoes, titlte }) {
   return (
@@ -29,7 +30,7 @@ export default function HotShoeList({ shoes, titlte }) {
             </CardHeader>
 
             <CardContent>
-              <img src={shoe.images?.[0]?.url} alt={shoe.name} />
+              <img src={getImageUrl(shoe.images?.[0]?.url)} alt={shoe.name} />
               <div className="flex justify-between">
                 <p className="text-xl font-bold mt-2">
                   {formatterToVND.format(shoe.price)}

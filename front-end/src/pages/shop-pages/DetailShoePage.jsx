@@ -18,7 +18,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-
+import { getImageUrl } from "@/utils/imageHelper";
 import { FaHome } from "react-icons/fa";
 
 export default function DetailShoePage() {
@@ -179,7 +179,7 @@ export default function DetailShoePage() {
         <div className="space-y-4">
           <div className="aspect-square relative">
             <img
-              src={shoe.images[selectedImage]?.url}
+              src={getImageUrl(shoe.images[selectedImage]?.url)}
               alt={shoe.name}
               className="w-full h-full object-cover rounded-lg"
             />
@@ -196,7 +196,7 @@ export default function DetailShoePage() {
                 }`}
               >
                 <img
-                  src={image.url}
+                  src={getImageUrl(image.url)}
                   alt={`Product view ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
