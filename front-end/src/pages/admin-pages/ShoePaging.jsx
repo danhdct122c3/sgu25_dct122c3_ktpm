@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, TableCellsMerge } from "lucide-react";
 import { formatterToVND } from "@/utils/formatter";
+import { getImageUrl } from "@/utils/imageHelper";
 import UpdateShoeForm from "../admin-pages/UpdateShoeForm";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
@@ -295,18 +296,27 @@ const ShoeManagement = () => {
               <TableRow key={shoe.id}>
                 <TableCell className="font-medium">{shoe.name}</TableCell>
                 <TableCell>
-                  <img
-                    src={shoe.images[0].url}
-                    alt={shoe.name}
-                    className="h-20 w-20 object-cover rounded"
-                  />
+                  {shoe.images && shoe.images.length > 0 ? (
+                    <img
+                      src={getImageUrl(shoe.images[0].url)}
+                      alt={shoe.name}
+                      className="h-20 w-20 object-cover rounded"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                      No image
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>{formatterToVND.format(shoe.price)}</TableCell>
                 <TableCell>
-                  {shoe.variants.reduce(
-                    (total, variant) => total + variant.stockQuantity,
-                    0
-                  )}
+                  {shoe.variants && shoe.variants.length > 0 
+                    ? shoe.variants.reduce(
+                        (total, variant) => total + variant.stockQuantity,
+                        0
+                      )
+                    : 0
+                  }
                 </TableCell>
                 <TableCell>
                   <UpdateShoeForm shoeId={shoe.id} />

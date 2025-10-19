@@ -26,10 +26,16 @@ const UnauthorizedPage = () => {
             🏠 Về trang chủ
           </Link>
           <Link 
+            to="/admin/login"
+            className="block w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            🛡️ Đăng nhập Admin
+          </Link>
+          <Link 
             to="/login"
             className="block w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
           >
-            🔑 Đăng nhập lại
+            � Đăng nhập User
           </Link>
         </div>
       </div>

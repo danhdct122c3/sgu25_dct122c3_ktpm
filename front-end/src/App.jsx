@@ -1,11 +1,14 @@
 import "./App.css";
 import UserLogin from "./pages/shop-pages/UserLogin";
+import AdminLogin from "./pages/admin-pages/AdminLogin";
 import SignUp from "./pages/shop-pages/SignUp";
 import Profile from "./pages/shop-pages/Profile";
 import RevenueStatistics from "./pages/admin-pages/RevenueStatistics";
 import "./App.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import { RouterProvider } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import ErrorPage from "./pages/ErrorPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
@@ -70,6 +73,10 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: "/admin/login",
+    element: <AdminLogin />,
+  },
+  {
     path: "/admin",
     element: (
       <ProtectedRoute requiredRole="ADMIN">
@@ -101,7 +108,23 @@ function App() {
   // Vì đã được xử lý trong initialState của auth.js (getUserFromToken)
   // Điều này tránh việc decode token 2 lần và đảm bảo user được khôi phục ngay từ đầu
 
-  return <RouterProvider router={router}></RouterProvider>;
+  return (
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <RouterProvider router={router} />
+    </>
+  );
 }
 
 export default App;

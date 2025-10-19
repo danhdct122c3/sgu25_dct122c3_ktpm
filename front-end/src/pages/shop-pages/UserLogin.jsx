@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectIsLoading, selectError } from "../../store/auth";
 import { authActions } from "@/store";
 import { selectUser } from "../../store/auth";
+import { jwtDecode } from "jwt-decode";
 
 const schema = z.object({
   username: z.string().min(1, { message: "Tên người dùng là bắt buộc" }),
@@ -53,13 +54,40 @@ function UserLogin() {
     try {
       const response = await api.post("auth/token", data);
       const token = response.data.result.token;
+
+      // Decode token để check role
+      const decodedToken = jwtDecode(token);
+      const userRole = decodedToken.scope;
+
+      console.log("🔑 User Login - Token decoded:", decodedToken);
+      console.log("👤 User Login - User role:", userRole);
+
+      // Chuẩn hóa role (xử lý cả "USER" và "ROLE_USER")
+      const normalizedRole = userRole?.replace("ROLE_", "");
+      console.log("✅ User Login - Normalized role:", normalizedRole);
+
+      // Kiểm tra role - trang này chỉ cho USER
+      if (normalizedRole === "ADMIN" || normalizedRole === "MANAGER") {
+        console.log("⚠️ User Login - Admin/Manager detected, redirecting...");
+        alert("⚠️ Tài khoản Admin/Manager vui lòng đăng nhập tại:\n/admin/login");
+        dispatch(authActions.loginFailure());
+        // Redirect về trang admin login
+        navigate("/admin/login");
+        return;
+      }
+
+      console.log("✅ User Login - Access granted!");
       localStorage.setItem("token", token);
       dispatch(authActions.loginSuccess(token));
+      
+      // User thì về trang chủ
+      console.log("↪️ Redirecting to /");
       navigate("/");
       
     } catch (err) {
-      console.log(err.response.data.message);
-      alert('Username or password is incorrect');
+      console.error("❌ User Login Error:", err);
+      console.error("Error response:", err.response?.data);
+      alert('❌ Tên đăng nhập hoặc mật khẩu không đúng');
       dispatch(authActions.loginFailure());
     }
   };
@@ -133,13 +161,26 @@ function UserLogin() {
                   >
                     {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
-                  {error && <p>{error}</p>}
+                  {error && <p className="text-red-500 text-center">{error}</p>}
+                  
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-gray-500">hoặc</span>
+                    </div>
+                  </div>
+
                   <a
                     href="/register"
                     className="text-center text-black hover:text-green-500 transition-colors duration-200 p-2"
                   >
                     Chưa có tài khoản? Tạo một tài khoản
                   </a>
+
+                  
                 </div>
               </CardFooter>
             </Card>

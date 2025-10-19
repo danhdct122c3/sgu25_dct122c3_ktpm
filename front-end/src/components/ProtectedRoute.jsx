@@ -11,10 +11,16 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   console.log("🔒 ProtectedRoute - Required Role:", requiredRole);
 
   // QUAN TRỌNG: Kiểm tra xem user đã đăng nhập chưa
-  // Nếu không có token HOẶC không có user => chuyển về trang login
+  // Nếu không có token HOẶC không có user => chuyển về trang login ĐÚNG
   if (!token || !user) {
     console.log("❌ No token or user found - redirecting to login");
-    return <Navigate to="/login" replace />;
+    
+    // Redirect về đúng trang login dựa vào required role
+    const loginPath = requiredRole === "ADMIN" || requiredRole === "MANAGER" 
+      ? "/admin/login" 
+      : "/login";
+    
+    return <Navigate to={loginPath} replace />;
   }
 
   // QUAN TRỌNG: Kiểm tra role nếu được yêu cầu (chỉ có 2 role: USER và ADMIN)
