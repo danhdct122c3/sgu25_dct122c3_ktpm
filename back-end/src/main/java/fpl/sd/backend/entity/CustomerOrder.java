@@ -34,6 +34,7 @@ public class CustomerOrder {
     Instant updateDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     OrderConstants.OrderStatus orderStatus;
 
     @Column(nullable = false)

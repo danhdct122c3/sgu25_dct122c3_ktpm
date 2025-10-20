@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -25,7 +24,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
@@ -33,11 +31,22 @@ import { FaHome } from "react-icons/fa";
 
 function CheckOut() {
   const items = useSelector(selectItems);
-  const { originalPrice, discountAmount, storePickup, tax, total, discountId } =
-    useSelector((state) => state.cartTotal);
+  const { 
+    originalPrice, 
+    discountAmount, 
+    storePickup, 
+    tax, 
+    total, 
+    discountId,
+    appliedCoupon,
+    discountCategories,
+    discountShoeIds,
+    discountDescription
+  } = useSelector((state) => state.cartTotal);
 
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({});
+  const [error, setError] = useState(null);
 
   const user = useSelector(selectUser);
   const userName = user ? user.sub : null;
@@ -198,7 +207,6 @@ function CheckOut() {
         draggable
         pauseOnHover
         theme="light"
-        transition:Bounce
       />
       <div className="px-4 py-2">
         <Breadcrumb>
@@ -341,9 +349,43 @@ function CheckOut() {
                     <span>{formatterToVND.format(storePickup)}</span>
                   </div>
                   {discountAmount > 0 && (
-                    <div className="flex justify-between text-green-700">
-                      <span className="text-muted-foreground">Giảm giá:</span>
-                      <span>-{formatterToVND.format(discountAmount)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-green-700">
+                        <span className="text-muted-foreground">
+                          Giảm giá {appliedCoupon && `(${appliedCoupon})`}
+                        </span>
+                        <span>-{formatterToVND.format(discountAmount)}</span>
+                      </div>
+                      
+                      {discountDescription && (
+                        <div className="text-sm text-gray-600 italic pl-4">
+                          {discountDescription}
+                        </div>
+                      )}
+                      
+                      {(discountCategories?.length > 0 || discountShoeIds?.length > 0) && (
+                        <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded-lg ml-4">
+                          <div className="font-medium mb-2 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            Phạm vi áp dụng:
+                          </div>
+                          {discountCategories?.length > 0 && (
+                            <div className="mb-1">
+                              <span className="font-medium">Danh mục:</span> {discountCategories.join(", ")}
+                            </div>
+                          )}
+                          {discountShoeIds?.length > 0 && (
+                            <div className="mb-1">
+                              <span className="font-medium">Sản phẩm cụ thể:</span> {discountShoeIds.length} sản phẩm được chọn
+                            </div>
+                          )}
+                          {(!discountCategories?.length && !discountShoeIds?.length) && (
+                            <div>
+                              <span className="font-medium">Áp dụng:</span> Tất cả sản phẩm
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   <Separator />

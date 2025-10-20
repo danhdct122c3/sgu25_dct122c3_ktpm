@@ -50,8 +50,22 @@ public class Discount {
     @Builder.Default
     boolean isActive = true;
 
+    // Usage limit fields
+    @Column(nullable = true)
+    Integer usageLimit; // null means unlimited
+
+    @Column(nullable = false)
+    @Builder.Default
+    Integer usedCount = 0;
+
     @OneToMany(mappedBy = "discount")
     List<CustomerOrder> customerOrders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "discount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    List<DiscountCategory> discountCategories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "discount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    List<DiscountShoe> discountShoes = new ArrayList<>();
 
     // Phương thức giúp kiểm tra và điều chỉnh giá trị khi cập nhật Discount
     public void setDiscountValues() {
@@ -59,7 +73,16 @@ public class Discount {
             this.percentage = null; // Disable percentage
         } else if (this.discountType == DiscountConstants.DiscountType.PERCENTAGE) {
             this.fixedAmount = null; // Disable fixedAmount
-            this.minimumOrderAmount = 0.0; // Disable minimumOrderAmount
+            // Không set minimumOrderAmount = 0.0 vì cả PERCENTAGE và FIXED_AMOUNT đều có thể có minimum amount
         }
+    }
+
+    // Helper methods for usage limit
+    public boolean isUsageLimitReached() {
+        return usageLimit != null && usedCount >= usageLimit;
+    }
+
+    public void incrementUsedCount() {
+        this.usedCount++;
     }
 }

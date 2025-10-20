@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios"; // We'll use axios for HTTP requests
+import  { useState, useEffect, useCallback } from "react";
+// import axios from "axios"; // We'll use axios for HTTP requests
 import api from "@/config/axios";
 
 // You'll need to install and import your UI components library
@@ -15,14 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, TableCellsMerge } from "lucide-react";
-import { formatterToVND } from "@/utils/formatter";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+// import { formatterToVND } from "@/utils/formatter";
 import UpdateDiscountForm from "../admin-pages/UpdateDiscountForm";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import { Link, useNavigate } from "react-router-dom";
-import { Pagination } from "@/components/ui/pagination";
+import { Link } from "react-router-dom";
+// import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";  
+// import { Checkbox } from "@/components/ui/checkbox";  
 
 
 const DiscountPaging = () => {
@@ -32,7 +32,7 @@ const DiscountPaging = () => {
   const [isActive, setIsActive] = useState("");
   const [sortOrder, setSortOrder] = useState("date");
   const [page, setPage] = useState(1);
-  const [size, setSize] = useState(5);
+  const [size] = useState(5);
 
   const fetchDiscountData = useCallback(async () => {
     try {
@@ -151,6 +151,9 @@ const DiscountPaging = () => {
               <TableCell className="p-3 font-semibold">Chỉnh sửa</TableCell>
               <TableCell className="p-3 font-semibold">Tên mã</TableCell>
               <TableCell className="p-3 font-semibold">Loại giảm giá</TableCell>
+              <TableCell className="p-3 font-semibold">Giá trị</TableCell>
+              <TableCell className="p-3 font-semibold">Giới hạn sử dụng</TableCell>
+              <TableCell className="p-3 font-semibold">Danh mục</TableCell>
               <TableCell className="p-3 font-semibold">Ngày bắt đầu</TableCell>
               <TableCell className="p-3 font-semibold">Ngày kết thúc</TableCell>
               <TableCell className="p-3 font-semibold">Trạng thái</TableCell>
@@ -158,22 +161,42 @@ const DiscountPaging = () => {
           </TableHeader>
           <TableBody>
           {discountData.data.map((discount) => (
-             
                 <TableRow key={discount.id} className="hover:bg-gray-50">
                   <TableCell className="p-3 text-yellow-500 cursor-pointer">
-                    {/* <button onClick={() => handleDeleteDiscount(discount.id)}>Delete</button> */}
-                    {/* Delete */}
                     <UpdateDiscountForm discountId={discount.id} />
                   </TableCell>
                   <TableCell className="p-3">{discount.code}</TableCell>
-                  <TableCell className="p-3">{discount.discountType}</TableCell>
+                  <TableCell className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      discount.discountType === 'PERCENTAGE' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {discount.discountType === 'PERCENTAGE' ? 'Phần trăm' : 'Số tiền cố định'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {discount.discountType === 'PERCENTAGE' 
+                      ? `${discount.percentage}%` 
+                      : `${discount.fixedAmount?.toLocaleString()}đ`
+                    }
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {discount.usageLimit ? `${discount.usageLimit} lần` : 'Không giới hạn'}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {discount.categories && discount.categories.length > 0 
+                      ? discount.categories.join(', ') 
+                      : 'Tất cả danh mục'
+                    }
+                  </TableCell>
                   <TableCell className="p-3">{new Date(discount.startDate).toLocaleString()}</TableCell>
                   <TableCell className="p-3">{new Date(discount.endDate).toLocaleString()}</TableCell>
                   <TableCell className="p-3">
                     {discount.active ? (
-                      <span className="text-green-500" value="true">Hoạt động </span>
+                      <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Hoạt động</span>
                     ) : (
-                      <span className="text-red-500"value="false">Tắt</span>
+                      <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">Tắt</span>
                     )}
                   </TableCell>
                 </TableRow>

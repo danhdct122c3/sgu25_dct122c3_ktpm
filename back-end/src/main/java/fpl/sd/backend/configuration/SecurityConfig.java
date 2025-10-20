@@ -62,6 +62,9 @@ public class SecurityConfig {
                 // Orders - người dùng đã đăng nhập mới tạo được
                 .requestMatchers("/orders/apply-discount").permitAll()
                 
+                // Payment - VNPay callback không cần authentication
+                .requestMatchers("/payment/payment-callback").permitAll()
+                
                 // Chat - công khai
                 .requestMatchers("/chat/**").permitAll()
                 

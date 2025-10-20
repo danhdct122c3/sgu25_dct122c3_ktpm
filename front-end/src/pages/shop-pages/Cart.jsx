@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Minus, Plus, Heart, X } from "lucide-react";
+import  { useEffect } from "react";
+import { Minus, Plus, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
@@ -33,7 +32,7 @@ export default function Cart() {
 
   const couponCode = useRef();
 
-  const [discountInfo, setDiscountInfor] = useState(null);
+  const [discountInfo, setDiscountInfo] = useState(null);
 
   const removeItem = (id) => {
     dispatch(cartActions.removeEntireItemFromCart(id));
@@ -49,19 +48,24 @@ export default function Cart() {
 
   const handleApplyCode = async () => {
     const currentCode = couponCode.current.value;
+    const currentTotal = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
 
     try {
       const response = await api.post(`/orders/apply-discount`, {
         discount: currentCode,
+        orderAmount: currentTotal,
       });
 
       if (!response.data.flag) {
-        setDiscountInfor(null);
+        setDiscountInfo(null);
         toast.error(response.data.message);
       }
 
       if (response.data.flag) {
-        setDiscountInfor(response.data.result);
+        setDiscountInfo(response.data.result);
         toast.success(response.data.message);
       }
     } catch (error) {
@@ -99,6 +103,9 @@ export default function Cart() {
       appliedCoupon: discountInfo?.coupon || null,
       discountType: discountInfo?.discountType || null,
       minimumOrderAmount: discountInfo?.minimumOrderAmount || 0,
+      discountCategories: discountInfo?.categories || [],
+      discountShoeIds: discountInfo?.shoeIds || [],
+      discountDescription: discountInfo?.description || null,
     };
   };
   useEffect(() => {
@@ -223,14 +230,37 @@ export default function Cart() {
                 </div>
 
                 {totals.discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>
-                      Giảm giá{" "}
-                      {totals.appliedCoupon && `(${totals.appliedCoupon})`}
-                      {totals.discountType === "PERCENTAGE" &&
-                        ` ${discountInfo.percentage}%`}
-                    </span>
-                    <span>-{formatterToVND.format(totals.discountAmount)}</span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-green-600">
+                      <span>
+                        Giảm giá{" "}
+                        {totals.appliedCoupon && `(${totals.appliedCoupon})`}
+                        {totals.discountType === "PERCENTAGE" &&
+                          ` ${discountInfo.percentage}%`}
+                      </span>
+                      <span>-{formatterToVND.format(totals.discountAmount)}</span>
+                    </div>
+                    
+                    {totals.discountDescription && (
+                      <div className="text-sm text-gray-600 italic">
+                        {totals.discountDescription}
+                      </div>
+                    )}
+                    
+                    {(totals.discountCategories.length > 0 || totals.discountShoeIds.length > 0) && (
+                      <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                        <div className="font-medium mb-1">Áp dụng cho:</div>
+                        {totals.discountCategories.length > 0 && (
+                          <div>• Danh mục: {totals.discountCategories.join(", ")}</div>
+                        )}
+                        {totals.discountShoeIds.length > 0 && (
+                          <div>• Sản phẩm cụ thể: {totals.discountShoeIds.length} sản phẩm</div>
+                        )}
+                        {totals.discountCategories.length === 0 && totals.discountShoeIds.length === 0 && (
+                          <div>• Tất cả sản phẩm</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

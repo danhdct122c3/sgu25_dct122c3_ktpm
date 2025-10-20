@@ -13,6 +13,9 @@ const cartTotalSlice = createSlice({
     appliedCoupon: null,
     discountType: null,
     minimumOrderAmount: 0,
+    discountCategories: [],
+    discountShoeIds: [],
+    discountDescription: null,
   },
   reducers: {
     setCartTotal: (state, action) => {

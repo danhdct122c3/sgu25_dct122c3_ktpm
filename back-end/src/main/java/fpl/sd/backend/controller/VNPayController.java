@@ -26,28 +26,65 @@ public class VNPayController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create-payment")
     public APIResponse<String> createPayment(@RequestBody PaymentRequest paymentRequest) {
-        return APIResponse.<String>builder()
-                .flag(true)
-                .message("Payment created successfully")
-                .code(200)
-                .result(paymentService.createPayment(paymentRequest.getOrderId(), paymentRequest.getIpAddress()))
-                .build();
+        try {
+            log.info("Creating payment for order: {}", paymentRequest.getOrderId());
+            
+            String paymentUrl = paymentService.createPayment(
+                paymentRequest.getOrderId(), 
+                paymentRequest.getIpAddress()
+            );
+            
+            return APIResponse.<String>builder()
+                    .flag(true)
+                    .message("Payment created successfully")
+                    .code(200)
+                    .result(paymentUrl)
+                    .build();
+                    
+        } catch (Exception e) {
+            log.error("Error creating payment for order: {}", paymentRequest.getOrderId(), e);
+            return APIResponse.<String>builder()
+                    .flag(false)
+                    .message("Payment creation failed: " + e.getMessage())
+                    .code(500)
+                    .build();
+        }
     }
 
     @GetMapping("/payment-callback")
     public APIResponse<PaymentResponse> paymentCallback(HttpServletRequest request) {
-        //Extract payment callback data
-        PaymentCallbackRequest callbackRequest = PaymentCallbackRequest.from(request);
+        try {
+            log.info("Received VNPay payment callback");
+            
+            //Extract payment callback data
+            PaymentCallbackRequest callbackRequest = PaymentCallbackRequest.from(request);
+            
+            log.info("Processing payment callback for order: {}", callbackRequest.getOrderId());
 
-        //Process payment
-        PaymentResponse response = paymentService.processPaymentCallback(callbackRequest);
+            //Process payment
+            PaymentResponse response = paymentService.processPaymentCallback(callbackRequest);
 
-        return APIResponse.<PaymentResponse>builder()
-                .flag(true)
-                .message("Payment successful")
-                .code(200)
-                .result(response)
-                .build();
-
+            return APIResponse.<PaymentResponse>builder()
+                    .flag(true)
+                    .message("Payment processed successfully")
+                    .code(200)
+                    .result(response)
+                    .build();
+                    
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid payment callback parameters: {}", e.getMessage());
+            return APIResponse.<PaymentResponse>builder()
+                    .flag(false)
+                    .message("Invalid payment callback parameters: " + e.getMessage())
+                    .code(400)
+                    .build();
+        } catch (Exception e) {
+            log.error("Error processing payment callback", e);
+            return APIResponse.<PaymentResponse>builder()
+                    .flag(false)
+                    .message("Payment processing failed")
+                    .code(500)
+                    .build();
+        }
     }
 }

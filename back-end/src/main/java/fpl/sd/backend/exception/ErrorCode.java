@@ -59,13 +59,18 @@ public enum ErrorCode {
     //Order-related errors
     ORDER_SAVE_ERROR(500, "Order Save Error", HttpStatus.INTERNAL_SERVER_ERROR),
     ORDER_NOT_FOUND(404,"Order not found" ,HttpStatus.NOT_FOUND),
-    ORDER_CANNOT_BE_CANCELLED(400, "Order cannot be cancelled. Only PENDING or RECEIVED orders can be cancelled.", HttpStatus.BAD_REQUEST),
+    ORDER_CANNOT_BE_CANCELLED(400, "Order cannot be cancelled. Only CREATED or CONFIRMED orders can be cancelled.", HttpStatus.BAD_REQUEST),
+    ORDER_STATUS_TRANSITION_INVALID(400, "Invalid order status transition", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_INVENTORY(400, "Insufficient inventory for this product", HttpStatus.BAD_REQUEST),
+    INVALID_ORDER_TOTAL(400, "Invalid order total. Total must be greater than 0", HttpStatus.BAD_REQUEST),
 
 
-    //Create Payment Url
+    //Payment-related errors
     INTERNAL_SERVER_ERROR(500, "Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR),
     PAYMENT_ALREADY_PROCESSED(500, "Payment already processed", HttpStatus.CONFLICT),
+    ORDER_CANNOT_BE_PAID(400, "Order cannot be paid. Only CREATED orders can be paid.", HttpStatus.BAD_REQUEST),
+    PAYMENT_SIGNATURE_INVALID(400, "Payment signature is invalid", HttpStatus.BAD_REQUEST),
+    PAYMENT_FAILED(400, "Payment failed", HttpStatus.BAD_REQUEST),
 
     //Email-related errors
     SEND_MAIL_ERROR(500, "Send mail error", HttpStatus.INTERNAL_SERVER_ERROR);

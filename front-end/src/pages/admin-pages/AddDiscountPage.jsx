@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,16 @@ import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import api from "@/config/axios";
 import "react-toastify/dist/ReactToastify.css";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, User, Mail, Phone, Home, ShoppingCart, Tag } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const schema = z.object({
   code: z.string().min(2),
@@ -20,9 +28,12 @@ const schema = z.object({
   percentage: z.number().nullable().optional(),
   fixedAmount: z.number().nullable().optional(),
   minimumOrderAmount: z.number().nullable().default(0), // Nếu không nhập thì mặc định là 0
+  usageLimit: z.number().nullable().optional(), // Thêm trường usageLimit
   startDate: z.string(),
   endDate: z.string(),
-  active: z.enum(["true", "false"])
+  active: z.enum(["true", "false"]),
+  categories: z.array(z.string()).optional(), // Thêm trường categories
+  shoeIds: z.array(z.number()).optional(), // Thêm trường shoeIds
 }).refine((data) => {
   if (data.discountType === "PERCENTAGE") {
     return data.percentage != null && data.fixedAmount == null;
@@ -39,13 +50,17 @@ export default function AddDiscountForm() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
+    
     watch,
   } = useForm({
     resolver: zodResolver(schema),
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [shoes, setShoes] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedShoes, setSelectedShoes] = useState([]);
   const navigate = useNavigate();
   // const [value, setValue] = useState(initialValue);
   const { setValue } = useForm();
@@ -59,6 +74,37 @@ export default function AddDiscountForm() {
       setValue("fixedAmount", null); // Đặt lại giá trị nếu discountType không phải FIXED_AMOUNT
     }
   }, [watch("discountType")]); // Theo dõi sự thay đổi của discountType
+
+  // Fetch categories và shoes
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch shoes
+        const shoesResponse = await api.get("/shoes");
+        if (shoesResponse.data.result && Array.isArray(shoesResponse.data.result)) {
+          setShoes(shoesResponse.data.result);
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        // Set fallback categories
+        setCategories([
+          { value: "SPORT", name: "Giày thể thao" },
+          { value: "RUNNING", name: "Giày chạy bộ" },
+          { value: "CASUAL", name: "Giày thường" },
+        ]);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Set available categories (hardcoded for now)
+  useEffect(() => {
+    setCategories([
+      { value: "SPORT", name: "Giày thể thao" },
+      { value: "RUNNING", name: "Giày chạy bộ" },
+      { value: "CASUAL", name: "Giày thường" },
+    ]);
+  }, []);
 
 
 
@@ -83,8 +129,11 @@ export default function AddDiscountForm() {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         minimumOrderAmount: data.minimumOrderAmount || 0,  // Đảm bảo giá trị không null, nếu trống thì set là 0
+        usageLimit: data.usageLimit || null, // Thêm usageLimit
         percentage: data.discountType === "PERCENTAGE" ? data.percentage : null,
         fixedAmount: data.discountType === "FIXED_AMOUNT" ? data.fixedAmount : null,
+        categories: selectedCategories.length > 0 ? selectedCategories : null, // Thêm categories
+        shoeIds: selectedShoes.length > 0 ? selectedShoes : null, // Thêm shoeIds
       };
   
       console.log("Sending data:", formattedData);
@@ -236,8 +285,93 @@ export default function AddDiscountForm() {
   })}
   defaultValue={0}  // Đảm bảo giá trị mặc định là 0
 />
+        </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="usageLimit" className="block text-gray-700">Giới hạn sử dụng</Label>
+          <Input
+            type="number"
+            name="usageLimit"
+            id="usageLimit"
+            placeholder="Nhập số lần sử dụng tối đa (để trống nếu không giới hạn)"
+            {...register("usageLimit", {
+              valueAsNumber: true,
+              validate: (value) => !value || value > 0 || "Usage limit must be greater than 0",
+            })}
+          />
+          {errors.usageLimit?.message && <p className="text-red-600 text-sm">{errors.usageLimit?.message}</p>}
+        </div>
 
+        <div className="space-y-2">
+          <Label className="block text-gray-700">Danh mục áp dụng</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {categories.map((category) => (
+              <div key={category.value} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`category-${category.value}`}
+                  checked={selectedCategories.includes(category.value)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedCategories([...selectedCategories, category.value]);
+                    } else {
+                      setSelectedCategories(selectedCategories.filter(c => c !== category.value));
+                    }
+                  }}
+                />
+                <Label htmlFor={`category-${category.value}`} className="text-sm">
+                  {category.name}
+                </Label>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500">Để trống nếu áp dụng cho tất cả danh mục</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="block text-gray-700">Sản phẩm cụ thể</Label>
+          <Select
+            onValueChange={(value) => {
+              const shoeId = parseInt(value);
+              if (!selectedShoes.includes(shoeId)) {
+                setSelectedShoes([...selectedShoes, shoeId]);
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn sản phẩm" />
+            </SelectTrigger>
+            <SelectContent>
+              {shoes.filter(shoe => !selectedShoes.includes(shoe.id)).map((shoe) => (
+                <SelectItem key={shoe.id} value={shoe.id.toString()}>
+                  {shoe.name} - {shoe.price?.toLocaleString()}đ
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {selectedShoes.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-600 mb-2">Sản phẩm đã chọn:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedShoes.map((shoeId) => {
+                  const shoe = shoes.find(s => s.id === shoeId);
+                  return shoe ? (
+                    <div key={shoeId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1">
+                      {shoe.name}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedShoes(selectedShoes.filter(id => id !== shoeId))}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-gray-500">Để trống nếu áp dụng cho tất cả sản phẩm</p>
         </div>
 
         <div className="space-y-2">

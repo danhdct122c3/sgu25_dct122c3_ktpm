@@ -8,6 +8,7 @@ import fpl.sd.backend.ai.chat.dto.ChatRequest;
 import fpl.sd.backend.ai.chat.dto.ChatResponse;
 import fpl.sd.backend.ai.chat.dto.Message;
 import fpl.sd.backend.constant.DiscountConstants;
+import fpl.sd.backend.constant.ShoeConstants;
 
 import fpl.sd.backend.dto.PageResponse;
 import fpl.sd.backend.dto.request.DiscountCreateRequest;
@@ -16,11 +17,16 @@ import fpl.sd.backend.dto.response.DiscountResponse;
 import fpl.sd.backend.dto.response.ShoeResponse;
 import fpl.sd.backend.entity.CustomerOrder;
 import fpl.sd.backend.entity.Discount;
+import fpl.sd.backend.entity.DiscountCategory;
+import fpl.sd.backend.entity.DiscountShoe;
 import fpl.sd.backend.entity.Shoe;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.DiscountMapper;
 import fpl.sd.backend.repository.DiscountRepository;
+import fpl.sd.backend.repository.DiscountCategoryRepository;
+import fpl.sd.backend.repository.DiscountShoeRepository;
+import fpl.sd.backend.repository.ShoeRepository;
 import fpl.sd.backend.utils.MessageUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +48,9 @@ public class DiscountService {
     DiscountMapper discountMapper;
     ObjectMapper objectMapper;
     ChatClient chatClient;
+    DiscountCategoryRepository discountCategoryRepository;
+    DiscountShoeRepository discountShoeRepository;
+    ShoeRepository shoeRepository;
 
     public List<DiscountResponse> getAllDiscounts() {
         List<Discount> discounts = discountRepository.findAll();
@@ -73,16 +82,46 @@ public class DiscountService {
         }
 
         // Ánh xạ từ request sang entity
-        Discount discounts = discountMapper.toDiscount(request);
+        Discount discount = discountMapper.toDiscount(request);
+
+        // Set usage limit
+        if (request.getUsageLimit() != null) {
+            discount.setUsageLimit(request.getUsageLimit());
+        }
 
         // Áp dụng logic kiểm tra và điều chỉnh các trường discount
-        discounts.setDiscountValues();
+        discount.setDiscountValues();
 
-        // Lưu dữ liệu vào database
-        discountRepository.save(discounts);
+        // Lưu discount trước
+        discount = discountRepository.save(discount);
+
+        // Xử lý categories nếu có
+        if (request.getCategories() != null && !request.getCategories().isEmpty()) {
+            for (ShoeConstants.Category category : request.getCategories()) {
+                DiscountCategory discountCategory = DiscountCategory.builder()
+                        .discount(discount)
+                        .category(category)
+                        .build();
+                discountCategoryRepository.save(discountCategory);
+            }
+        }
+
+        // Xử lý shoes nếu có
+        if (request.getShoeIds() != null && !request.getShoeIds().isEmpty()) {
+            for (String shoeId : request.getShoeIds()) {
+                Shoe shoe = shoeRepository.findById(Integer.parseInt(shoeId))
+                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                
+                DiscountShoe discountShoe = DiscountShoe.builder()
+                        .discount(discount)
+                        .shoe(shoe)
+                        .build();
+                discountShoeRepository.save(discountShoe);
+            }
+        }
 
         // Trả về response
-        return discountMapper.toDiscountResponse(discounts);
+        return discountMapper.toDiscountResponse(discount);
     }
 
 

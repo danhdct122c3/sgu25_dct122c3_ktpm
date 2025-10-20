@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from "react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import  { useState, useEffect } from "react";
+// import {
+//   Pagination,
+//   PaginationContent,
+//   PaginationEllipsis,
+//   PaginationItem,
+//   PaginationLink,
+//   PaginationNext,
+//   PaginationPrevious,
+// } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { format } from "date-fns";
+// import { Label } from "@/components/ui/label";
+// import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+// import { cn } from "@/lib/utils";
+// import { Calendar } from "@/components/ui/calendar";
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from "@/components/ui/popover";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import axios from "axios";
+// import axios from "axios";
 import api from "@/config/axios";
 import { formatterToVND } from "@/utils/formatter";
 
@@ -106,7 +106,7 @@ export default function MemberOrderHistory() {
         </TableHeader>
         <TableBody>
           {Array.isArray(customerOrders) && customerOrders.length > 0 ? (
-            customerOrders.map((customerOrder,index) => (
+            customerOrders.map((customerOrder) => (
               <TableRow key={customerOrder.id} className="hover:bg-gray-50">
                 <TableCell className="p-3 text-blue-500">#{customerOrder.id.slice(0, 8)}</TableCell>
                 <TableCell className="p-3">{customerOrder.username}</TableCell>
@@ -114,7 +114,24 @@ export default function MemberOrderHistory() {
                 <TableCell className="p-3 text-yellow-500">{formatterToVND.format(customerOrder.originalTotal)}</TableCell>
                 <TableCell className="p-3 text-green-500">{formatterToVND.format(customerOrder.finalTotal)}</TableCell>
                 <TableCell>
-                {customerOrder.orderStatus }
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    customerOrder.orderStatus === 'PAID' ? 'bg-green-100 text-green-800' :
+                    customerOrder.orderStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                    customerOrder.orderStatus === 'CANCELED' ? 'bg-red-100 text-red-800' :
+                    customerOrder.orderStatus === 'RECEIVED' ? 'bg-purple-100 text-purple-800' :
+                    customerOrder.orderStatus === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
+                    customerOrder.orderStatus === 'PAYMENT_FAILED' ? 'bg-orange-100 text-orange-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {customerOrder.orderStatus === 'PAID' ? '🟢 Đã thanh toán' :
+                     customerOrder.orderStatus === 'PENDING' ? '🟡 Chờ xử lý' :
+                     customerOrder.orderStatus === 'CANCELED' ? '❌ Đã hủy' :
+                     customerOrder.orderStatus === 'RECEIVED' ? '📦 Đã nhận' :
+                     customerOrder.orderStatus === 'SHIPPED' ? '🚚 Đã giao' :
+                     customerOrder.orderStatus === 'PAYMENT_FAILED' ? '💳 Thanh toán thất bại' :
+                     customerOrder.orderStatus
+                    }
+                  </span>
                 </TableCell>
                 <TableCell className="p-3 text-blue-500 cursor-pointer">
                 <UpdateMemberOrderHistory orderId={customerOrder.id} />

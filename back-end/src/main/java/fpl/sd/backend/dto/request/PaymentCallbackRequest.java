@@ -34,15 +34,37 @@ public class PaymentCallbackRequest {
             }
         });
 
+        // Validate required parameters
+        String orderId = params.get("vnp_OrderInfo");
+        String amountStr = params.get("vnp_Amount");
+        String transactionNo = params.get("vnp_TransactionNo");
+        
+        if (orderId == null || orderId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Order ID is required in payment callback");
+        }
+        
+        if (transactionNo == null || transactionNo.trim().isEmpty()) {
+            throw new IllegalArgumentException("Transaction number is required in payment callback");
+        }
+        
+        Long amount = null;
+        if (amountStr != null && !amountStr.trim().isEmpty()) {
+            try {
+                amount = Long.parseLong(amountStr);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid amount format in payment callback: " + amountStr);
+            }
+        }
+
         return PaymentCallbackRequest.builder()
                 .secureHash(params.get("vnp_SecureHash"))
                 .parameters(params)
                 .responseCode(params.get("vnp_ResponseCode"))
                 .transactionStatus(params.get("vnp_TransactionStatus"))
-                .orderId(params.get("vnp_OrderInfo"))
-                .amount(Long.parseLong(params.get("vnp_Amount")))
+                .orderId(orderId)
+                .amount(amount)
                 .bankCode(params.get("vnp_BankCode"))
-                .transactionNo(params.get("vnp_TransactionNo"))
+                .transactionNo(transactionNo)
                 .paymentDate(params.get("vnp_PayDate"))
                 .cardType(params.get("vnp_CardType"))
                 .build();

@@ -87,7 +87,7 @@ public class OrderController {
     @PostMapping("/apply-discount")
     public APIResponse<?> applyDiscount(@RequestBody @Valid ApplyDiscountRequest request) {
         try {
-            ApplyDiscountResponse applyDiscountResponse = orderService.applyDiscount(request.getDiscount());
+            ApplyDiscountResponse applyDiscountResponse = orderService.applyDiscount(request.getDiscount(), request.getOrderAmount());
             return APIResponse.<ApplyDiscountResponse>builder()
                     .code(200)
                     .flag(true)

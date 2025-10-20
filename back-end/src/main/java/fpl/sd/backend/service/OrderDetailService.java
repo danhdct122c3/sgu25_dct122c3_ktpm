@@ -30,7 +30,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import fpl.sd.backend.dto.PageResponse;
 
 
 
@@ -136,10 +135,10 @@ public class OrderDetailService {
             customerOrder.setFinalTotal(request.getFinalTotal());
         }
 
-        // ✅ RESTORE INVENTORY when status changes to CANCELED
+        //  RESTORE INVENTORY when status changes to CANCELLED
         if (request.getOrderStatus() != null 
-                && request.getOrderStatus() == OrderConstants.OrderStatus.CANCELED
-                && oldStatus != OrderConstants.OrderStatus.CANCELED) {
+                && request.getOrderStatus() == OrderConstants.OrderStatus.CANCELLED
+                && oldStatus != OrderConstants.OrderStatus.CANCELLED) {
             
             log.info("=== ORDER STATUS CHANGED TO CANCELED - RESTORING INVENTORY ===");
             log.info("Order ID: {}, Previous Status: {}", orderId, oldStatus);
@@ -161,7 +160,7 @@ public class OrderDetailService {
                 variant.setStockQuantity(newStock);
                 shoeVariantRepository.save(variant);
                 
-                log.info("✅ Successfully restored stock for variant {} (Product: {})", 
+                log.info(" Successfully restored stock for variant {} (Product: {})", 
                         variant.getId(), variant.getShoe().getName());
             }
             

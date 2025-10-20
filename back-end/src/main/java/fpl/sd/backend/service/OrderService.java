@@ -34,13 +34,35 @@ public class OrderService {
     CustomerOrderRepository orderRepository;
     OrderDetailRepository orderDetailRepository;
     DiscountRepository discountRepository;
+    DiscountValidationService discountValidationService;
 
 
     public OrderResponse createOrder(OrderRequest request) {
+        
+        // Validate và tính toán lại tổng tiền từ items
+        double calculatedTotal = request.getItems().stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+        
+        // Kiểm tra tổng tiền phải > 0
+        if (calculatedTotal <= 0) {
+            throw new AppException(ErrorCode.INVALID_ORDER_TOTAL);
+        }
+        
+        // Cập nhật lại originalTotal nếu không đúng
+        if (request.getOriginalTotal() != calculatedTotal) {
+            log.warn("Original total mismatch. Expected: {}, Received: {}", calculatedTotal, request.getOriginalTotal());
+            request.setOriginalTotal(calculatedTotal);
+        }
+        
+        // Tính toán finalTotal bao gồm thuế và phí vận chuyển
+        // finalTotal từ frontend đã bao gồm: originalPrice - discountAmount + tax + storePickup
+        // Chúng ta sẽ sử dụng finalTotal từ frontend để đảm bảo tính nhất quán
+        log.info("Using finalTotal from frontend: {}", request.getFinalTotal());
 
         CustomerOrder newOrder = orderMapper.toCustomerOrder(request);
         newOrder.setOrderDate(Instant.now());
-        newOrder.setOrderStatus(OrderConstants.OrderStatus.PENDING);
+        newOrder.setOrderStatus(OrderConstants.OrderStatus.CREATED);
 
         if (request.getDiscountId() != null) {
 
@@ -90,6 +112,21 @@ public class OrderService {
 
 
         savedOrder.setOrderDetails(orderDetails);
+        
+        // Kiểm tra và áp dụng discount nếu có
+        if (savedOrder.getDiscount() != null) {
+            Discount discount = savedOrder.getDiscount();
+            
+            // Kiểm tra xem discount có áp dụng được cho order này không
+            if (!discountValidationService.isDiscountApplicableToOrder(discount, orderDetails)) {
+                throw new AppException(ErrorCode.COUPON_INVALID);
+            }
+            
+            // Tăng usedCount khi discount được áp dụng thành công
+            discount.incrementUsedCount();
+            discountRepository.save(discount);
+        }
+        
         savedOrder = orderRepository.save(savedOrder);
 
         List<CartItemResponse> cartItemsResponse = savedOrder.getOrderDetails().stream()
@@ -115,7 +152,7 @@ public class OrderService {
         return currentdate.after(expirationDate);
     }
 
-    public ApplyDiscountResponse applyDiscount(String code) {
+    public ApplyDiscountResponse applyDiscount(String code, Double orderAmount) {
         // Validate input
         if (code == null || code.trim().isEmpty()) {
             throw new AppException(ErrorCode.COUPON_INVALID);
@@ -134,6 +171,15 @@ public class OrderService {
             throw new AppException(ErrorCode.COUPON_INVALID);
         }
 
+        // Kiểm tra giới hạn lượt sử dụng
+        if (discount.isUsageLimitReached()) {
+            throw new AppException(ErrorCode.COUPON_INVALID);
+        }
+
+        // Kiểm tra minimum order amount
+        if (orderAmount != null && orderAmount < discount.getMinimumOrderAmount()) {
+            throw new AppException(ErrorCode.MINIMUM_AMOUNT_NOT_MET);
+        }
 
         ApplyDiscountResponse response = new ApplyDiscountResponse();
         response.setId(discount.getId());
@@ -156,11 +202,19 @@ public class OrderService {
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
     }
 
-    public CustomerOrder updateStatus(String id, OrderConstants.OrderStatus status, PaymentDetail paymentDetail) {
+    public CustomerOrder updateStatus(String id, OrderConstants.OrderStatus newStatus, PaymentDetail paymentDetail) {
         CustomerOrder order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        order.setOrderStatus(status);
+        // Kiểm tra xem có thể chuyển trạng thái không
+        if (!OrderConstants.canTransitionTo(order.getOrderStatus(), newStatus)) {
+            log.warn("Cannot transition order {} from {} to {}", id, order.getOrderStatus(), newStatus);
+            throw new AppException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
+        }
+
+        log.info("Updating order {} status from {} to {}", id, order.getOrderStatus(), newStatus);
+        
+        order.setOrderStatus(newStatus);
         order.setPaymentDetail(paymentDetail);
         order.setUpdateDate(Instant.now());
 
@@ -169,7 +223,7 @@ public class OrderService {
 
     /**
      * Cancel an order
-     * Only allows cancellation if order status is PENDING or RECEIVED
+     * Only allows cancellation if order status is CREATED or CONFIRMED
      * User can only cancel their own orders (checked via authentication context)
      */
     public OrderResponse cancelOrder(String orderId) {
@@ -178,18 +232,17 @@ public class OrderService {
         CustomerOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        // Check if order can be cancelled (only PENDING or RECEIVED status)
-        if (order.getOrderStatus() != OrderConstants.OrderStatus.PENDING
-                && order.getOrderStatus() != OrderConstants.OrderStatus.RECEIVED) {
+        // Check if order can be cancelled using the new business logic
+        if (!OrderConstants.canCustomerCancel(order.getOrderStatus())) {
             log.warn("Cannot cancel order {}. Current status: {}", orderId, order.getOrderStatus());
             throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
         }
 
-        // Update order status to CANCELED
-        order.setOrderStatus(OrderConstants.OrderStatus.CANCELED);
+        // Update order status to CANCELLED
+        order.setOrderStatus(OrderConstants.OrderStatus.CANCELLED);
         order.setUpdateDate(Instant.now());
         
-        log.info("Order {} status changed to CANCELED", orderId);
+        log.info("Order {} status changed to CANCELLED", orderId);
 
         // Restore inventory for all order items
         List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(orderId);
@@ -211,7 +264,7 @@ public class OrderService {
         }
 
         CustomerOrder savedOrder = orderRepository.save(order);
-        log.info("=== ORDER {} CANCELED SUCCESSFULLY ===", orderId);
+        log.info("=== ORDER {} CANCELLED SUCCESSFULLY ===", orderId);
         
         return orderMapper.toOrderResponse(savedOrder);
     }

@@ -142,23 +142,33 @@ export default function UpdateDiscountForm({ discountId }) {
           Chỉnh Sửa
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-2xl mx-auto">
+      <DialogContent className="w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Chỉnh sửa thông tin mã giảm chi tiết</DialogTitle>
+          <DialogTitle>Chỉnh sửa thông tin mã giảm giá</DialogTitle>
           <DialogDescription>
             Thay đổi thông tin giảm giá ở đây. Nhấn Lưu khi bạn đã nhập xong các thay đổi.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="code">Tên mã</Label>
-            <Input
-              id="code"
-              name="code"
-              defaultValue={discount.code}
-              {...register("code")}
-            />
-            {errors.code?.message && <p className="text-red-600">{errors.code?.message}</p>}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Tên mã</Label>
+              <Input
+                id="code"
+                name="code"
+                defaultValue={discount.code}
+                {...register("code")}
+              />
+              {errors.code?.message && <p className="text-red-600 text-sm">{errors.code?.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="discountType">Loại giảm giá</Label>
+              <select {...register("discountType")} className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base">
+                <option value="FIXED_AMOUNT">Số tiền cố định</option>
+                <option value="PERCENTAGE">Phần trăm</option>
+              </select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -169,81 +179,80 @@ export default function UpdateDiscountForm({ discountId }) {
               defaultValue={discount.description}
               {...register("description")}
             />
-            {errors.description?.message && <p className="text-red-600">{errors.description?.message}</p>}
+            {errors.description?.message && <p className="text-red-600 text-sm">{errors.description?.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="active">Trạng thái:</Label>
-              <select {...register("active")} className="block w-2/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base">
+              <Label htmlFor="percentage">Phần trăm (%)</Label>
+              <Input
+                id="percentage"
+                name="percentage"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                defaultValue={discount.percentage ?? null}
+                {...register("percentage", { valueAsNumber: true })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fixedAmount">Số tiền cố định (VNĐ)</Label>
+              <Input
+                id="fixedAmount"
+                name="fixedAmount"
+                type="number"
+                step="1000"
+                min="0"
+                defaultValue={discount.fixedAmount ?? null}
+                {...register("fixedAmount", { valueAsNumber: true })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minimumOrderAmount">Đơn hàng tối thiểu (VNĐ)</Label>
+              <Input
+                id="minimumOrderAmount"
+                name="minimumOrderAmount"
+                type="number"
+                step="1000"
+                min="0"
+                defaultValue={discount.minimumOrderAmount ?? 0}
+                {...register("minimumOrderAmount", { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="active">Trạng thái</Label>
+              <select {...register("active")} className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base">
                 <option value="true">Hoạt động</option>
                 <option value="false">Tắt</option>
               </select>
-              {errors.active?.message && <p className="text-red-600">{errors.active?.message}</p>}
+              {errors.active?.message && <p className="text-red-600 text-sm">{errors.active?.message}</p>}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="discountType">Loại giảm giá</Label>
-              <select {...register("discountType")} className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 pl-3 pr-10 py-2 text-base">
-                <option value="FIXED_AMOUNT">Số tiền cố định</option>
-                <option value="PERCENTAGE">Phần trăm</option>
-              </select>
+              <Label htmlFor="startDate">Ngày bắt đầu</Label>
+              <Input
+                id="startDate"
+                type="datetime-local"
+                defaultValue={discount.startDate}
+                {...register("startDate")}
+              />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="percentage">Phần trăm</Label>
-            <Input
-              id="percentage"
-              name="percentage"
-              type="number"
-              step="0.01"
-              defaultValue={discount.percentage ?? null}
-              {...register("percentage", { valueAsNumber: true })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fixedAmount">Số tiền cố định</Label>
-            <Input
-              id="fixedAmount"
-              name="fixedAmount"
-              type="number"
-              step="0.01"
-              defaultValue={discount.fixedAmount ?? null}
-              {...register("fixedAmount", { valueAsNumber: true })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="minimumOrderAmount">Số tiền đơn hàng tối thiểu</Label>
-            <Input
-              id="minimumOrderAmount"
-              name="minimumOrderAmount"
-              type="number"
-              step="0.01"
-              defaultValue={discount.minimumOrderAmount ?? 0}
-              {...register("minimumOrderAmount", { valueAsNumber: true })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Ngày bắt đầu</Label>
-            <Input
-              id="startDate"
-              type="datetime-local"
-              defaultValue={discount.startDate}
-              {...register("startDate")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="endDate">Ngày kết thúc</Label>
-            <Input
-              id="endDate"
-              type="datetime-local"
-              defaultValue={discount.endDate}
-              {...register("endDate")}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="endDate">Ngày kết thúc</Label>
+              <Input
+                id="endDate"
+                type="datetime-local"
+                defaultValue={discount.endDate}
+                {...register("endDate")}
+              />
+            </div>
           </div>
 
           <DialogFooter>
