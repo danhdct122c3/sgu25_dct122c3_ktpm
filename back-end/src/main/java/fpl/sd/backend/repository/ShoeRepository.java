@@ -38,6 +38,7 @@ public interface ShoeRepository extends JpaRepository<Shoe, Integer> {
     AND (:brandId IS NULL OR b.id = :brandId)
     AND (:gender IS NULL OR s.gender = :gender)
     AND (:category IS NULL OR s.category = :category)
+    AND (:status IS NULL OR s.status = :status)
     """)
     Page<Shoe> findShoesByFilters(@Param("name") String name,
                                 @Param("minPrice") Long minPrice,
