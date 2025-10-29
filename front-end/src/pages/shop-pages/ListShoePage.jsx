@@ -30,12 +30,12 @@ import { FiShoppingBag } from "react-icons/fi";
 import { Input } from "@/components/ui/input";
 import { getImageUrl } from "@/utils/imageHelper";
 import ComboBoxOrderBy from "../../components/shop/ComboBoxOrderBy";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFilterOptions } from "@/store/filter";
 import { useShopFilters } from "@/hooks/useShopFilters";
 import { cartActions } from "@/store";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer, Bounce } from "react-toastify";
 import { formatterToVND } from "../../utils/formatter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -156,32 +156,65 @@ export default function ListShoePage() {
   }, [filters]);
 
   return (
-    <main className="container mx-auto bg-white rounded-sm">
-      <ToastContainer
-        position="bottom-right"
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        transition:Bounce
-      />
-      <div className="px-4 py-2">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/"><FaHome /></BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/shoes">Sản phẩm</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+    
+<main className="container mx-auto bg-white rounded-sm">
+    {/* ✅ ToastContainer: đúng cú pháp transition */}
+    <ToastContainer
+      position="bottom-right"
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+      transition={Bounce}
+    />
+
+    {/* ✅ Breadcrumb an toàn theo route */}
+    {(() => {
+      const { id } = useParams(); // có id => trang chi tiết
+      return (
+        <div className="px-4 py-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/" className="inline-flex items-center gap-2">
+                    <FaHome className="h-4 w-4" aria-hidden="true" />
+                    <span>Trang chủ</span>
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+
+              <BreadcrumbSeparator />
+
+              {id ? (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/shoes">Sản phẩm</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+
+                  <BreadcrumbSeparator />
+
+                  <BreadcrumbItem>
+                    {/* Nếu bạn có state tên sản phẩm, thay "Chi tiết" bằng tên đó */}
+                    <BreadcrumbPage>Chi tiết</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              ) : (
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Sản phẩm</BreadcrumbPage>
+                </BreadcrumbItem>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      );
+    })()}
       <div className="flex p-4">
         <div className="w-1/3 me-4">
           <Accordion type="single" collapsible>
@@ -249,27 +282,44 @@ export default function ListShoePage() {
               </Select>
             </div> */}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             {currentShoes.map((shoe) => (
               <Card
                 key={shoe.id}
-                className="hover:border-stone-950 cursor-pointer"
+                className="h-full flex flex-col overflow-hidden hover:border-stone-950 cursor-pointer"
               >
-                <CardHeader>
-                  <CardTitle className="capitalize">{shoe.name}</CardTitle>
+                <CardHeader className="pb-0">
+                  <CardTitle className="capitalize line-clamp-2 min-h-[48px]" title={shoe.name}>
+                    {shoe.name}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <img src={getImageUrl(shoe.images[0].url)} alt="" />
-                  <div className="flex justify-between">
-                    <p className="text-xl font-bold mt-2">
+
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="w-full aspect-square grid place-items-center bg-white overflow-hidden">
+                    <img
+                      src={getImageUrl(shoe.images?.[0]?.url)}
+                      alt={shoe.name}
+                      className="h-full w-full object-contain p-2"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://via.placeholder.com/300?text=IMG";
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-3 flex justify-between items-start">
+                    <p className="text-xl font-bold">
                       {formatterToVND.format(shoe.price)}
                     </p>
-                    <p className="text-xl font-bold mt-2 line-through">
+                    <p className="text-xl font-bold line-through">
                       {formatterToVND.format(shoe.fakePrice)}
                     </p>
                   </div>
+
+                  <div className="mt-auto" />
                 </CardContent>
-                <CardFooter className="flex justify-center">
+
+                <CardFooter className="flex justify-center pt-0">
                   <Link to={`/shoes/${shoe.id}`} className="w-full">
                     <Button className="w-full cursor-pointer hover:bg-slate-500 hover:text-slate-950">
                       <BiSolidDetail className="w-6 h-6 mr-2" />
