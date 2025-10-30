@@ -184,6 +184,29 @@ public class OrderDetailService {
         response.setOriginalTotal(order.getOriginalTotal());
         response.setUserId(order.getUser().getId());
 
+        // Discount amount (stored on CustomerOrder)
+        try {
+            response.setDiscountAmount(order.getDiscountAmount());
+            // also expose as `discount` to match frontend expectations
+            response.setDiscount(order.getDiscountAmount());
+        } catch (Exception ex) {
+            // if missing, default to 0
+            response.setDiscountAmount(0.0);
+            response.setDiscount(0.0);
+        }
+
+        // Compute shipping fee if not stored explicitly
+        try {
+            Double shipping = 0.0;
+            if (order.getFinalTotal() != null && order.getOriginalTotal() != null && order.getDiscountAmount() != null) {
+                // finalTotal = originalTotal - discount + shippingFee
+                shipping = order.getFinalTotal() - order.getOriginalTotal() + order.getDiscountAmount();
+            }
+            response.setShippingFee(shipping != null ? shipping : 0.0);
+        } catch (Exception ex) {
+            response.setShippingFee(0.0);
+        }
+
 //        response.setDiscountId(String.valueOf(order.getDiscount().getId()));
 //        response.setPaymentId(String.valueOf(order.getPaymentDetail().getId()));
 //        // Gán giá trị username từ thực thể User

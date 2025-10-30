@@ -48,114 +48,92 @@ export default function MemberOrderHistoryDetail() {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  return (
-    <div className="container mx-auto p-4 space-y-6 h-screen bg-gray-50 rounded-md shadow-md">
-      {/* Header Section */}
-      <div className="flex items-center justify-between mb-4">
-      <Link to={"/admin/member-order-history"}>
-        <Button variant="ghost" className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Quay lại
-        </Button>
-        </Link>
-        <h1 className="text-4xl font-bold">Chi tiết đơn hàng</h1>
-        <div className="w-24" /> {/* Spacer for alignment */}
-      </div>
+  // Compute totals
+  const subTotal = (orderDetail?.cartItems || []).reduce((s, it) => s + ((it?.price || 0) * (it?.quantity || 0)), 0);
+  const shippingFee = orderDetail?.shippingFee ?? 0;
+  const discount = orderDetail?.discount ?? 0;
+  const finalTotal = orderDetail?.finalTotal ?? subTotal + shippingFee - discount;
 
-      {/* Order Information */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-gray-700">Thông tin khách hàng</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded-md shadow-sm">
-          <div className="flex items-center gap-2">
-            <User className="h-5 w-5 text-gray-600" />
-            <div>
-              <Label className="text-xl font-medium text-gray-600">Tên khách hàng</Label>
-              <p className="text-gray-800">{userDetail?.fullName || "N/A"}</p>
-            </div>
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link to={"/admin/member-order-history"}>
+            <Button variant="ghost" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Quay lại
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-semibold">Chi tiết đơn hàng</h1>
+            <p className="text-sm text-muted-foreground">Mã đơn: <span className="font-medium">{orderDetail?.id}</span></p>
           </div>
-          <div className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-gray-600" />
-            <div>
-              <Label className="text-xl font-medium text-gray-600">Email</Label>
-              <p className="text-gray-800">{userDetail?.email || "N/A"}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Phone className="h-5 w-5 text-gray-600" />
-            <div>
-              <Label className="text-xl font-medium text-gray-600">Số điện thoại</Label>
-              <p className="text-gray-800">{userDetail?.phone || "N/A"}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Home className="h-5 w-5 text-gray-600" />
-            <div>
-              <Label className="text-xl font-medium text-gray-600">Địa chỉ giao hàng</Label>
-              <p className="text-gray-800">{userDetail?.address || "N/A"}</p>
-            </div>
-          </div>
+        </div>
+        <div className="text-right">
+          <div className="inline-block px-3 py-1 rounded-full bg-gray-100 text-sm">{orderDetail?.orderStatus}</div>
+          <div className="text-sm text-muted-foreground">{orderDetail?.orderDate ? new Date(orderDetail.orderDate).toLocaleString() : ''}</div>
         </div>
       </div>
 
-      {/* Product Details */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-gray-700">Chi tiết sản phẩm</h2>
-        {orderDetail.cartItems.map((item) => {
-          const INLINE_PLACEHOLDER =
-            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="20">No image</text></svg>';
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT: items list (span 2 cols) */}
+        <div className="lg:col-span-2 space-y-4">
+          <Card className="p-4">
+            <h2 className="text-lg font-medium mb-3">Sản phẩm trong đơn</h2>
+            <div className="divide-y">
+              {(orderDetail?.cartItems || []).map((it) => {
+                const INLINE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="20">No image</text></svg>';
+                const rawImg = getImageUrl(it?.imageUrl) || getImageUrl(it?.image) || getImageUrl(it?.images?.[0]?.url) || null;
+                const img = rawImg || INLINE_PLACEHOLDER;
 
-          const rawImg = getImageUrl(item?.imageUrl) || getImageUrl(item?.image) || getImageUrl(item?.images?.[0]?.url) || null;
-          const img = rawImg || INLINE_PLACEHOLDER;
-
-          return (
-            <Card key={item.variantId} className="p-4 bg-white rounded-md shadow-sm">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-shrink-0 w-40 h-40 bg-white grid place-items-center overflow-hidden rounded border">
-                  <a href={img} target="_blank" rel="noopener noreferrer" title="Mở ảnh lớn" className="w-full h-full grid place-items-center">
-                    <img
-                      src={img}
-                      alt={item.productName || "product"}
-                      className="h-full w-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.src = INLINE_PLACEHOLDER;
-                      }}
-                    />
-                  </a>
-                </div>
-
-                <div className="flex-1 space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5 text-gray-600" />
-                      <div>
-                        <p className="text-xl font-medium text-gray-600">{item.productName || "N/A"}</p>
-                      </div>
+                return (
+                  <div key={it.variantId} className="py-4 flex items-center gap-4">
+                    <div className="w-24 h-24 bg-white rounded border grid place-items-center overflow-hidden">
+                      <a href={img} target="_blank" rel="noreferrer" className="w-full h-full grid place-items-center">
+                        <img src={img} alt={it.productName} className="object-contain w-full h-full" onError={(e)=>{e.currentTarget.src=INLINE_PLACEHOLDER}} />
+                      </a>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-5 w-5 text-gray-600" />
-                      <div>
-                        <p className="text-xl font-medium text-gray-600">{formatterToVND.format(item.price) || "N/A"} x 1</p>
-                      </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-lg">{it.productName}</div>
+                      <div className="text-sm text-muted-foreground">Mã: {it.variantId} • Số lượng: {it.quantity}</div>
+                    </div>
+                    <div className="w-36 text-right">
+                      <div className="text-sm text-muted-foreground">Đơn giá</div>
+                      <div className="font-medium">{formatterToVND.format(it.price)}</div>
+                    </div>
+                    <div className="w-36 text-right">
+                      <div className="text-sm text-muted-foreground">Thành tiền</div>
+                      <div className="font-semibold">{formatterToVND.format((it.price||0)*(it.quantity||0))}</div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </Card>
+        </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-gray-600" />
-                      <div>
-                        <p className="text-xl font-medium text-gray-600">{formatterToVND.format(item.price) || "N/A"}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Package className="h-5 w-5 text-gray-600" />
-                      <p className="text-xl font-medium text-gray-600">{item.quantity || 0}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+        {/* RIGHT: customer + totals */}
+        <div className="space-y-4">
+          <Card className="p-4">
+            <h3 className="text-md font-medium mb-2">Khách hàng</h3>
+            <div className="text-sm text-gray-700">
+              <div className="mb-1"><strong>{userDetail?.fullName || '—'}</strong></div>
+              <div className="text-muted-foreground">{userDetail?.email}</div>
+              <div className="text-muted-foreground">{userDetail?.phone}</div>
+              <div className="mt-2 text-sm">{userDetail?.address}</div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="text-md font-medium mb-3">Tổng cộng đơn hàng</h3>
+            <div className="text-sm">
+              <div className="flex justify-between mb-2"><div className="text-muted-foreground">Tạm tính</div><div>{formatterToVND.format(subTotal)}</div></div>
+              <div className="flex justify-between mb-2"><div className="text-muted-foreground">Giảm giá</div><div>-{formatterToVND.format(discount)}</div></div>
+              <div className="flex justify-between mb-2"><div className="text-muted-foreground">Phí vận chuyển</div><div>{formatterToVND.format(shippingFee)}</div></div>
+              <div className="border-t mt-2 pt-2 flex justify-between font-semibold text-lg"><div>Tổng cộng</div><div>{formatterToVND.format(finalTotal)}</div></div>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

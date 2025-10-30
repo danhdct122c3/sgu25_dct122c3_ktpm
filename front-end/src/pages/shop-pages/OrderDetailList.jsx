@@ -111,6 +111,9 @@ function OrderCard({ order, onOrderCancelled }) {
   const discount = order?.discount ?? 0;
   const grandTotal = order?.finalTotal ?? subTotal + shippingFee - discount;
 
+  // Trạng thái nào cho phép khách hủy (backend cho phép CREATED hoặc CONFIRMED)
+  const cancellableStatuses = new Set(["CREATED", "CONFIRMED", "PENDING"]);
+
   const handleCancelOrder = async () => {
     if (
       !window.confirm(
@@ -141,6 +144,8 @@ function OrderCard({ order, onOrderCancelled }) {
 
   const getStatusStyle = (status) => {
     switch (status) {
+      case "CONFIRMED":
+        return "bg-green-50 text-green-800";
       case "PAID":
         return "bg-green-100 text-green-800";
       case "PENDING":
@@ -160,6 +165,10 @@ function OrderCard({ order, onOrderCancelled }) {
 
   const getStatusText = (status) => {
     switch (status) {
+      case "CREATED":
+        return "CREATED";
+      case "CONFIRMED":
+        return "Đã xác nhận";
       case "PAID":
         return "Đã thanh toán";
       case "PENDING":
@@ -199,7 +208,7 @@ function OrderCard({ order, onOrderCancelled }) {
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             {/* HÀNG ACTION: CỐ ĐỊNH VỊ TRÍ */}
             <div className="flex justify-end items-center gap-2 mb-4">
-              {order?.orderStatus === "PENDING" && (
+              {cancellableStatuses.has(order?.orderStatus) && (
                 <Button
                   variant="destructive"
                   onClick={handleCancelOrder}

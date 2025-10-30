@@ -40,6 +40,9 @@ public class OrderDetailResponse {
     String cardType;
     String discountId;
     String couponName;
+    Double discountAmount;
+    Double discount;
+    Double shippingFee;
     List<CartItemResponse> cartItems;
 
 
