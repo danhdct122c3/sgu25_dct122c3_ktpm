@@ -21,6 +21,8 @@ import fpl.sd.backend.mapper.OrderMapper;
 import fpl.sd.backend.repository.CustomerOrderRepository;
 import fpl.sd.backend.repository.OrderDetailRepository;
 import fpl.sd.backend.repository.ShoeVariantRepository;
+import fpl.sd.backend.repository.ShoeImageRepository;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -46,6 +48,7 @@ public class OrderDetailService {
     CustomerOrderRepository orderRepository;
     OrderDetailRepository orderDetailRepository;
     ShoeVariantRepository shoeVariantRepository;
+    ShoeImageRepository shoeImageRepository;
     OrderMapper orderMapper;
 
 
@@ -206,8 +209,31 @@ public class OrderDetailService {
                     cartItemResponse.setVariantId(orderDetail.getVariant().getId());
                     cartItemResponse.setPrice(orderDetail.getPrice());
                     cartItemResponse.setQuantity(orderDetail.getQuantity());
-                    cartItemResponse.setProductId(orderDetail.getVariant().getShoe().getId());
+                    int shoeId = orderDetail.getVariant().getShoe().getId();
+                    cartItemResponse.setProductId(shoeId);
                     cartItemResponse.setProductName(orderDetail.getVariant().getShoe().getName());
+
+                    // Populate imageUrl from ShoeImageRepository (first image if exists)
+                    try {
+                        List<fpl.sd.backend.entity.ShoeImage> imgs = shoeImageRepository.findAllByShoeId(shoeId);
+                        if (imgs != null && !imgs.isEmpty()) {
+                            String file = imgs.get(0).getUrl();
+                            if (file != null && !file.isBlank()) {
+                                String imageUrl;
+                                if (file.startsWith("http://") || file.startsWith("https://")) {
+                                    imageUrl = file;
+                                } else if (file.startsWith("/uploads/")) {
+                                    imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath().path(file).toUriString();
+                                } else {
+                                    String filename = file.startsWith("/") ? file.substring(1) : file;
+                                    imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath().path("/uploads/shoes/").path(filename).toUriString();
+                                }
+                                cartItemResponse.setImageUrl(imageUrl);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // ignore image mapping errors
+                    }
                     return cartItemResponse;
                 })
                 .collect(Collectors.toList());

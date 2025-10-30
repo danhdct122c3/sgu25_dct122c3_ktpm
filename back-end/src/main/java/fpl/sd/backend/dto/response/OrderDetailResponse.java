@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Data
 @NoArgsConstructor
@@ -72,6 +73,32 @@ public class OrderDetailResponse {
                     cartItemResponse.setPrice(orderDetail.getPrice());
                     cartItemResponse.setProductId(orderDetail.getVariant().getShoe().getId());
                     cartItemResponse.setProductName(orderDetail.getVariant().getShoe().getName());
+
+                    // Map first shoe image (if available) into cart item as an absolute URL
+                    try {
+                        if (orderDetail.getVariant() != null && orderDetail.getVariant().getShoe() != null) {
+                            List<fpl.sd.backend.entity.ShoeImage> images = orderDetail.getVariant().getShoe().getShoeImages();
+                            if (images != null && !images.isEmpty()) {
+                                String file = images.get(0).getUrl();
+                                if (file != null && !file.isBlank()) {
+                                    String imageUrl;
+                                    if (file.startsWith("http://") || file.startsWith("https://")) {
+                                        imageUrl = file;
+                                    } else if (file.startsWith("/uploads/")) {
+                                        imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath().path(file).toUriString();
+                                    } else {
+                                        // assume filename stored; serve from /uploads/shoes/{filename}
+                                        String filename = file.startsWith("/") ? file.substring(1) : file;
+                                        imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath().path("/uploads/shoes/").path(filename).toUriString();
+                                    }
+                                    cartItemResponse.setImageUrl(imageUrl);
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // swallow errors mapping images — we don't want to break the whole response
+                    }
+
                     return cartItemResponse;
                 })
                 .collect(Collectors.toList());

@@ -3,29 +3,27 @@
  * @param {string} imageUrl - Image URL from backend (can be relative or absolute)
  * @returns {string} Full image URL
  */
+/**
+ * Normalize and return a safe image URL.
+ * - returns null for empty input (caller should decide fallback)
+ * - returns absolute URLs unchanged
+ * - for /uploads/ paths, prepends VITE_API_BASE_URL or http://localhost:8080
+ */
 export const getImageUrl = (imageUrl) => {
-  if (!imageUrl) {
-    console.log('⚠️ getImageUrl: empty URL');
-    return '';
+  if (!imageUrl) return null;
+
+  // absolute URL -> passthrough
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+
+  // normalize leading slash
+  const normalized = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+
+  // common case: files served under /uploads/
+  if (normalized.startsWith('/uploads/')) {
+    const backendBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    return `${backendBase.replace(/\/$/, '')}${normalized}`;
   }
-  
-  // If already absolute URL (http/https), return as is
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    console.log('✅ getImageUrl: absolute URL', imageUrl);
-    return imageUrl;
-  }
-  
-  // If relative URL starting with /uploads/, prepend backend base URL with /api/v1
-  if (imageUrl.startsWith('/uploads/')) {
-    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
-    // Ensure backend URL ends with /api/v1
-    const baseUrl = backendUrl.endsWith('/api/v1') ? backendUrl : `${backendUrl}/api/v1`;
-    const fullUrl = `${baseUrl}${imageUrl}`;
-    console.log('🔗 getImageUrl: converted', imageUrl, '→', fullUrl);
-    return fullUrl;
-  }
-  
-  // Otherwise return as is
-  console.log('➡️ getImageUrl: passthrough', imageUrl);
-  return imageUrl;
+
+  // otherwise return normalized relative path — caller may treat this as usable
+  return normalized;
 };

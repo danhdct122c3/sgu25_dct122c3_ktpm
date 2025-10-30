@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, User, Mail, Phone, Home, ShoppingCart, Tag } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { formatterToVND } from "@/utils/formatter";
+import { getImageUrl } from "@/utils/imageHelper";
 import { DollarSign, Package } from "lucide-react";
 export default function MemberOrderHistoryDetail() {
   const { orderId, userId } = useParams(); // Get both orderId and userId from the URL
@@ -99,42 +100,62 @@ export default function MemberOrderHistoryDetail() {
       {/* Product Details */}
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-gray-700">Chi tiết sản phẩm</h2>
-        {orderDetail.cartItems.map((item) => (
-          <Card key={item.variantId} className="p-4 bg-white rounded-md shadow-sm">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 space-y-2">
-                <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-gray-600" />
-                  <div>
-                    {/* <Label className="text-xl font-medium text-gray-600">Tên sản phẩm</Label> */}
-                    <p className="text-xl font-medium text-gray-600">{item.productName || "N/A"}</p>
-                  </div>
+        {orderDetail.cartItems.map((item) => {
+          const INLINE_PLACEHOLDER =
+            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="20">No image</text></svg>';
+
+          const rawImg = getImageUrl(item?.imageUrl) || getImageUrl(item?.image) || getImageUrl(item?.images?.[0]?.url) || null;
+          const img = rawImg || INLINE_PLACEHOLDER;
+
+          return (
+            <Card key={item.variantId} className="p-4 bg-white rounded-md shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-shrink-0 w-40 h-40 bg-white grid place-items-center overflow-hidden rounded border">
+                  <a href={img} target="_blank" rel="noopener noreferrer" title="Mở ảnh lớn" className="w-full h-full grid place-items-center">
+                    <img
+                      src={img}
+                      alt={item.productName || "product"}
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = INLINE_PLACEHOLDER;
+                      }}
+                    />
+                  </a>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-gray-600" />
-                  <div>
-                    {/* <Label className="text-xl font-medium text-gray-600">Giá 1 sản phẩm</Label> */}
-                    <p className="text-xl font-medium text-gray-600">{formatterToVND.format(item.price) || "N/A"} x 1</p>
-                  </div>
-                </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-gray-600" />
-                    <div>
-                      <p className="text-xl font-medium text-gray-600">{formatterToVND.format(item.price) || "N/A"}</p>
+
+                <div className="flex-1 space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="h-5 w-5 text-gray-600" />
+                      <div>
+                        <p className="text-xl font-medium text-gray-600">{item.productName || "N/A"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-5 w-5 text-gray-600" />
+                      <div>
+                        <p className="text-xl font-medium text-gray-600">{formatterToVND.format(item.price) || "N/A"} x 1</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-gray-600" />
-                    <p className="text-xl font-medium text-gray-600">{item.quantity || 0}</p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-gray-600" />
+                      <div>
+                        <p className="text-xl font-medium text-gray-600">{formatterToVND.format(item.price) || "N/A"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Package className="h-5 w-5 text-gray-600" />
+                      <p className="text-xl font-medium text-gray-600">{item.quantity || 0}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

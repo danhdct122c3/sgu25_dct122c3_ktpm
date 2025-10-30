@@ -51,9 +51,13 @@ public class ImageController {
             // Save file
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
             
-            // Return URL path
-            String imageUrl = "/uploads/shoes/" + filename;
-            uploadedUrls.add(imageUrl);
+        // Build absolute URL (including context path) so frontend can use it directly
+        String imageUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+            .fromCurrentContextPath()
+            .path("/uploads/shoes/")
+            .path(filename)
+            .toUriString();
+        uploadedUrls.add(imageUrl);
         }
         
         return APIResponse.<List<String>>builder()
@@ -87,9 +91,12 @@ public class ImageController {
         // Save file
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
         
-        // Return URL path
-        String imageUrl = "/uploads/shoes/" + filename;
-        
+    // Build absolute URL (including context path) so frontend can use it directly
+    String imageUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+        .fromCurrentContextPath()
+        .path("/uploads/shoes/")
+        .path(filename)
+        .toUriString();
         return APIResponse.<String>builder()
                 .result(imageUrl)
                 .build();

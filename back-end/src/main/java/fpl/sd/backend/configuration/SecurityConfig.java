@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers("/shoes/**").permitAll()
                 .requestMatchers("/shoe-images/**").permitAll() // Shoe images - công khai để xem
                 .requestMatchers("/uploads/**").permitAll() // Uploaded static files - công khai
+                .requestMatchers("/api/v1/uploads/**").permitAll()
                 
                 // Orders - người dùng đã đăng nhập mới tạo được
                 .requestMatchers("/orders/apply-discount").permitAll()
