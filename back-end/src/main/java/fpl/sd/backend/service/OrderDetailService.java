@@ -195,16 +195,13 @@ public class OrderDetailService {
             response.setDiscount(0.0);
         }
 
-        // Compute shipping fee if not stored explicitly
+        // Keep shipping fee as fixed 50,000 (VND) to match existing frontend behavior
         try {
-            Double shipping = 0.0;
-            if (order.getFinalTotal() != null && order.getOriginalTotal() != null && order.getDiscountAmount() != null) {
-                // finalTotal = originalTotal - discount + shippingFee
-                shipping = order.getFinalTotal() - order.getOriginalTotal() + order.getDiscountAmount();
-            }
-            response.setShippingFee(shipping != null ? shipping : 0.0);
+            double shipping = 50000.0;
+            response.setShippingFee(shipping);
         } catch (Exception ex) {
-            response.setShippingFee(0.0);
+            // fallback to the same fixed value
+            response.setShippingFee(50000.0);
         }
 
 //        response.setDiscountId(String.valueOf(order.getDiscount().getId()));

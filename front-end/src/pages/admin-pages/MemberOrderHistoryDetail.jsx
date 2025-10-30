@@ -51,8 +51,10 @@ export default function MemberOrderHistoryDetail() {
   // Compute totals
   const subTotal = (orderDetail?.cartItems || []).reduce((s, it) => s + ((it?.price || 0) * (it?.quantity || 0)), 0);
   const shippingFee = orderDetail?.shippingFee ?? 0;
-  const discount = orderDetail?.discount ?? 0;
-  const finalTotal = orderDetail?.finalTotal ?? subTotal + shippingFee - discount;
+  const discount = orderDetail?.discount ?? orderDetail?.discountAmount ?? 0;
+  const tax = orderDetail?.tax ?? Math.round(subTotal * 0.1);
+  const computedTotal = subTotal - discount + shippingFee + tax;
+  const finalTotal = orderDetail?.finalTotal ?? computedTotal;
 
   return (
     <div className="container mx-auto p-6">
@@ -129,6 +131,7 @@ export default function MemberOrderHistoryDetail() {
             <div className="text-sm">
               <div className="flex justify-between mb-2"><div className="text-muted-foreground">Tạm tính</div><div>{formatterToVND.format(subTotal)}</div></div>
               <div className="flex justify-between mb-2"><div className="text-muted-foreground">Giảm giá</div><div>-{formatterToVND.format(discount)}</div></div>
+              <div className="flex justify-between mb-2"><div className="text-muted-foreground">Thuế (10%)</div><div>{formatterToVND.format(tax)}</div></div>
               <div className="flex justify-between mb-2"><div className="text-muted-foreground">Phí vận chuyển</div><div>{formatterToVND.format(shippingFee)}</div></div>
               <div className="border-t mt-2 pt-2 flex justify-between font-semibold text-lg"><div>Tổng cộng</div><div>{formatterToVND.format(finalTotal)}</div></div>
             </div>

@@ -107,9 +107,14 @@ function OrderCard({ order, onOrderCancelled }) {
     (sum, it) => sum + (it?.price ?? 0) * (it?.quantity ?? 0),
     0
   );
+  // Tax: prefer server-provided, otherwise assume 10% as used in Cart.jsx
   const shippingFee = order?.shippingFee ?? 0;
-  const discount = order?.discount ?? 0;
-  const grandTotal = order?.finalTotal ?? subTotal + shippingFee - discount;
+  const discount = order?.discount ?? order?.discountAmount ?? 0;
+  const tax = order?.tax ?? Math.round(subTotal * 0.1);
+
+  // Grand total: prefer server finalTotal when present, otherwise compute from parts
+  const computedTotal = subTotal - discount + shippingFee + tax;
+  const grandTotal = (order?.finalTotal ?? computedTotal);
 
   // Trạng thái nào cho phép khách hủy (backend cho phép CREATED hoặc CONFIRMED)
   const cancellableStatuses = new Set(["CREATED", "CONFIRMED", "PENDING"]);
@@ -188,7 +193,7 @@ function OrderCard({ order, onOrderCancelled }) {
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader>
+      <CardHeader className="relative">
         <CardTitle className="flex justify-between items-center">
           <span>Đơn hàng #{String(order?.id).slice(0, 8)}</span>
           <span
@@ -199,16 +204,32 @@ function OrderCard({ order, onOrderCancelled }) {
             {getStatusText(order?.orderStatus)}
           </span>
         </CardTitle>
-        <CardDescription>
-          Đặt hàng vào ngày {orderDate ? format(orderDate, "dd/MM/yyyy") : "—"}
-        </CardDescription>
+          <CardDescription>
+            Đặt hàng vào ngày {orderDate ? format(orderDate, "dd/MM/yyyy") : "—"}
+          </CardDescription>
+          {/* preview removed from header; rendered in action row to avoid overlap */}
       </CardHeader>
         <CardContent>
           {/* Collapsible bao trọn khu action + nội dung để trigger không bị “nhảy” */}
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             {/* HÀNG ACTION: CỐ ĐỊNH VỊ TRÍ */}
-            <div className="flex justify-end items-center gap-2 mb-4">
-              {cancellableStatuses.has(order?.orderStatus) && (
+            <div className="flex justify-between items-center gap-2 mb-4">
+              {/* Left: reserve fixed space for compact preview so buttons don't shift */}
+              <div className="w-56 flex-shrink-0">
+                {!isOpen ? (
+                  <div className="flex items-center gap-3 bg-white/90 dark:bg-gray-800/80 border border-muted/20 dark:border-gray-700 rounded-lg px-3 py-2 shadow-sm">
+                    <Package className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm text-muted-foreground">{(order?.cartItems ?? []).length} sản phẩm</span>
+                      <span className="text-lg font-semibold">{formatterToVND.format(grandTotal)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full" />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {cancellableStatuses.has(order?.orderStatus) && (
                 <Button
                   variant="destructive"
                   onClick={handleCancelOrder}
@@ -216,18 +237,19 @@ function OrderCard({ order, onOrderCancelled }) {
                 >
                   {isCancelling ? "Đang hủy..." : "Hủy đơn"}
                 </Button>
-              )}
+                )}
 
-              {/* Trigger luôn nằm ở đây, không đi theo bảng */}
-              <CollapsibleTrigger asChild>
-                <Button variant="outline">
-                  {isOpen ? (
-                    <>Ẩn chi tiết <ChevronUp className="ml-2 h-4 w-4" /></>
-                  ) : (
-                    <>Xem chi tiết <ChevronDown className="ml-2 h-4 w-4" /></>
-                  )}
-                </Button>
-              </CollapsibleTrigger>
+                {/* Trigger luôn nằm ở đây, không đi theo bảng */}
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline">
+                    {isOpen ? (
+                      <>Ẩn chi tiết <ChevronUp className="ml-2 h-4 w-4" /></>
+                    ) : (
+                      <>Xem chi tiết <ChevronDown className="ml-2 h-4 w-4" /></>
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
             </div>
 
             {/* NỘI DUNG CHI TIẾT: đặt dưới, không ảnh hưởng vị trí nút */}
@@ -330,8 +352,16 @@ function OrderCard({ order, onOrderCancelled }) {
                   {/* TỔNG KẾT: BỎ “Tạm tính”, giữ Giảm giá, Ship, Tổng cộng */}
                   <tfoot>
                     <tr className="border-t">
+                      <td colSpan={3} className="px-4 py-2 text-right text-sm">Tạm tính</td>
+                      <td className="px-4 py-2 text-right text-sm">{formatterToVND.format(subTotal)}</td>
+                    </tr>
+                    <tr className="border-t">
                       <td colSpan={3} className="px-4 py-2 text-right text-sm">Giảm giá</td>
                       <td className="px-4 py-2 text-right text-sm">-{formatterToVND.format(discount)}</td>
+                    </tr>
+                    <tr className="border-t">
+                      <td colSpan={3} className="px-4 py-2 text-right text-sm">Thuế (10%)</td>
+                      <td className="px-4 py-2 text-right text-sm">{formatterToVND.format(tax)}</td>
                     </tr>
                     <tr className="border-t">
                       <td colSpan={3} className="px-4 py-2 text-right text-sm">Phí vận chuyển</td>
