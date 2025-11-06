@@ -35,9 +35,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchFilterOptions } from "@/store/filter";
 import { useShopFilters } from "@/hooks/useShopFilters";
 import { cartActions } from "@/store";
-import { ToastContainer, Bounce } from "react-toastify";
+import { selectUser } from "@/store/auth";
+import { ToastContainer, Bounce, toast } from "react-toastify";
 import { formatterToVND } from "../../utils/formatter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Breadcrumb,
@@ -60,6 +62,9 @@ export default function ListShoePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
 
+  const navigate = useNavigate();
+  const user = useSelector(selectUser);
+
   const itemsPerPage = 8;
 
   const filteredShoe = shoes.filter((shoe) => {
@@ -81,6 +86,14 @@ export default function ListShoePage() {
   };
 
   const handleAddToCart = (shoe) => {
+    // Kiểm tra đăng nhập
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!", {
+        autoClose: 2000,
+      });
+      return;
+    }
+
     const size =
       shoe.variants && shoe.variants[0] && shoe.variants[0].size
         ? shoe.variants[0].size // If size is directly available
@@ -101,7 +114,7 @@ export default function ListShoePage() {
     console.log(itemToAdd);
     localStorage.setItem("cartItems", JSON.stringify(itemToAdd));
 
-    toast.success("Item added to cart", {
+    toast.success("Đã thêm vào giỏ hàng!", {
       autoClose: 2000,
     });
   };

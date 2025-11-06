@@ -124,7 +124,7 @@ public class OrderDetailService {
         CustomerOrder customerOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        // Store old status to check if it's changing to CANCELED
+        // Store old status to check if it's changing to CANCELED or REJECTED
         OrderConstants.OrderStatus oldStatus = customerOrder.getOrderStatus();
 
         if (request.getOrderDate() != null) {
@@ -132,18 +132,33 @@ public class OrderDetailService {
         }
 
         if (request.getOrderStatus() != null) {
+            // Kiểm tra xem admin có thể chuyển sang trạng thái mới không (workflow tuần tự - từng bước một)
+            if (!OrderConstants.canAdminTransitionToNextStep(oldStatus, request.getOrderStatus())) {
+                // Thông báo cụ thể nếu admin cố chuyển CREATED → PAID
+                if (oldStatus == OrderConstants.OrderStatus.CREATED && request.getOrderStatus() == OrderConstants.OrderStatus.PAID) {
+                    log.warn("Admin attempted to manually change order {} from CREATED to PAID - this is only allowed via VNPay callback", orderId);
+                    throw new AppException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
+                }
+                
+                log.warn("Admin cannot transition order {} from {} to {} - must follow sequential workflow", 
+                         orderId, oldStatus, request.getOrderStatus());
+                throw new AppException(ErrorCode.ORDER_STATUS_TRANSITION_INVALID);
+            }
+            
             customerOrder.setOrderStatus(request.getOrderStatus());
         }
         if (request.getFinalTotal() != null) {
             customerOrder.setFinalTotal(request.getFinalTotal());
         }
 
-        //  RESTORE INVENTORY when status changes to CANCELLED
+        //  RESTORE INVENTORY when status changes to CANCELLED or REJECTED
         if (request.getOrderStatus() != null 
-                && request.getOrderStatus() == OrderConstants.OrderStatus.CANCELLED
-                && oldStatus != OrderConstants.OrderStatus.CANCELLED) {
+                && (request.getOrderStatus() == OrderConstants.OrderStatus.CANCELLED 
+                    || request.getOrderStatus() == OrderConstants.OrderStatus.REJECTED)
+                && oldStatus != OrderConstants.OrderStatus.CANCELLED
+                && oldStatus != OrderConstants.OrderStatus.REJECTED) {
             
-            log.info("=== ORDER STATUS CHANGED TO CANCELED - RESTORING INVENTORY ===");
+            log.info("=== ORDER STATUS CHANGED TO {} - RESTORING INVENTORY ===", request.getOrderStatus());
             log.info("Order ID: {}, Previous Status: {}", orderId, oldStatus);
             
             // Get all order details for this order

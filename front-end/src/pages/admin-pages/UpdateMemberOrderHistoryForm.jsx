@@ -29,18 +29,53 @@ const schema = z
     orderStatus: z.string(),
   });
 
-// Định nghĩa quy trình chuyển đổi trạng thái theo nghiệp vụ
-const ORDER_STATUS_TRANSITIONS = {
-  CREATED: ['CONFIRMED', 'CANCELLED', 'REJECTED', 'PAID'],
-  CONFIRMED: ['PREPARING', 'CANCELLED', 'REJECTED'],
-  PREPARING: ['READY_FOR_DELIVERY', 'CANCELLED'],
-  READY_FOR_DELIVERY: ['OUT_FOR_DELIVERY'],
-  OUT_FOR_DELIVERY: ['DELIVERED'],
-  PAID: ['CONFIRMED', 'CANCELLED', 'REJECTED'],
-  DELIVERED: [], // Trạng thái cuối
-  CANCELLED: [], // Trạng thái cuối
-  REJECTED: [], // Trạng thái cuối
-  PAYMENT_FAILED: [] // Trạng thái cuối
+// Định nghĩa quy trình chuyển đổi trạng thái theo nghiệp vụ - chỉ cho phép chuyển sang trạng thái tiếp theo
+// COD: CREATED → CONFIRMED → PREPARING → READY_FOR_DELIVERY → OUT_FOR_DELIVERY → DELIVERED
+// VNPay: CREATED → PAID (tự động) → CONFIRMED → PREPARING → READY_FOR_DELIVERY → OUT_FOR_DELIVERY → DELIVERED
+const ORDER_STATUS_WORKFLOW = {
+  CREATED: {
+    nextCOD: 'CONFIRMED', // COD bỏ qua PAID
+    nextVNPay: null, // VNPay phải đợi hệ thống tự chuyển sang PAID, admin không được chuyển thủ công
+    labelCOD: 'Xác nhận đơn hàng',
+    labelVNPay: 'Chờ thanh toán',
+    icon: '✅',
+    descriptionCOD: 'Xác nhận đơn hàng COD và bắt đầu xử lý',
+    descriptionVNPay: 'Đơn VNPay đang chờ khách thanh toán. Trạng thái PAID sẽ tự động cập nhật khi thanh toán thành công.'
+  },
+  PAID: {
+    next: 'CONFIRMED', 
+    label: 'Xác nhận đơn hàng',
+    icon: '✅',
+    description: 'Xác nhận đơn hàng đã thanh toán và bắt đầu xử lý'
+  },
+  CONFIRMED: {
+    next: 'PREPARING',
+    label: 'Bắt đầu chuẩn bị',
+    icon: '👨‍🍳',
+    description: 'Đóng gói và chuẩn bị hàng'
+  },
+  PREPARING: {
+    next: 'READY_FOR_DELIVERY',
+    label: 'Sẵn sàng giao hàng',
+    icon: '📦',
+    description: 'Hàng đã đóng gói xong'
+  },
+  READY_FOR_DELIVERY: {
+    next: 'OUT_FOR_DELIVERY',
+    label: 'Bắt đầu giao hàng',
+    icon: '🚚',
+    description: 'Shipper đã nhận và đang giao'
+  },
+  OUT_FOR_DELIVERY: {
+    next: 'DELIVERED',
+    label: 'Hoàn thành giao hàng',
+    icon: '✅',
+    description: 'Khách hàng đã nhận hàng'
+  },
+  DELIVERED: null, // Trạng thái cuối - không có nút tiếp theo
+  CANCELLED: null, // Trạng thái cuối
+  REJECTED: null, // Trạng thái cuối  
+  PAYMENT_FAILED: null // Trạng thái cuối
 };
 
 // Mapping trạng thái với hiển thị tiếng Việt
@@ -71,11 +106,9 @@ export default function UpdateMemberOrderHistory ({ orderId }) {
   const [isLoading, setIsLoading] = useState(false);
   const [customerOrder, setCustomerOrder] = useState({});
   const [currentStatus, setCurrentStatus] = useState('');
-  const [availableStatuses, setAvailableStatuses] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isCODOrder, setIsCODOrder] = useState(false); // Phân biệt COD vs VNPay
   const navigate = useNavigate();
-
-  // Watch orderStatus để cập nhật trạng thái hiện tại
-  const watchedStatus = watch('orderStatus');
 
   useEffect(() => {
     const fetchCustomerOrder = async () => {
@@ -87,9 +120,8 @@ export default function UpdateMemberOrderHistory ({ orderId }) {
         setCustomerOrder(orderData);
         setCurrentStatus(orderData.orderStatus);
         
-        // Tính toán các trạng thái có thể chuyển đổi
-        const possibleStatuses = ORDER_STATUS_TRANSITIONS[orderData.orderStatus] || [];
-        setAvailableStatuses([orderData.orderStatus, ...possibleStatuses]);
+        // Phân biệt COD (không có paymentDetail) vs VNPay (có paymentDetail)
+        setIsCODOrder(!orderData.bankCode && !orderData.cardType);
         
         reset({
           finalTotal: orderData.finalTotal, 
@@ -107,60 +139,68 @@ export default function UpdateMemberOrderHistory ({ orderId }) {
     fetchCustomerOrder();
   }, [orderId, reset]);
 
-  const onSubmit = async (data) => {
-    setIsLoading(true);
-    const toastId = toast.loading("Đang cập nhật đơn hàng...");
+  // Chuyển sang trạng thái tiếp theo trong workflow
+  const handleNextStatus = async () => {
+    const workflow = ORDER_STATUS_WORKFLOW[currentStatus];
+    if (!workflow) return;
+
+    // Xác định trạng thái tiếp theo dựa trên COD hay VNPay
+    let nextStatus;
+    if (currentStatus === 'CREATED') {
+      if (isCODOrder) {
+        nextStatus = workflow.nextCOD; // COD: CREATED → CONFIRMED
+      } else {
+        // VNPay: không cho admin chuyển thủ công từ CREATED → PAID
+        toast.error("⚠️ Đơn VNPay phải đợi khách thanh toán. Trạng thái PAID sẽ tự động cập nhật!", {
+          autoClose: 4000
+        });
+        return;
+      }
+    } else {
+      nextStatus = workflow.next;
+    }
+
+    if (!nextStatus) return;
+
+    setIsProcessing(true);
+    const toastId = toast.loading(`Đang chuyển sang: ${ORDER_STATUS_DISPLAY[nextStatus]?.label}...`);
     
     try {
-      // Kiểm tra tính hợp lệ của việc chuyển đổi trạng thái
-      if (data.orderStatus !== currentStatus) {
-        const allowedTransitions = ORDER_STATUS_TRANSITIONS[currentStatus] || [];
-        if (!allowedTransitions.includes(data.orderStatus)) {
-          toast.update(toastId, {
-            render: `Không thể chuyển từ trạng thái "${ORDER_STATUS_DISPLAY[currentStatus]?.label}" sang "${ORDER_STATUS_DISPLAY[data.orderStatus]?.label}"`,
-            type: "error",
-            isLoading: false,
-            autoClose: 3000,
-          });
-          return;
-        }
-      }
-
       const response = await api.put(`order-details/order/${orderId}`, {
-        ...data,
-        finalTotal: data.finalTotal, 
-        username: data.username, 
-        orderDate: new Date(data.orderDate).toISOString(),
+        finalTotal: customerOrder.finalTotal, 
+        username: customerOrder.username, 
+        orderDate: new Date(customerOrder.orderDate).toISOString(),
+        orderStatus: nextStatus
       });
 
       if (response.status === 200 && response.data.flag) {
         toast.update(toastId, {
-          render: "Cập nhật đơn hàng thành công!",
+          render: `✅ Đã chuyển sang: ${ORDER_STATUS_DISPLAY[nextStatus]?.label}`,
           type: "success",
           isLoading: false,
           autoClose: 2000,
         });
         setTimeout(() => {
-          window.location.reload(); // Reload để cập nhật danh sách
+          window.location.reload();
         }, 2000);
       } else {
         toast.update(toastId, {
-          render: response.data.message || "Cập nhật đơn hàng thất bại.",
+          render: response.data.message || "Cập nhật trạng thái thất bại.",
           type: "error",
           isLoading: false,
           autoClose: 2000,
         });
       }
     } catch (error) {
-      console.error("Error updating Order:", error);
+      console.error("Error updating status:", error);
       toast.update(toastId, {
-        render: "Có lỗi xảy ra khi cập nhật đơn hàng.",
+        render: error.response?.data?.message || "Có lỗi xảy ra khi cập nhật trạng thái.",
         type: "error",
         isLoading: false,
         autoClose: 2000,
       });
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -190,18 +230,7 @@ export default function UpdateMemberOrderHistory ({ orderId }) {
           </DialogDescription>
         </DialogHeader>
         
-        {/* Hiển thị quy trình */}
-        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-          <h4 className="font-semibold mb-2">Quy trình đơn hàng:</h4>
-          <div className="text-sm text-gray-600 space-y-1">
-            <div>📝 Đã tạo → ✅ Đã xác nhận → 👨‍🍳 Đang chuẩn bị → 📦 Sẵn sàng giao → 🚚 Đang giao → ✅ Đã giao</div>
-            <div className="text-xs mt-2">
-              <span className="font-medium">Lưu ý:</span> Có thể hủy (❌) hoặc từ chối (🚫) ở một số giai đoạn. Thanh toán (💳) có thể xảy ra ở nhiều thời điểm.
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-6">
           {/* Thông tin đơn hàng (chỉ đọc) */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -244,78 +273,145 @@ export default function UpdateMemberOrderHistory ({ orderId }) {
           </div>
 
           {/* Trạng thái hiện tại */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Trạng thái hiện tại</Label>
-            <div className={`p-3 rounded-lg ${ORDER_STATUS_DISPLAY[currentStatus]?.bg || 'bg-gray-50'}`}>
-              <span className={`font-medium ${ORDER_STATUS_DISPLAY[currentStatus]?.color || 'text-gray-700'}`}>
-                {ORDER_STATUS_DISPLAY[currentStatus]?.label || currentStatus}
-              </span>
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <span>📍</span>
+              <span>Trạng thái hiện tại</span>
+              {isCODOrder && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                  💵 COD
+                </span>
+              )}
+              {!isCODOrder && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  💳 VNPay
+                </span>
+              )}
+            </Label>
+            <div className={`p-4 rounded-lg border-2 ${ORDER_STATUS_DISPLAY[currentStatus]?.bg || 'bg-gray-50'} border-${ORDER_STATUS_DISPLAY[currentStatus]?.color?.split('-')[1] || 'gray'}-200`}>
+              <div className="flex items-center justify-between">
+                <span className={`font-bold text-lg ${ORDER_STATUS_DISPLAY[currentStatus]?.color || 'text-gray-700'}`}>
+                  {ORDER_STATUS_DISPLAY[currentStatus]?.label || currentStatus}
+                </span>
+                {ORDER_STATUS_WORKFLOW[currentStatus] === null && (
+                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                    Trạng thái cuối
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Chọn trạng thái mới */}
-          <div className="space-y-2">
-            <Label htmlFor="orderStatus" className="text-sm font-medium text-gray-700">
-              Chuyển sang trạng thái
-            </Label>
-            <select 
-              {...register("orderStatus")} 
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-all duration-200"
-            >
-              {availableStatuses.map((status) => (
-                <option key={status} value={status} className="py-2">
-                  {ORDER_STATUS_DISPLAY[status]?.label || status}
-                  {status === currentStatus ? ' (Hiện tại)' : ''}
-                </option>
-              ))}
-            </select>
-            
-            {availableStatuses.length <= 1 ? (
-              <p className="text-xs text-amber-600 mt-1">
-                ⚠️ Đơn hàng đã ở trạng thái cuối, không thể thay đổi
-              </p>
-            ) : (
-              <p className="text-xs text-gray-500 mt-1">
-                Chỉ có thể chuyển sang các trạng thái được phép theo quy trình nghiệp vụ
-              </p>
-            )}
-          </div>
+          {/* Action buttons - Chuyển trạng thái hoặc từ chối */}
+          {ORDER_STATUS_WORKFLOW[currentStatus] !== null && (
+            <div className="space-y-3 pt-4 border-t border-gray-200">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <span>⚡</span>
+                <span>Hành động tiếp theo</span>
+              </Label>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {/* Button chuyển sang trạng thái tiếp theo */}
+                {(() => {
+                  const workflow = ORDER_STATUS_WORKFLOW[currentStatus];
+                  
+                  // Xác định trạng thái tiếp theo và nội dung button
+                  let nextStatus, buttonLabel, buttonDescription;
+                  
+                  if (currentStatus === 'CREATED') {
+                    if (isCODOrder) {
+                      nextStatus = workflow?.nextCOD;
+                      buttonLabel = workflow?.labelCOD;
+                      buttonDescription = workflow?.descriptionCOD;
+                    } else {
+                      // VNPay - không hiển thị button, chỉ hiển thị thông báo
+                      return (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <span className="text-2xl">⏳</span>
+                            <div>
+                              <p className="text-sm font-medium text-amber-800">
+                                Đang chờ khách hàng thanh toán VNPay
+                              </p>
+                              <p className="text-xs text-amber-700 mt-1">
+                                {workflow?.descriptionVNPay}
+                              </p>
+                              <div className="mt-2 text-xs bg-white border border-amber-300 rounded p-2">
+                                <p className="font-medium text-amber-900">💡 Lưu ý:</p>
+                                <p className="text-amber-700">
+                                  • Trạng thái sẽ <strong>tự động</strong> chuyển sang PAID khi thanh toán thành công<br/>
+                                  • Admin <strong>không được</strong> chuyển thủ công để tránh nhầm lẫn<br/>
+                                  • Nếu khách không thanh toán, có thể từ chối đơn hàng bên dưới
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  } else {
+                    nextStatus = workflow?.next;
+                    buttonLabel = workflow?.label;
+                    buttonDescription = workflow?.description;
+                  }
 
-          {/* Hiển thị cảnh báo nếu chuyển sang trạng thái đặc biệt */}
-          {watchedStatus && watchedStatus !== currentStatus && (
-            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <span className="text-yellow-600">⚠️</span>
-                <div className="text-sm">
-                  <p className="font-medium text-yellow-800">Xác nhận thay đổi trạng thái</p>
-                  <p className="text-yellow-700">
-                    Từ: <span className="font-medium">{ORDER_STATUS_DISPLAY[currentStatus]?.label}</span>
-                    {' → '}
-                    Sang: <span className="font-medium">{ORDER_STATUS_DISPLAY[watchedStatus]?.label}</span>
-                  </p>
-                  {(watchedStatus === 'CANCELLED' || watchedStatus === 'REJECTED') && (
-                    <p className="text-red-600 mt-1">
-                      🔄 Lưu ý: Hành động này sẽ hoàn trả số lượng sản phẩm về kho
-                    </p>
-                  )}
-                </div>
+                  // Hiển thị button nếu có trạng thái tiếp theo
+                  if (nextStatus) {
+                    return (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="mb-2">
+                          <p className="text-sm font-medium text-gray-700">
+                            {workflow?.icon} {buttonLabel}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {buttonDescription}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={handleNextStatus}
+                          disabled={isProcessing}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
+                        >
+                          {isProcessing ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="animate-spin">⏳</span>
+                              <span>Đang xử lý...</span>
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center gap-2">
+                              <span>→</span>
+                              <span>Chuyển sang: {ORDER_STATUS_DISPLAY[nextStatus]?.label}</span>
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  }
+                  
+                  return null;
+                })()}
               </div>
             </div>
           )}
 
-          <DialogFooter className="flex justify-between">
-            <div className="text-xs text-gray-500">
-              Mã đơn hàng: {orderId}
+          {/* Thông báo khi đã ở trạng thái cuối */}
+          {ORDER_STATUS_WORKFLOW[currentStatus] === null && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-gray-600">
+                ℹ️ Đơn hàng đã ở trạng thái cuối, không thể thay đổi
+              </p>
             </div>
-            <Button 
-              type="submit" 
-              disabled={isLoading || availableStatuses.length <= 1} 
-              className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {isLoading ? 'Đang cập nhật...' : 'Lưu thay đổi'}
-            </Button>
-          </DialogFooter>
-        </form>
+          )}
+        </div>
+
+        <DialogFooter className="border-t pt-4">
+          <div className="w-full flex justify-between items-center">
+            <div className="text-xs text-gray-500">
+              Mã đơn hàng: <span className="font-mono font-medium">{orderId}</span>
+            </div>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

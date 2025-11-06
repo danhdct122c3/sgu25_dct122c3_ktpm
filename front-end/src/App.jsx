@@ -54,7 +54,14 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "shoes", element: <ListShoePage /> },
       { path: "shoes/:id", element: <DetailShoePage /> },
-      { path: "cart", element: <Cart /> },
+      { 
+        path: "cart", 
+        element: (
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        )
+      },
 
       { path: "login", element: <UserLogin /> },
       { path: "register", element: <SignUp /> },

@@ -1,11 +1,13 @@
 package fpl.sd.backend.controller;
 
 import fpl.sd.backend.dto.APIResponse;
+import fpl.sd.backend.dto.request.CreatePaymentOrderRequest;
 import fpl.sd.backend.dto.request.PaymentCallbackRequest;
 import fpl.sd.backend.dto.request.PaymentRequest;
 import fpl.sd.backend.dto.response.PaymentResponse;
 import fpl.sd.backend.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -46,6 +48,35 @@ public class VNPayController {
             return APIResponse.<String>builder()
                     .flag(false)
                     .message("Payment creation failed: " + e.getMessage())
+                    .code(500)
+                    .build();
+        }
+    }
+    
+    /**
+     * Endpoint mới: Tạo đơn hàng VNPay (không trừ tồn kho) và tạo payment URL
+     * Tồn kho sẽ được trừ khi callback thành công
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/create-payment-order")
+    public APIResponse<String> createPaymentOrder(@Valid @RequestBody CreatePaymentOrderRequest request) {
+        try {
+            log.info("Creating VNPay order for user: {}", request.getUserId());
+            
+            String paymentUrl = paymentService.createPaymentOrder(request);
+            
+            return APIResponse.<String>builder()
+                    .flag(true)
+                    .message("Payment order created successfully")
+                    .code(200)
+                    .result(paymentUrl)
+                    .build();
+                    
+        } catch (Exception e) {
+            log.error("Error creating payment order for user: {}", request.getUserId(), e);
+            return APIResponse.<String>builder()
+                    .flag(false)
+                    .message("Payment order creation failed: " + e.getMessage())
                     .code(500)
                     .build();
         }

@@ -97,6 +97,7 @@ function OrderCard({ order, onOrderCancelled }) {
   }, [order?.id]);
   const [isOpen, setIsOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Guards an toàn
   const items = order?.cartItems ?? [];
@@ -147,45 +148,96 @@ function OrderCard({ order, onOrderCancelled }) {
     }
   };
 
+  const handleRetryPayment = async () => {
+    setIsRetrying(true);
+    try {
+      // Lấy IP address
+      const ipResponse = await fetch("https://api.ipify.org?format=json");
+      const ipData = await ipResponse.json();
+
+      // Tạo lại payment URL cho đơn hàng đã tồn tại
+      const response = await api.post("/payment/create-payment", {
+        orderId: order.id,
+        ipAddress: ipData.ip
+      });
+
+      if (response.data.flag && response.data.result) {
+        // Chuyển đến VNPay
+        window.location.href = response.data.result;
+      } else {
+        throw new Error(response.data.message || "Failed to create payment");
+      }
+    } catch (error) {
+      console.error("Error retrying payment:", error);
+      toast.error("Không thể tạo thanh toán. Vui lòng thử lại!");
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   const getStatusStyle = (status) => {
     switch (status) {
-      case "CONFIRMED":
-        return "bg-green-50 text-green-800";
+      case "CREATED":
+        return "bg-yellow-50 text-yellow-800 border border-yellow-200";
       case "PAID":
-        return "bg-green-100 text-green-800";
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-green-100 text-green-800 border border-green-200";
+      case "CONFIRMED":
+        return "bg-green-50 text-green-800 border border-green-200";
+      case "PREPARING":
+        return "bg-blue-50 text-blue-800 border border-blue-200";
+      case "READY_FOR_DELIVERY":
+        return "bg-purple-50 text-purple-800 border border-purple-200";
+      case "OUT_FOR_DELIVERY":
+        return "bg-orange-50 text-orange-800 border border-orange-200";
+      case "DELIVERED":
+        return "bg-green-100 text-green-900 border border-green-300";
       case "CANCELED":
-        return "bg-red-100 text-red-800";
-      case "RECEIVED":
-        return "bg-purple-100 text-purple-800";
-      case "SHIPPED":
-        return "bg-blue-100 text-blue-800";
+      case "CANCELLED":
+        return "bg-red-100 text-red-800 border border-red-200";
+      case "REJECTED":
+        return "bg-red-100 text-red-900 border border-red-300";
       case "PAYMENT_FAILED":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border border-red-200";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+      case "RECEIVED":
+        return "bg-purple-100 text-purple-800 border border-purple-200";
+      case "SHIPPED":
+        return "bg-blue-100 text-blue-800 border border-blue-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
       case "CREATED":
-        return "CREATED";
-      case "CONFIRMED":
-        return "Đã xác nhận";
+        return "Chờ thanh toán";
       case "PAID":
         return "Đã thanh toán";
+      case "CONFIRMED":
+        return "Đã xác nhận";
+      case "PREPARING":
+        return "Đang chuẩn bị";
+      case "READY_FOR_DELIVERY":
+        return "Sẵn sàng giao hàng";
+      case "OUT_FOR_DELIVERY":
+        return "Đang giao hàng";
+      case "DELIVERED":
+        return "Đã giao hàng";
+      case "CANCELED":
+      case "CANCELLED":
+        return "Đã hủy";
+      case "REJECTED":
+        return "Đã từ chối";
+      case "PAYMENT_FAILED":
+        return "Thanh toán thất bại";
       case "PENDING":
         return "Chờ xử lý";
-      case "CANCELED":
-        return "Đã hủy";
       case "RECEIVED":
         return "Đã nhận";
       case "SHIPPED":
         return "Đã giao";
-      case "PAYMENT_FAILED":
-        return "Thanh toán thất bại";
       default:
         return status;
     }
@@ -229,6 +281,18 @@ function OrderCard({ order, onOrderCancelled }) {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {/* Nút thanh toán lại cho đơn hàng CREATED */}
+                {order?.orderStatus === "CREATED" && (
+                  <Button
+                    variant="default"
+                    onClick={handleRetryPayment}
+                    disabled={isRetrying}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isRetrying ? "Đang xử lý..." : "Thanh toán lại"}
+                  </Button>
+                )}
+                
                 {cancellableStatuses.has(order?.orderStatus) && (
                 <Button
                   variant="destructive"

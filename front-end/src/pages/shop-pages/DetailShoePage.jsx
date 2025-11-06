@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { cartActions } from "@/store";
 import { ToastContainer, toast } from "react-toastify";
 import { selectItems } from "@/store/cart-slice";
+import { selectUser } from "@/store/auth";
 import { formatter, formatterToVND } from "../../utils/formatter";
 import { useNavigate } from "react-router-dom";
 import {
@@ -31,6 +32,7 @@ export default function DetailShoePage() {
   const [shoe, setShoe] = React.useState(null);
 
   const cartItems = useSelector(selectItems);
+  const user = useSelector(selectUser);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -56,6 +58,14 @@ export default function DetailShoePage() {
   const imagesShoe = shoe?.images;
 
   const handleBuyNow = () => {
+    // Kiểm tra đăng nhập
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để mua hàng!", {
+        autoClose: 2000,
+      });
+      return;
+    }
+
     if (!selectedVariant) {
       toast.error("Vui lòng chọn kích thước trước khi thêm vào giỏ hàng.", {
         autoClose: 2000,
@@ -78,6 +88,14 @@ export default function DetailShoePage() {
   };
 
   const handleAddToCart = () => {
+    // Kiểm tra đăng nhập
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!", {
+        autoClose: 2000,
+      });
+      return;
+    }
+
     if (!selectedVariant) {
       toast.error("Vui lòng chọn kích thước trước khi thêm vào giỏ hàng.", {
         autoClose: 2000,

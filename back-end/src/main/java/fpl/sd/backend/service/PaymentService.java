@@ -2,8 +2,11 @@ package fpl.sd.backend.service;
 
 import fpl.sd.backend.configuration.VNPayConfig;
 import fpl.sd.backend.constant.OrderConstants;
+import fpl.sd.backend.dto.request.CreatePaymentOrderRequest;
+import fpl.sd.backend.dto.request.OrderRequest;
 import fpl.sd.backend.dto.request.PaymentCallbackRequest;
 import fpl.sd.backend.dto.request.PaymentRequest;
+import fpl.sd.backend.dto.response.OrderResponse;
 import fpl.sd.backend.dto.response.PaymentResponse;
 import fpl.sd.backend.entity.CustomerOrder;
 import fpl.sd.backend.entity.PaymentDetail;
@@ -67,6 +70,40 @@ public class PaymentService {
             throw e;
         } catch (Exception e) {
             log.error("Unexpected error creating payment for order {}", orderId, e);
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Tạo đơn hàng VNPay (không trừ tồn kho) và trả về payment URL
+     * Tồn kho sẽ được trừ khi callback thành công từ VNPay
+     */
+    @Transactional
+    public String createPaymentOrder(CreatePaymentOrderRequest request) {
+        try {
+            // Convert sang OrderRequest
+            OrderRequest orderRequest = OrderRequest.builder()
+                    .originalTotal(request.getOriginalTotal())
+                    .discountAmount(request.getDiscountAmount())
+                    .finalTotal(request.getFinalTotal())
+                    .discountId(request.getDiscountId())
+                    .userId(request.getUserId())
+                    .items(request.getItems())
+                    .build();
+            
+            // Tạo đơn hàng KHÔNG trừ tồn kho (deductInventory = false)
+            OrderResponse orderResponse = orderService.createOrder(orderRequest, false);
+            log.info("Created order {} without deducting inventory", orderResponse.getOrderId());
+            
+            // Tạo payment URL
+            String paymentUrl = createPayment(orderResponse.getOrderId(), request.getIpAddress());
+            
+            return paymentUrl;
+        } catch (AppException e) {
+            log.error("Error creating payment order: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error creating payment order", e);
             throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }

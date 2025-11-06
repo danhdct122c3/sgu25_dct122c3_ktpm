@@ -16,6 +16,8 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     console.log("❌ No token or user found - redirecting to login");
     
     // Redirect về đúng trang login dựa vào required role
+    // Nếu yêu cầu ADMIN/MANAGER role => redirect đến /admin/login
+    // Nếu không có role hoặc yêu cầu USER => redirect đến /login
     const loginPath = requiredRole === "ADMIN" || requiredRole === "MANAGER" 
       ? "/admin/login" 
       : "/login";

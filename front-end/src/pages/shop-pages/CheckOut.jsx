@@ -183,12 +183,40 @@ function CheckOut() {
         return;
       }
 
-      const orderData = await createOrder();
+      // Lấy IP address
+      const ipResponse = await fetch("https://api.ipify.org?format=json");
+      const ipData = await ipResponse.json();
 
-      await initializeVNPayment(orderData.orderId);
+      // Map cart items
+      const orderItems = items.map(item => ({
+        variantId: item.variantId,
+        quantity: item.quantity,
+        price: item.price,
+        productId: item.productId
+      }));
 
-      // navigate("/checkout/payment-callback");
+      // Gọi endpoint mới: tạo đơn hàng và payment URL cùng lúc
+      // Đơn hàng sẽ KHÔNG trừ tồn kho, chỉ trừ khi thanh toán thành công
+      const response = await api.post("/payment/create-payment-order", {
+        originalTotal: originalPrice,
+        discountAmount: discountAmount || 0,
+        finalTotal: total,
+        discountId: discountId || null,
+        userId: userData.id,
+        items: orderItems,
+        ipAddress: ipData.ip
+      });
+
+      if (response.data.flag && response.data.result) {
+        // Chuyển đến VNPay
+        window.location.href = response.data.result;
+      } else {
+        throw new Error(response.data.message || "Failed to create payment");
+      }
+
     } catch (error) {
+      console.error("Error creating VNPay payment:", error);
+      toast.error("Tạo thanh toán thất bại. Vui lòng thử lại!");
       setLoading(false);
     } finally {
       setLoading(false);

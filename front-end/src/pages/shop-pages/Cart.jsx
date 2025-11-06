@@ -128,11 +128,8 @@ export default function Cart() {
   }
 
   const handleCheckout = () => {
-    if (!user) {
-      navigate("/login");
-    } else {
-      navigate("/checkout");
-    }
+    // Vì đã bảo vệ route /cart, user luôn đã đăng nhập khi vào đây
+    navigate("/checkout");
   };
 
   return (

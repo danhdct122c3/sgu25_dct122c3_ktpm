@@ -11,6 +11,7 @@ import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.OrderMapper;
 import fpl.sd.backend.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -38,6 +39,10 @@ public class OrderService {
 
 
     public OrderResponse createOrder(OrderRequest request) {
+        return createOrder(request, true);
+    }
+
+    public OrderResponse createOrder(OrderRequest request, boolean deductInventory) {
         
         // Validate và tính toán lại tổng tiền từ items
         double calculatedTotal = request.getItems().stream()
@@ -90,13 +95,20 @@ public class OrderService {
                     ShoeVariant variant = shoeVariantRepository.findById(variantId)
                             .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
+                    // Kiểm tra tồn kho
                     int newQuantity = variant.getStockQuantity() - cartItem.getQuantity();
                     if (newQuantity < 0) {
                         throw new AppException(ErrorCode.INSUFFICIENT_INVENTORY);
                     }
 
-                    variant.setStockQuantity(newQuantity);
-                    shoeVariantRepository.save(variant);
+                    // CHỈ TRỪ TỒN KHO NẾU deductInventory = true (cho COD)
+                    // Với VNPay, sẽ trừ sau khi thanh toán thành công
+                    if (deductInventory) {
+                        variant.setStockQuantity(newQuantity);
+                        shoeVariantRepository.save(variant);
+                        log.info("Deducted inventory for variant {}: {} -> {}", 
+                                variantId, variant.getStockQuantity() + cartItem.getQuantity(), newQuantity);
+                    }
 
                     OrderDetailId orderDetailId = new OrderDetailId(finalSavedOrder.getId(), variantId);
 
@@ -114,6 +126,8 @@ public class OrderService {
         savedOrder.setOrderDetails(orderDetails);
         
         // Kiểm tra và áp dụng discount nếu có
+        // CHỈ TĂNG usedCount NẾU deductInventory = true (cho COD)
+        // Với VNPay, sẽ tăng sau khi thanh toán thành công
         if (savedOrder.getDiscount() != null) {
             Discount discount = savedOrder.getDiscount();
             
@@ -122,9 +136,13 @@ public class OrderService {
                 throw new AppException(ErrorCode.COUPON_INVALID);
             }
             
-            // Tăng usedCount khi discount được áp dụng thành công
-            discount.incrementUsedCount();
-            discountRepository.save(discount);
+            if (deductInventory) {
+                // Tăng usedCount khi discount được áp dụng thành công
+                discount.incrementUsedCount();
+                discountRepository.save(discount);
+                log.info("Incremented discount usedCount for discount {}: {}", 
+                        discount.getId(), discount.getUsedCount());
+            }
         }
         
         savedOrder = orderRepository.save(savedOrder);
@@ -214,11 +232,60 @@ public class OrderService {
 
         log.info("Updating order {} status from {} to {}", id, order.getOrderStatus(), newStatus);
         
+        // Nếu chuyển sang PAID, trừ tồn kho và tăng discount usedCount
+        if (newStatus == OrderConstants.OrderStatus.PAID && order.getOrderStatus() == OrderConstants.OrderStatus.CREATED) {
+            deductInventoryForOrder(order);
+            incrementDiscountUsageForOrder(order);
+        }
+        
         order.setOrderStatus(newStatus);
         order.setPaymentDetail(paymentDetail);
         order.setUpdateDate(Instant.now());
 
         return orderRepository.save(order);
+    }
+    
+    /**
+     * Trừ tồn kho cho đơn hàng (dùng khi thanh toán VNPay thành công)
+     */
+    @Transactional
+    public void deductInventoryForOrder(CustomerOrder order) {
+        log.info("Deducting inventory for order: {}", order.getId());
+        
+        List<OrderDetail> orderDetails = orderDetailRepository.findOrderDetailsByOrderId(order.getId());
+        
+        for (OrderDetail detail : orderDetails) {
+            ShoeVariant variant = detail.getVariant();
+            int quantity = detail.getQuantity();
+            int newQuantity = variant.getStockQuantity() - quantity;
+            
+            if (newQuantity < 0) {
+                log.error("Insufficient inventory for variant {}: requested {}, available {}", 
+                         variant.getId(), quantity, variant.getStockQuantity());
+                throw new AppException(ErrorCode.INSUFFICIENT_INVENTORY);
+            }
+            
+            variant.setStockQuantity(newQuantity);
+            shoeVariantRepository.save(variant);
+            
+            log.info("Deducted inventory for variant {}: {} -> {}", 
+                    variant.getId(), variant.getStockQuantity() + quantity, newQuantity);
+        }
+    }
+    
+    /**
+     * Tăng usedCount của discount (dùng khi thanh toán VNPay thành công)
+     */
+    @Transactional
+    public void incrementDiscountUsageForOrder(CustomerOrder order) {
+        if (order.getDiscount() != null) {
+            Discount discount = order.getDiscount();
+            discount.incrementUsedCount();
+            discountRepository.save(discount);
+            
+            log.info("Incremented discount usedCount for order {}, discount {}: {}", 
+                    order.getId(), discount.getId(), discount.getUsedCount());
+        }
     }
 
     /**
