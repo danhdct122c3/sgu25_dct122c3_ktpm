@@ -41,7 +41,7 @@ public class OrderDetailController {
      *                 Must match the username in JWT token for non-admin users
      * @return List of orders for this user
      */
-    @PreAuthorize("hasRole('ADMIN') or #username == authentication.principal.claims['sub']")
+    @PreAuthorize("#username == authentication.principal.claims['sub']")
     @GetMapping("/user/{username}")
     public APIResponse<List<OrderDetailResponse>> getOrderDetailsByUserId(@PathVariable("username") String username) {
         return APIResponse.<List<OrderDetailResponse>>builder()
@@ -52,7 +52,7 @@ public class OrderDetailController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','MANAGER')")
     @GetMapping
     public APIResponse<List<OrderDetailResponse>> getOrderDetails() {
         return APIResponse.<List<OrderDetailResponse>>builder()
@@ -64,7 +64,7 @@ public class OrderDetailController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','MANAGER')")
     @GetMapping("/order/{orderId}")
     public APIResponse<OrderDetailResponse> getOrderDetailByOrderId(@PathVariable String orderId) {
         return APIResponse.<OrderDetailResponse>builder()
@@ -78,7 +78,7 @@ public class OrderDetailController {
 
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','MANAGER')")
     @PutMapping("/order/{orderId}")
     public APIResponse<OrderDetailResponse> updateOrderDetail(@PathVariable String orderId, @RequestBody @Valid OrderUpdateRequest request) {
         OrderDetailResponse orderDetailResponse = orderDetailService.updateOrderDetail(orderId, request);
@@ -126,7 +126,7 @@ public class OrderDetailController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','MANAGER')")
     @GetMapping("/list-order")
     public APIResponse<PageResponse<OrderDetailResponse>> getOrderPaging(
             @RequestParam(required = false) String orderStatus,

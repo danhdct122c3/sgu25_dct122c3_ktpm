@@ -28,7 +28,7 @@ public class DiscountController {
     DiscountService discountService;
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping
     public APIResponse<DiscountResponse> addDiscount(@RequestBody @Valid DiscountCreateRequest discount) {
         return APIResponse.<DiscountResponse>builder()
@@ -39,7 +39,7 @@ public class DiscountController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping
     public APIResponse<List<DiscountResponse>> GetAllDiscounts() {
         return APIResponse.<List<DiscountResponse>>builder()
@@ -60,7 +60,7 @@ public class DiscountController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}")
     public APIResponse<DiscountResponse> updateDiscount(@PathVariable Integer id, @RequestBody @Valid DiscountUpdateRequest request) {
         DiscountResponse discountResponse = discountService.updateDiscount(id, request);
@@ -72,7 +72,7 @@ public class DiscountController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/isActive")
     public APIResponse<List<DiscountResponse>> getDiscountByIsActive(@RequestParam(value = "isActive", required = false) boolean isActive) {
         return APIResponse.<List<DiscountResponse>>builder()
@@ -93,7 +93,7 @@ public class DiscountController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/list-discount")
     public APIResponse<PageResponse<DiscountResponse>> getDiscountPaging(
             @RequestParam(required = false) String discountType,
@@ -115,7 +115,7 @@ public class DiscountController {
      * Delete a discount
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/{id}")
     public APIResponse<Void> deleteDiscount(@PathVariable Integer id) {
         discountService.deleteDiscount(id);

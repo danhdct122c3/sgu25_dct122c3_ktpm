@@ -135,9 +135,20 @@ public class ShoeService {
         newShoe.setName(request.getName());
         newShoe.setPrice(request.getPrice());
         newShoe.setDescription(request.getDescription());
-        newShoe.setGender(ShoeConstants.Gender.valueOf(request.getGender().toUpperCase()));
         newShoe.setStatus(request.isStatus());
         newShoe.setCreatedAt(Instant.now());
+
+        // Map enums safely
+        ShoeConstants.Gender genderEnum = ShoeConstants.getGenderFromString(request.getGender());
+        ShoeConstants.Category categoryEnum = ShoeConstants.getCategoryFromString(request.getCategory());
+        if (genderEnum == null || categoryEnum == null) {
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
+        newShoe.setGender(genderEnum);
+        newShoe.setCategory(categoryEnum);
+
+        // Map optional fields
+        newShoe.setFakePrice(request.getFakePrice());
 
         // Retrieve Brand
         Brand brand = brandRepository.findById(request.getBrandId())

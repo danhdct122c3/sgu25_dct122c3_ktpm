@@ -1,3 +1,6 @@
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+
 export const formatterToVND = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',

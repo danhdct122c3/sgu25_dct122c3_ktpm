@@ -1,11 +1,10 @@
-import React from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
+  
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,7 @@ function AdminLogin() {
     dispatch(authActions.loginStart());
 
     try {
-      const response = await api.post("auth/token", data);
+      const response = await api.post("/auth/token", data);
       const token = response.data.result.token;
 
       // Decode token để check role
@@ -59,10 +58,10 @@ function AdminLogin() {
       const normalizedRole = userRole?.replace("ROLE_", "");
       console.log("✅ Admin Login - Normalized role:", normalizedRole);
 
-      // Kiểm tra role - chỉ cho phép ADMIN và MANAGER
-      if (normalizedRole !== "ADMIN" && normalizedRole !== "MANAGER") {
+      // Kiểm tra role - cho phép ADMIN, MANAGER và STAFF
+      if (normalizedRole !== "ADMIN" && normalizedRole !== "MANAGER" && normalizedRole !== "STAFF") {
         console.log("❌ Admin Login - Access denied for role:", normalizedRole);
-        alert("⚠️ Chỉ có Admin/Manager mới có thể đăng nhập tại đây!\nVui lòng sử dụng trang đăng nhập cho khách hàng.");
+        alert("⚠️ Chỉ có Admin/Manager/Staff mới có thể đăng nhập tại đây!\nVui lòng sử dụng trang đăng nhập cho khách hàng.");
         dispatch(authActions.loginFailure());
         return;
       }
@@ -78,6 +77,9 @@ function AdminLogin() {
       } else if (normalizedRole === "MANAGER") {
         console.log("↪️ Redirecting to /manager");
         navigate("/manager");
+      } else if (normalizedRole === "STAFF") {
+        console.log("↪️ Redirecting to /staff");
+        navigate("/staff");
       }
     } catch (err) {
       console.error("❌ Admin Login Error:", err);

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class RoleConstants {
     public enum Role {
-        USER, ADMIN
+        CUSTOMER, STAFF, MANAGER, ADMIN
     }
     public static RoleConstants.Role getRoleFromString(String roleString) {
         for (RoleConstants.Role role : RoleConstants.Role.values()) {

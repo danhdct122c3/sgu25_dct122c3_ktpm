@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -65,6 +66,19 @@ public class AuthenticationController {
                 .code(200)
                 .message("Successfully logged out.")
                 .result(null)
+                .build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public APIResponse<fpl.sd.backend.dto.response.UserResponse> me(Authentication authentication) {
+        String username = authentication.getName();
+        var user = userService.getUserByUserName(username);
+        return APIResponse.<fpl.sd.backend.dto.response.UserResponse>builder()
+                .flag(true)
+                .code(200)
+                .message("Successfully")
+                .result(user)
                 .build();
     }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -17,28 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-
-import { ComboboxSortDiscount } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -50,22 +29,9 @@ import {
 } from "@/components/ui/popover";
 
 export function OrderHistory() {
-  const [selectedOption, setSelectedOption] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const options = ["mới nhất", "cũ nhất"];
-  
   // Trạng thái riêng cho ngày bắt đầu và ngày kết thúc
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-
-  const handleSelection = (value) => {
-    setSelectedOption(value);
-
-    // Mở hộp thoại nếu 'chỉnh sửa' được chọn
-    if (value === "chỉnh sửa") {
-      setIsDialogOpen(true);
-    }
-  };
 
   return (
     <div className="mt-5 mb-5 bg-white p-5">

@@ -1,5 +1,6 @@
 // src/pages/OrderDetailList.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import PropTypes from "prop-types";
 import { format } from "date-fns";
 import { ChevronDown, ChevronUp, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,14 +25,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export default function OrderDetailList() {
-  const [userData, setUserData] = useState({});
   const [orderList, setOrderList] = useState([]);
   const navigate = useNavigate();
 
   const user = useSelector(selectUser);
   const userName = user ? user.sub : null;
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!userName) {
       console.log("Waiting for username...");
       return;
@@ -47,24 +47,13 @@ export default function OrderDetailList() {
         console.error("🚫 Access denied - không có quyền xem đơn hàng này");
       }
     }
-  };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!userName) return;
-      try {
-        const response = await api.get(`/users/profile?username=${userName}`);
-        setUserData(response.data.result || {});
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchUser();
   }, [userName]);
+
+  // removed unused fetchUser and userData state
 
   useEffect(() => {
     fetchOrders();
-  }, [userName]);
+  }, [fetchOrders]);
 
   return (
     <div className="mx-auto w-full max-w-screen-xl px-4">
@@ -449,3 +438,28 @@ function OrderCard({ order, onOrderCancelled }) {
     </Card>
   );
 }
+
+OrderCard.propTypes = {
+  order: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    orderDate: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+    cartItems: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        name: PropTypes.string,
+        imageUrl: PropTypes.string,
+        price: PropTypes.number,
+        quantity: PropTypes.number,
+        size: PropTypes.string,
+        color: PropTypes.string,
+      })
+    ),
+    shippingFee: PropTypes.number,
+    discount: PropTypes.number,
+    discountAmount: PropTypes.number,
+    tax: PropTypes.number,
+    finalTotal: PropTypes.number,
+    orderStatus: PropTypes.string,
+  }).isRequired,
+  onOrderCancelled: PropTypes.func,
+};

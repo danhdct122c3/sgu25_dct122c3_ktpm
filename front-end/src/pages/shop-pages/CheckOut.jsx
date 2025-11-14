@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react/no-unescaped-entities */
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -46,7 +47,7 @@ function CheckOut() {
 
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({});
-  const [error, setError] = useState(null);
+  const [ setError] = useState(null);
 
   const user = useSelector(selectUser);
   const userName = user ? user.sub : null;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -28,7 +28,6 @@ function Profile() {
   const [fullName, setFullName] = useState(userData?.fullName || "");
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
   const user = useSelector(selectUser);
   const userName = user ? user.sub : null;
 
@@ -73,8 +72,7 @@ function Profile() {
       updateFullAddress(locationData.fullAddress, street);
     }
   };
-
-  const updateFullAddress = (loc, str) => {
+  const updateFullAddress = useCallback((loc, str) => {
     const addressParts = [];
     if (loc) addressParts.push(loc);
     if (str) addressParts.push(str);
@@ -87,11 +85,11 @@ function Profile() {
         address: newAddress,
       }));
     }
-  };
+  }, [userData]);
 
   useEffect(() => {
     updateFullAddress(location, street);
-  }, [location, street]);
+  }, [location, street, updateFullAddress]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();

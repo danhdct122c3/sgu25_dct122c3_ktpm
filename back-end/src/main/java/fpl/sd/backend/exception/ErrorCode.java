@@ -73,9 +73,9 @@ public enum ErrorCode {
     PAYMENT_FAILED(400, "Payment failed", HttpStatus.BAD_REQUEST),
 
     //Email-related errors
-    SEND_MAIL_ERROR(500, "Send mail error", HttpStatus.INTERNAL_SERVER_ERROR);
+    SEND_MAIL_ERROR(500, "Send mail error", HttpStatus.INTERNAL_SERVER_ERROR),
 
-
+    INVALID_INPUT(400, "Invalid input provided", HttpStatus.BAD_REQUEST);
 
 
 

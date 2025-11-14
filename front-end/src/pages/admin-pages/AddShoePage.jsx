@@ -1,4 +1,3 @@
-import React from 'react'
 import RunningShoeForm from './RunningShoeForm'
 
 export default function AddShoePage() {

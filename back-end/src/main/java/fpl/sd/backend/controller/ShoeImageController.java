@@ -59,7 +59,7 @@ public class ShoeImageController {
      * Add a new image to a shoe
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/shoe/{shoeId}")
     public APIResponse<ImageResponse> addImageToShoe(
             @PathVariable int shoeId,
@@ -77,7 +77,7 @@ public class ShoeImageController {
      * Update an existing image
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}")
     public APIResponse<ImageResponse> updateImage(
             @PathVariable int id,
@@ -95,7 +95,7 @@ public class ShoeImageController {
      * Delete an image
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/{id}")
     public APIResponse<Void> deleteImage(@PathVariable int id) {
         shoeImageService.deleteImage(id);
@@ -110,7 +110,7 @@ public class ShoeImageController {
      * Delete all images for a specific shoe
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/shoe/{shoeId}")
     public APIResponse<Void> deleteAllImagesByShoeId(@PathVariable int shoeId) {
         shoeImageService.deleteAllImagesByShoeId(shoeId);

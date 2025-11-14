@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import api from "@/config/axios";
 
-export default function VariantShoe({ variants, onVariantChange }) {
+export default function VariantShoe({ variants = [], onVariantChange }) {
   
   const [sizes, setSize] = useState([]);
 
   useEffect(() => {
     const fetchSizes = async () => {
       try {
-        const { data } = await api.get("shoes/sizes");
+        const { data } = await api.get("/shoes/sizes");
         console.log(data.result);
         
         setSize(data.result);
@@ -20,10 +20,12 @@ export default function VariantShoe({ variants, onVariantChange }) {
   }, [])
 
   const handleVariantChange = (size, quantity) => {
-    onVariantChange({
-      sizeId: size.id,
-      stockQuantity: parseInt(quantity) || 0,
-    });
+    if (typeof onVariantChange === "function") {
+      onVariantChange({
+        sizeId: size.id,
+        stockQuantity: parseInt(quantity) || 0,
+      });
+    }
   };
 
   return (
@@ -32,7 +34,7 @@ export default function VariantShoe({ variants, onVariantChange }) {
       <div className="grid grid-cols-3 gap-4">
         {sizes.map((size) => (
           <div key={size.id} className="flex flex-col">
-            <label htmlFor={`size-${size}`} className="font-medium mb-1">
+            <label htmlFor={`size-${size.id}`} className="font-medium mb-1">
               Kích cỡ {size.sizeNumber}
             </label>
             <input

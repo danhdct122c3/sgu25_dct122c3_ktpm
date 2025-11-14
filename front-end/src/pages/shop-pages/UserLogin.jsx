@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+// import React is not required in modern JSX; remove unused imports
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGoogle, faFacebook } from "@fortawesome/free-brands-svg-icons";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { selectIsLoading, selectError } from "../../store/auth";
 import { authActions } from "@/store";
-import { selectUser } from "../../store/auth";
 import { jwtDecode } from "jwt-decode";
 
 const schema = z.object({
@@ -36,10 +32,6 @@ function UserLogin() {
   const error = useSelector(selectError);
   const dispatch = useDispatch();
 
-  
-  const user = useSelector(selectUser);
-  const userName = user ? user.sub : "";
-
   const {
     register,
     handleSubmit,
@@ -52,7 +44,7 @@ function UserLogin() {
     dispatch(authActions.loginStart());
 
     try {
-      const response = await api.post("auth/token", data);
+      const response = await api.post("/auth/token", data);
       const token = response.data.result.token;
 
       // Decode token để check role
@@ -66,10 +58,10 @@ function UserLogin() {
       const normalizedRole = userRole?.replace("ROLE_", "");
       console.log("✅ User Login - Normalized role:", normalizedRole);
 
-      // Kiểm tra role - trang này chỉ cho USER
-      if (normalizedRole === "ADMIN" || normalizedRole === "MANAGER") {
+      // Kiểm tra role - trang này chỉ cho CUSTOMER
+      if (normalizedRole === "ADMIN" || normalizedRole === "MANAGER" || normalizedRole === "STAFF") {
         console.log("⚠️ User Login - Admin/Manager detected, redirecting...");
-        alert("⚠️ Tài khoản Admin/Manager vui lòng đăng nhập tại:\n/admin/login");
+        alert("⚠️ Tài khoản Admin/Manager/Staff vui lòng đăng nhập tại:\n/admin/login");
         dispatch(authActions.loginFailure());
         // Redirect về trang admin login
         navigate("/admin/login");
@@ -156,6 +148,7 @@ function UserLogin() {
               <CardFooter className="flex items-center justify-center">
                 <div className="w-full flex flex-col space-y-4">
                   <Button
+                    type="submit"
                     disabled={isLoading}
                     className="w-full bg-black text-white rounded p-2 hover:bg-gray-500"
                   >

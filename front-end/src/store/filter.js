@@ -19,6 +19,12 @@ export const fetchFilterOptions = createAsyncThunk(
   }
 );
 
+// Normalize category values to ensure consistency
+const normalizeCategory = (category) => {
+  if (category === "SPORTS") return "SPORT";
+  return category;
+};
+
 const filterSlice = createSlice({
   name: "filters",
   initialState: {
@@ -37,7 +43,7 @@ const filterSlice = createSlice({
       .addCase(fetchFilterOptions.fulfilled, (state, action) => {
         state.loading = false;
         state.brands = action.payload.brands;
-        state.categories = action.payload.categories;
+        state.categories = action.payload.categories.map(normalizeCategory);
         state.genders = action.payload.genders;
       })
       .addCase(fetchFilterOptions.rejected, (state, action) => {

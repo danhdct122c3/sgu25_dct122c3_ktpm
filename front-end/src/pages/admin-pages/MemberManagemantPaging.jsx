@@ -15,14 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, TableCellsMerge } from "lucide-react";
-import { formatterToVND } from "@/utils/formatter";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import UpdateMemberForm from "./UpdateMemberForm";
-import { IoIosAddCircleOutline } from "react-icons/io";
 // import { Link, useNavigate } from "react-router-dom";
-import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";  
 
 const MemberManagemantPaging = () => {
   const [userData, setUserData] = useState(null);
@@ -104,7 +100,9 @@ const MemberManagemantPaging = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="USER">User</SelectItem>
+            <SelectItem value="MANAGER">Manager</SelectItem>
+            <SelectItem value="STAFF">Staff</SelectItem>
+            <SelectItem value="USER">Customer</SelectItem>
           </SelectContent>
         </Select>
 
@@ -155,11 +153,11 @@ const MemberManagemantPaging = () => {
             {userData.data.map((user) => (
               <TableRow key={user.id} className="hover:bg-gray-50">
                 <TableCell className="p-3 text-yellow-500 cursor-pointer">
-                  {/* Chỉ cho phép chỉnh sửa tài khoản USER, không được sửa ADMIN */}
-                  {user.roleName === "USER" ? (
+                  {/* Cho phép sửa tất cả ngoại trừ ADMIN */}
+                  {user.roleName !== "ADMIN" ? (
                     <UpdateMemberForm userId={user.username} />
                   ) : (
-                    <span className="text-gray-400">Không thể sửa</span>
+                    <span className="text-gray-400">Không thể sửa Admin</span>
                   )}
                 </TableCell>
                 <TableCell className="p-3">{user.username}</TableCell>

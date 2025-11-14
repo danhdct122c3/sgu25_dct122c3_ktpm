@@ -43,7 +43,7 @@ public class ShoeController {
      * Admin only - returns all shoes regardless of status
      */
     @GetMapping("/admin/all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     public APIResponse<List<ShoeResponse>> getAllShoesForAdmin() {
         return APIResponse.<List<ShoeResponse>>builder()
                 .flag(true)
@@ -84,7 +84,7 @@ public class ShoeController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping
     public APIResponse<ShoeResponse> createShoe(@RequestBody @Valid ShoeCreateRequest request) {
         return APIResponse.<ShoeResponse>builder()
@@ -106,7 +106,7 @@ public class ShoeController {
 
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}")
     public APIResponse<ShoeResponse> updateShoe(@PathVariable("id") int id, @RequestBody ShoeUpdateRequest request) {
         return APIResponse.<ShoeResponse>builder()
@@ -172,7 +172,7 @@ public class ShoeController {
      * Protected endpoint - ADMIN only
      * Uses soft delete to maintain data integrity
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/{id}")
     public APIResponse<Void> deleteShoe(@PathVariable("id") int id) {
         shoeService.deleteShoe(id);

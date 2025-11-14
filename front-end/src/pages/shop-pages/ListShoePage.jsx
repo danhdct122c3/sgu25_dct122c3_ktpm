@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import api from "@/config/axios";
 import { useState, useEffect } from "react";
 import {
@@ -7,39 +7,31 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { IoIosSearch } from "react-icons/io";
+// removed unused IoIosSearch import
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// removed unused Select imports
 import { Button } from "@/components/ui/button";
 import { BiSolidDetail } from "react-icons/bi";
-import { FiShoppingBag } from "react-icons/fi";
+// removed unused FiShoppingBag import
 import { Input } from "@/components/ui/input";
 import { getImageUrl } from "@/utils/imageHelper";
-import ComboBoxOrderBy from "../../components/shop/ComboBoxOrderBy";
+// removed unused ComboBoxOrderBy import
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFilterOptions } from "@/store/filter";
 import { useShopFilters } from "@/hooks/useShopFilters";
-import { cartActions } from "@/store";
-import { selectUser } from "@/store/auth";
-import { ToastContainer, Bounce, toast } from "react-toastify";
+// removed unused cartActions and selectUser imports
+import { ToastContainer, Bounce } from "react-toastify";
 import { formatterToVND } from "../../utils/formatter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// removed unused useNavigate import
 
 import {
   Breadcrumb,
@@ -54,16 +46,14 @@ import { FaHome } from "react-icons/fa";
 
 export default function ListShoePage() {
   const [shoes, setShoes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // removed unused loading state
   const [prevFilters, setPrevFilters] = useState({});
   const [initialLoad, setInitialLoad] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
-
-  const navigate = useNavigate();
-  const user = useSelector(selectUser);
+  const sortOrder = "asc"; // fixed: only using a constant sort order
+  const { id } = useParams();
 
   const itemsPerPage = 8;
 
@@ -71,9 +61,9 @@ export default function ListShoePage() {
     return shoe.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const sortedShoes = [...filteredShoe].sort((a, b) => {
-    sortOrder === "asc" ? a.price - b.price : b.price - a.price;
-  });
+  const sortedShoes = [...filteredShoe].sort(
+    (a, b) => (sortOrder === "asc" ? a.price - b.price : b.price - a.price)
+  );
 
   const indexOfLastShoe = currentPage * itemsPerPage;
   const indexOfFirstShoe = indexOfLastShoe - itemsPerPage;
@@ -85,49 +75,12 @@ export default function ListShoePage() {
     setCurrentPage(page);
   };
 
-  const handleAddToCart = (shoe) => {
-    // Kiểm tra đăng nhập
-    if (!user) {
-      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng!", {
-        autoClose: 2000,
-      });
-      return;
-    }
-
-    const size =
-      shoe.variants && shoe.variants[0] && shoe.variants[0].size
-        ? shoe.variants[0].size // If size is directly available
-        : shoe.variants && shoe.variants[0] && shoe.variants[0].sku
-        ? shoe.variants[0].sku.split("-").pop() // If size is in SKU
-        : "6";
-
-    const itemToAdd = {
-      productId: shoe.id,
-      price: shoe.price,
-      imageUrl: shoe.images[0].url,
-      variantId: shoe.variants[0].id,
-      size: size,
-      name: shoe.name,
-    };
-
-    dispatch(cartActions.addItemToCart(itemToAdd));
-    console.log(itemToAdd);
-    localStorage.setItem("cartItems", JSON.stringify(itemToAdd));
-
-    toast.success("Đã thêm vào giỏ hàng!", {
-      autoClose: 2000,
-    });
-  };
+  // removed unused handleAddToCart
 
   const dispatch = useDispatch();
-  const {
-    brands,
-    categories,
-    genders,
-    loading: filtersLoading,
-  } = useSelector((state) => state.filter);
+  const { brands, categories, genders } = useSelector((state) => state.filter);
 
-  const { filters, updateFilter, clearFilters } = useShopFilters();
+  const { filters } = useShopFilters();
 
   useEffect(() => {
     if (!brands.length || !categories.length || !genders.length) {
@@ -135,8 +88,7 @@ export default function ListShoePage() {
     }
   }, [dispatch, brands.length, categories.length, genders.length]);
 
-  const fetchShoes = async () => {
-    setLoading(true);
+  const fetchShoes = useCallback(async () => {
     try {
       let endpoint = "/shoes";
       if (filters.category) {
@@ -153,8 +105,7 @@ export default function ListShoePage() {
     } catch (error) {
       console.error("Error fetching shoes:", error);
     }
-    setLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     if (initialLoad) {
@@ -166,7 +117,7 @@ export default function ListShoePage() {
     if (JSON.stringify(prevFilters) !== JSON.stringify(filters)) {
       fetchShoes();
     }
-  }, [filters]);
+  }, [filters, initialLoad, prevFilters, fetchShoes]);
 
   return (
     
@@ -185,49 +136,43 @@ export default function ListShoePage() {
       transition={Bounce}
     />
 
-    {/* ✅ Breadcrumb an toàn theo route */}
-    {(() => {
-      const { id } = useParams(); // có id => trang chi tiết
-      return (
-        <div className="px-4 py-2">
-          <Breadcrumb>
-            <BreadcrumbList>
+    {/* ✅ Breadcrumb theo route */}
+    <div className="px-4 py-2">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/" className="inline-flex items-center gap-2">
+                <FaHome className="h-4 w-4" aria-hidden="true" />
+                <span>Trang chủ</span>
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+
+          <BreadcrumbSeparator />
+
+          {id ? (
+            <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/" className="inline-flex items-center gap-2">
-                    <FaHome className="h-4 w-4" aria-hidden="true" />
-                    <span>Trang chủ</span>
-                  </Link>
+                  <Link to="/shoes">Sản phẩm</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
 
               <BreadcrumbSeparator />
 
-              {id ? (
-                <>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link to="/shoes">Sản phẩm</Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-
-                  <BreadcrumbSeparator />
-
-                  <BreadcrumbItem>
-                    {/* Nếu bạn có state tên sản phẩm, thay "Chi tiết" bằng tên đó */}
-                    <BreadcrumbPage>Chi tiết</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </>
-              ) : (
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Sản phẩm</BreadcrumbPage>
-                </BreadcrumbItem>
-              )}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      );
-    })()}
+              <BreadcrumbItem>
+                <BreadcrumbPage>Chi tiết</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          ) : (
+            <BreadcrumbItem>
+              <BreadcrumbPage>Sản phẩm</BreadcrumbPage>
+            </BreadcrumbItem>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
       <div className="flex p-4">
         <div className="w-1/3 me-4">
           <Accordion type="single" collapsible>

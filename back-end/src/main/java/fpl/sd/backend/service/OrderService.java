@@ -37,6 +37,19 @@ public class OrderService {
     DiscountRepository discountRepository;
     DiscountValidationService discountValidationService;
 
+    /**
+     * Kiểm tra chủ sở hữu của đơn hàng theo username (JWT subject)
+     */
+    public boolean isOrderOwner(String orderId, String username) {
+        try {
+            CustomerOrder order = orderRepository.findById(orderId).orElse(null);
+            if (order == null || order.getUser() == null) return false;
+            return username != null && username.equals(order.getUser().getUsername());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 
     public OrderResponse createOrder(OrderRequest request) {
         return createOrder(request, true);

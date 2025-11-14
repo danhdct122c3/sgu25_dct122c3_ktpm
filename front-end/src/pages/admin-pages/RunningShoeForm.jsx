@@ -32,6 +32,14 @@ const schema = z.object({
 
 export default function RunningShoeForm() {
   const navigate = useNavigate();
+  // Xác định base path theo vai trò để điều hướng đúng portal
+  const token = localStorage.getItem("token");
+  let basePrefix = "/admin";
+  try {
+    const scope = token ? JSON.parse(atob(token.split(".")[1]))?.scope : null;
+    const normalizedRole = (scope || "").replace("ROLE_", "");
+    basePrefix = normalizedRole === "MANAGER" ? "/manager" : normalizedRole === "STAFF" ? "/staff" : "/admin";
+  } catch (_) {}
   const [brands, setBrands] = useState([]);
   const [sizes, setSizes] = useState([]);
 
@@ -204,7 +212,7 @@ export default function RunningShoeForm() {
       
       try {
         const test2Response = await api.post("/shoes", testData2);
-        console.log("✅ Test 2 worked:", test2Response.status);
+      console.log("✅ Test 2 worked:", test2Response.status);
       } catch (error) {
         console.log("❌ Test 2 failed:", error.response?.data?.message);
       }
@@ -355,7 +363,7 @@ export default function RunningShoeForm() {
           });
 
           setTimeout(() => {
-            navigate("/admin/manage-shoes");
+            navigate(`${basePrefix}/manage-shoes`);
           }, 4000);
         }
       } catch (error) {

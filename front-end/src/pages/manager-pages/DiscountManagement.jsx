@@ -57,11 +57,25 @@ export function DiscountManagement() {
   const [editingDiscount, setEditingDiscount] = useState(null);
   const [categories, setCategories] = useState([]);
   const [shoes, setShoes] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedShoes, setSelectedShoes] = useState([]);
   const options = ["mới nhất", "cũ nhất"];
-  
-  // Tách riêng trạng thái cho ngày bắt đầu và ngày kết thúc
+
+  // Controlled form state for create/edit
+  const [form, setForm] = useState({
+    code: "",
+    discountType: "PERCENTAGE",
+    percentage: "",
+    fixedAmount: "",
+    minimumOrderAmount: 0,
+    usageLimit: "",
+    description: "",
+    startDate: null,
+    endDate: null,
+    categories: [], // values like 'SPORT'
+    shoeIds: [], // strings like '123'
+    isActive: true,
+  });
+
+  // Local date objects for calendar UI
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
@@ -71,21 +85,56 @@ export function DiscountManagement() {
     // Mở hộp thoại khi chọn 'edit'
     if (value === "edit" && discount) {
       setEditingDiscount(discount);
-      setSelectedCategories(discount.categories || []);
-      setSelectedShoes(discount.shoeIds || []);
+
+      // Normalize shoeIds to strings for consistent handling
+      const shoeIds = (discount.shoeIds || []).map((id) => String(id));
+
+      setForm({
+        code: discount.code || "",
+        discountType: discount.discountType || "PERCENTAGE",
+        percentage: discount.percentage ?? "",
+        fixedAmount: discount.fixedAmount ?? "",
+        minimumOrderAmount: discount.minimumOrderAmount ?? 0,
+        usageLimit: discount.usageLimit ?? "",
+        description: discount.description ?? "",
+        startDate: discount.startDate ? new Date(discount.startDate).toISOString() : null,
+        endDate: discount.endDate ? new Date(discount.endDate).toISOString() : null,
+        categories: discount.categories || [],
+        shoeIds: shoeIds,
+        isActive: discount.isActive === undefined ? true : discount.isActive,
+      });
+
       setStartDate(discount.startDate ? new Date(discount.startDate) : null);
       setEndDate(discount.endDate ? new Date(discount.endDate) : null);
+
       setIsDialogOpen(true);
+    }
+
+    // If delete is selected, call delete API
+    if (value === "delete" && discount) {
+      if (confirm(`Xác nhận xóa mã ${discount.code}?`)) {
+        api.delete(`/discounts/${discount.id}`)
+          .then(() => {
+            fetchDiscounts();
+          })
+          .catch(err => console.error(err));
+      }
     }
   };
 
   const [discounts, setDiscounts] = React.useState([]);
-  
-  useEffect(() => {
-    const fetchDiscounts = async () => {
+
+  const fetchDiscounts = async () => {
+    try {
       const { data } = await api.get("discounts");
-      setDiscounts(data.result);
-    };
+      setDiscounts(data.result || []);
+    } catch (err) {
+      console.error("Failed to fetch discounts", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDiscounts();
 
     const fetchData = async () => {
       try {
@@ -99,7 +148,6 @@ export function DiscountManagement() {
       }
     };
 
-    fetchDiscounts();
     fetchData();
   }, []);
 
@@ -112,11 +160,95 @@ export function DiscountManagement() {
     ]);
   }, []);
 
+  // Handlers for controlled form inputs
+  const handleInputChange = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const toggleCategory = (categoryValue) => {
+    setForm((prev) => {
+      const exists = prev.categories.includes(categoryValue);
+      return {
+        ...prev,
+        categories: exists ? prev.categories.filter(c => c !== categoryValue) : [...prev.categories, categoryValue]
+      };
+    });
+  };
+
+  const addShoeByValue = (value) => {
+    // value is shoe.id as string
+    setForm(prev => {
+      if (prev.shoeIds.includes(value)) return prev;
+      return { ...prev, shoeIds: [...prev.shoeIds, value] };
+    });
+  };
+
+  const removeShoe = (value) => {
+    setForm(prev => ({ ...prev, shoeIds: prev.shoeIds.filter(id => id !== value) }));
+  };
+
+  const openCreateDialog = () => {
+    setEditingDiscount(null);
+    setForm({
+      code: "",
+      discountType: "PERCENTAGE",
+      percentage: "",
+      fixedAmount: "",
+      minimumOrderAmount: 0,
+      usageLimit: "",
+      description: "",
+      startDate: null,
+      endDate: null,
+      categories: [],
+      shoeIds: [],
+      isActive: true,
+    });
+    setStartDate(null);
+    setEndDate(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      // Validate dates
+      if (startDate && endDate && startDate > endDate) {
+        alert('Ngày bắt đầu phải trước ngày kết thúc');
+        return;
+      }
+
+      const payload = {
+        code: form.code,
+        discountType: form.discountType,
+        percentage: form.percentage === "" ? null : Number(form.percentage),
+        fixedAmount: form.fixedAmount === "" ? null : Number(form.fixedAmount),
+        minimumOrderAmount: form.minimumOrderAmount === "" ? 0 : Number(form.minimumOrderAmount),
+        usageLimit: form.usageLimit === "" ? null : Number(form.usageLimit),
+        description: form.description,
+        startDate: startDate ? new Date(startDate).toISOString() : null,
+        endDate: endDate ? new Date(endDate).toISOString() : null,
+        categories: form.categories,
+        shoeIds: form.shoeIds, // backend expects array of strings
+        active: form.isActive,
+      };
+
+      if (editingDiscount) {
+        await api.put(`/discounts/${editingDiscount.id}`, payload);
+      } else {
+        await api.post(`/discounts`, payload);
+      }
+
+      // refresh list and close
+      await fetchDiscounts();
+      setIsDialogOpen(false);
+    } catch (err) {
+      console.error('Save discount failed', err);
+      alert('Lưu mã giảm giá thất bại');
+    }
+  };
+
   return (
     <div>
-      <h1 className="mt-5 text-4xl font-bold" align="center">
-        Quản lý mã giảm giá
-      </h1>
+      <h1 className="mt-5 text-4xl font-bold" align="center">Quản lý mã giảm giá</h1>
 
       <div className="mt-5">
         <div className="grid gap-4 sm:grid-cols-10 grid-cols-1">
@@ -255,161 +387,69 @@ export function DiscountManagement() {
         </DialogTrigger>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle align="center">Chỉnh sửa mã giảm giá</DialogTitle>
+            <DialogTitle align="center">{editingDiscount ? 'Chỉnh sửa mã giảm giá' : 'Tạo mã giảm giá'}</DialogTitle>
           </DialogHeader>
-          <form className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+
+          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+            <div className="space-y-2">
+              <Label htmlFor="code">Tên mã</Label>
+              <Input id="code" type="text" value={form.code} onChange={(e) => handleInputChange('code', e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Mô tả</Label>
+              <Input id="description" type="text" value={form.description} onChange={(e) => handleInputChange('description', e.target.value)} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="disId">Mã giảm giá</Label>
-                <Input 
-                  id="disId" 
-                  type="text" 
-                  className="mb-2" 
-                  defaultValue={editingDiscount?.code || ""}
-                />
+                <Label htmlFor="active">Trạng thái</Label>
+                <select id="active" className="w-full p-2 border rounded-md" value={String(form.isActive)} onChange={(e) => handleInputChange('isActive', e.target.value === 'true')}>
+                  <option value="true">Hoạt động</option>
+                  <option value="false">Tắt</option>
+                </select>
               </div>
-              
+
               <div>
                 <Label htmlFor="discountType">Loại giảm giá</Label>
-                <select 
-                  id="discountType"
-                  className="w-full p-2 border rounded-md mb-2"
-                  defaultValue={editingDiscount?.discountType || "PERCENTAGE"}
-                >
+                <select id="discountType" className="w-full p-2 border rounded-md" value={form.discountType} onChange={(e) => handleInputChange('discountType', e.target.value)}>
                   <option value="PERCENTAGE">Phần trăm</option>
                   <option value="FIXED_AMOUNT">Số tiền cố định</option>
                 </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="disPer">Phần trăm</Label>
-                <Input 
-                  id="disPer" 
-                  type="number" 
-                  className="mb-2" 
-                  defaultValue={editingDiscount?.percentage || ""}
-                />
+                <Label htmlFor="percentage">Phần trăm</Label>
+                <Input id="percentage" type="number" value={form.percentage ?? ''} onChange={(e) => handleInputChange('percentage', e.target.value === '' ? '' : Number(e.target.value))} disabled={form.discountType !== 'PERCENTAGE'} />
               </div>
-              
+
               <div>
                 <Label htmlFor="fixedAmount">Số tiền cố định</Label>
-                <Input 
-                  id="fixedAmount" 
-                  type="number" 
-                  className="mb-2" 
-                  defaultValue={editingDiscount?.fixedAmount || ""}
-                />
+                <Input id="fixedAmount" type="number" value={form.fixedAmount ?? ''} onChange={(e) => handleInputChange('fixedAmount', e.target.value === '' ? '' : Number(e.target.value))} disabled={form.discountType !== 'FIXED_AMOUNT'} />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="minimumOrderAmount">Số tiền đơn hàng tối thiểu</Label>
-                <Input 
-                  id="minimumOrderAmount" 
-                  type="number" 
-                  className="mb-2" 
-                  defaultValue={editingDiscount?.minimumOrderAmount || 0}
-                />
+                <Input id="minimumOrderAmount" type="number" value={form.minimumOrderAmount ?? 0} onChange={(e) => handleInputChange('minimumOrderAmount', e.target.value === '' ? 0 : Number(e.target.value))} />
               </div>
-              
+
               <div>
                 <Label htmlFor="usageLimit">Giới hạn sử dụng</Label>
-                <Input 
-                  id="usageLimit" 
-                  type="number" 
-                  className="mb-2" 
-                  placeholder="Để trống nếu không giới hạn"
-                  defaultValue={editingDiscount?.usageLimit || ""}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Mô tả</Label>
-              <Input 
-                id="description" 
-                type="text" 
-                className="mb-2" 
-                defaultValue={editingDiscount?.description || ""}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="disStart">Ngày bắt đầu</Label>
-                <Popover id="disStart" className="mb-2">
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : <span>Chọn ngày bắt đầu</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <Label htmlFor="disEnd">Ngày kết thúc</Label>
-                <Popover id="disEnd" className="mb-2">
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "PPP") : <span>Chọn ngày kết thúc</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input id="usageLimit" type="number" placeholder="Để trống nếu không giới hạn" value={form.usageLimit ?? ''} onChange={(e) => handleInputChange('usageLimit', e.target.value === '' ? '' : Number(e.target.value))} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="block text-gray-700">Danh mục áp dụng</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <Label>Danh mục áp dụng</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {categories.map((category) => (
                   <div key={category.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`category-${category.value}`}
-                      checked={selectedCategories.includes(category.value)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedCategories([...selectedCategories, category.value]);
-                        } else {
-                          setSelectedCategories(selectedCategories.filter(c => c !== category.value));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`category-${category.value}`} className="text-sm">
-                      {category.name}
-                    </Label>
+                    <Checkbox id={`category-${category.value}`} checked={form.categories.includes(category.value)} onCheckedChange={() => toggleCategory(category.value)} />
+                    <Label htmlFor={`category-${category.value}`} className="text-sm">{category.name}</Label>
                   </div>
                 ))}
               </div>
@@ -417,43 +457,30 @@ export function DiscountManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label className="block text-gray-700">Sản phẩm cụ thể</Label>
-              <Select
-                onValueChange={(value) => {
-                  const shoeId = parseInt(value);
-                  if (!selectedShoes.includes(shoeId)) {
-                    setSelectedShoes([...selectedShoes, shoeId]);
-                  }
-                }}
-              >
+              <Label>Sản phẩm cụ thể</Label>
+              <Select onValueChange={(value) => addShoeByValue(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn sản phẩm" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shoes.filter(shoe => !selectedShoes.includes(shoe.id)).map((shoe) => (
+                  {shoes.filter(shoe => !form.shoeIds.includes(String(shoe.id))).map((shoe) => (
                     <SelectItem key={shoe.id} value={shoe.id.toString()}>
                       {shoe.name} - {shoe.price?.toLocaleString()}đ
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              
-              {selectedShoes.length > 0 && (
+
+              {form.shoeIds.length > 0 && (
                 <div className="mt-2">
                   <p className="text-sm text-gray-600 mb-2">Sản phẩm đã chọn:</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedShoes.map((shoeId) => {
-                      const shoe = shoes.find(s => s.id === shoeId);
+                    {form.shoeIds.map((shoeId) => {
+                      const shoe = shoes.find(s => s.id === Number(shoeId));
                       return shoe ? (
                         <div key={shoeId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1">
                           {shoe.name}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedShoes(selectedShoes.filter(id => id !== shoeId))}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            ×
-                          </button>
+                          <button type="button" onClick={() => removeShoe(shoeId)} className="text-blue-600 hover:text-blue-800">×</button>
                         </div>
                       ) : null;
                     })}
@@ -463,26 +490,30 @@ export function DiscountManagement() {
               <p className="text-sm text-gray-500">Để trống nếu áp dụng cho tất cả sản phẩm</p>
             </div>
 
-            <div className="mt-5 gap-4 sm:flex">
-              <Button 
-                type="button"
-                className="bg-gray-500 text-indigo-50"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Quay lại
-              </Button>
-              <Button className="bg-green-500 text-indigo-50">Lưu</Button>
-              <Button 
-                type="button"
-                className="bg-red-500 text-indigo-50"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Hủy
-              </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startDate">Ngày bắt đầu</Label>
+                <Input id="startDate" type="datetime-local" value={form.startDate ? new Date(form.startDate).toISOString().slice(0, 16) : ''} onChange={(e) => handleInputChange('startDate', e.target.value ? new Date(e.target.value).toISOString() : null)} />
+              </div>
+
+              <div>
+                <Label htmlFor="endDate">Ngày kết thúc</Label>
+                <Input id="endDate" type="datetime-local" value={form.endDate ? new Date(form.endDate).toISOString().slice(0, 16) : ''} onChange={(e) => handleInputChange('endDate', e.target.value ? new Date(e.target.value).toISOString() : null)} />
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6">
+              <Button type="button" onClick={() => setIsDialogOpen(false)} className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Hủy</Button>
+              <Button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu thay đổi</Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Add button to create new discount */}
+      <div className="fixed bottom-6 right-6">
+        <Button className="bg-blue-600 text-white rounded-full px-4 py-2" onClick={openCreateDialog}>Tạo mã mới</Button>
+      </div>
     </div>
   );
 }

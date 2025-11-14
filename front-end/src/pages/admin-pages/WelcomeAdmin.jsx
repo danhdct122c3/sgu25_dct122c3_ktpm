@@ -4,10 +4,12 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatterToVND, formatDate } from "@/utils/formatter";
+import { formatterToVND } from "@/utils/formatter";
 import { useEffect } from "react";
 import api from "@/config/axios";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/auth";
 import {
   Table,
   TableBody,
@@ -18,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import PropTypes from "prop-types";
 
 
 export function WelcomeAdmin() {
@@ -25,48 +28,32 @@ export function WelcomeAdmin() {
   const [topCustomer, setTopCustomer] = useState([]);
   const [inventoryStatus, setInventoryStatus] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
+  const user = useSelector(selectUser);
+  const role = (user?.scope || "").replace("ROLE_", "");
 
   useEffect(() => {
-    const fetchDailyReport = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get("report/daily-report");
-        setDailyReport(response.data.result);
+        if (role === "MANAGER" || role === "ADMIN") {
+          const resp = await api.get("/report/daily-report");
+          setDailyReport(resp.data.result || []);
+        }
+        if (role === "ADMIN") {
+          const resp = await api.get("/report/top-customer");
+          setTopCustomer(resp.data.result || []);
+        }
+        if (role === "MANAGER") {
+          const inv = await api.get("/report/inventory-status");
+          setInventoryStatus(inv.data.result || []);
+          const top = await api.get("/report/top-seller");
+          setTopSellers(top.data.result || []);
+        }
       } catch (error) {
         console.error(error);
       }
     };
-    fetchDailyReport();
-
-    const fetchTopCustomer = async () => {
-      try {
-        const response = await api.get("/report/top-customer");
-        setTopCustomer(response.data.result);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchTopCustomer();
-
-    const fetchInventoryStatus = async () => {
-      try {
-        const response = await api.get("/report/inventory-status");
-        setInventoryStatus(response.data.result);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchInventoryStatus();
-
-    const fetchTopSeller = async () => {
-      try {
-        const response = await api.get("/report/top-seller");
-        setTopSellers(response.data.result);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchTopSeller();
-  }, []);
+    fetchData();
+  }, [role]);
 
   console.log(inventoryStatus);
   console.log(topSellers);
@@ -86,14 +73,24 @@ export function WelcomeAdmin() {
   };
 
   function StockStatus({ stock }) {
-    if (stock > 50) {
-      return <Badge className="bg-green-500">Còn trong kho</Badge>;
-    } else if (stock > 20) {
-      return <Badge className="bg-yellow-500">Giới hạn</Badge>;
-    } else {
-      return <Badge className="bg-red-500">Sắp hết hàng</Badge>;
+    if (stock == null) return <Badge className="bg-gray-500">Không xác định</Badge>;
+    if (typeof stock === "number") {
+      if (stock >= 50) return <Badge className="bg-green-500">Còn trong kho</Badge>;
+      if (stock >= 20) return <Badge className="bg-yellow-500">Giới hạn</Badge>;
+      if (stock > 0) return <Badge className="bg-red-500">Sắp hết hàng</Badge>;
+      return <Badge className="bg-red-600">Hết hàng</Badge>;
     }
+    const s = String(stock).toUpperCase();
+    if (s.includes("OUT")) return <Badge className="bg-red-600">Hết hàng</Badge>;
+    if (s.includes("LOW")) return <Badge className="bg-red-500">Sắp hết hàng</Badge>;
+    if (s.includes("LIMIT")) return <Badge className="bg-yellow-500">Giới hạn</Badge>;
+    if (s.includes("IN") || s.includes("AVAILABLE")) return <Badge className="bg-green-500">Còn trong kho</Badge>;
+    return <Badge className="bg-gray-500">{stock}</Badge>;
   }
+
+  StockStatus.propTypes = {
+    stock: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  };
 
   return (
     <div className="p-6 max-w-full h-screen mx-auto bg-white rounded-lg shadow-md">

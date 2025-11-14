@@ -36,9 +36,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -159,6 +161,7 @@ public class DiscountService {
         Discount discount = discountRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
 
+        // Cập nhật các trường cơ bản
         if (request.getCode() != null) {
             discount.setCode(request.getCode());
         }
@@ -168,19 +171,19 @@ public class DiscountService {
         if (request.getDescription() != null) {
             discount.setDescription(request.getDescription());
         }
-//        if (request.getStartDate() != null) {
-//            discount.setStartDate(request.getStartDate());
-//        }
         if (request.getMinimumOrderAmount() != null) {
             discount.setMinimumOrderAmount(request.getMinimumOrderAmount());
         }
-//        if (request.getEndDate() != null) {
-//            discount.setEndDate(request.getEndDate());
-//        }
+
         // Kiểm tra ngày hợp lệ
-        if (request.getStartDate().isAfter(request.getEndDate())) {
-            throw new AppException(ErrorCode.INVALID_DATE_RANGE);
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            if (request.getStartDate().isAfter(request.getEndDate())) {
+                throw new AppException(ErrorCode.INVALID_DATE_RANGE);
+            }
+            discount.setStartDate(request.getStartDate());
+            discount.setEndDate(request.getEndDate());
         }
+
         if (request.getDiscountType() != null) {
             discount.setDiscountType(request.getDiscountType());
         }
@@ -191,7 +194,68 @@ public class DiscountService {
             discount.setActive(request.getActive());
         }
 
-        discountRepository.save(discount);
+        // Cập nhật usage limit
+        if (request.getUsageLimit() != null) {
+            discount.setUsageLimit(request.getUsageLimit());
+        }
+
+        // Áp dụng logic kiểm tra và điều chỉnh các trường discount
+        discount.setDiscountValues();
+
+        // Lưu discount trước khi xử lý relations
+        discount = discountRepository.save(discount);
+
+        // Xử lý categories: xóa cũ và thêm mới
+        if (request.getCategories() != null) {
+            // Xóa tất cả categories cũ
+            discountCategoryRepository.deleteByDiscount(discount);
+
+            // Thêm categories mới
+            if (!request.getCategories().isEmpty()) {
+                // Normalize category strings to match enum values
+                List<ShoeConstants.Category> normalizedCategories = request.getCategories().stream()
+                        .map(category -> {
+                            ShoeConstants.Category normalizedCategory = ShoeConstants.getCategoryFromString(category.name());
+                            if (normalizedCategory == null) {
+                                throw new AppException(ErrorCode.INVALID_INPUT);
+                            }
+                            return normalizedCategory;
+                        })
+                        .collect(Collectors.toList());
+
+                for (ShoeConstants.Category category : normalizedCategories) {
+                    DiscountCategory discountCategory = DiscountCategory.builder()
+                            .discount(discount)
+                            .category(category)
+                            .build();
+                    discountCategoryRepository.save(discountCategory);
+                }
+            }
+        }
+
+        // Xử lý shoes: xóa cũ và thêm mới
+        if (request.getShoeIds() != null) {
+            // Xóa tất cả shoes cũ
+            discountShoeRepository.deleteByDiscount(discount);
+
+            // Thêm shoes mới
+            if (!request.getShoeIds().isEmpty()) {
+                for (String shoeId : request.getShoeIds()) {
+                    Shoe shoe = shoeRepository.findById(Integer.parseInt(shoeId))
+                            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+                    DiscountShoe discountShoe = DiscountShoe.builder()
+                            .discount(discount)
+                            .shoe(shoe)
+                            .build();
+                    discountShoeRepository.save(discountShoe);
+                }
+            }
+        }
+
+        // Lấy lại discount với đầy đủ relations để trả về response
+        discount = discountRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_FOUND));
 
         return discountMapper.toDiscountResponse(discount);
     }
@@ -334,5 +398,3 @@ public PageResponse<DiscountResponse> getDiscountPaging(
     }
 
 }
-
-

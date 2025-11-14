@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -34,6 +34,69 @@ export default function ProfileUser() {
   const user = useSelector(selectUser);
   const userName = user ? user.sub : null;
 
+  const fetchUserData = useCallback(async () => {
+    setLoading(true);
+    try {
+      console.log("=== FETCHING USER PROFILE ===");
+      console.log("Username:", userName);
+      console.log("API Endpoint:", `/users/profile?username=${userName}`);
+      
+      // Try multiple endpoints since /users/profile?username= returns 403 for ROLE_MEMBER
+      let response = null;
+      const profileEndpoints = [
+        "/users/me",
+        "/users/profile", 
+        "/auth/me",
+        `/users/profile?username=${userName}`
+      ];
+      
+      for (const endpoint of profileEndpoints) {
+        try {
+          console.log(`Trying profile endpoint: ${endpoint}`);
+          response = await api.get(endpoint);
+          console.log(`✅ SUCCESS with ${endpoint}:`, response.data);
+          break;
+        } catch (err) {
+          console.log(`❌ FAILED ${endpoint}:`, err.response?.status);
+          if (endpoint === profileEndpoints[profileEndpoints.length - 1]) {
+            throw err; // Last endpoint failed, throw error
+          }
+        }
+      }
+      
+      const data = response.data.result;
+      console.log("User Data:", data);
+      
+      setUserData(data);
+      console.log("✅ User data loaded successfully");
+      
+    } catch (err) {
+      console.error("=== FETCH USER PROFILE ERROR ===");
+      console.error("Full error:", err);
+      console.error("Response:", err.response?.data);
+      console.error("Status:", err.response?.status);
+      console.error("Username used:", userName);
+      console.error("================================");
+      
+      // Show info instead of error - allow user to continue
+      toast.info("Không thể tải thông tin cũ. Bạn có thể nhập thông tin mới và lưu.", {
+        autoClose: 5000
+      });
+      
+      // Set minimal user data to allow form to work
+      setUserData({ 
+        id: "unknown", 
+        username: userName,
+        email: "",
+        phone: "",
+        fullName: "",
+        address: ""
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [userName]);
+
   useEffect(() => {
     if (userData) {
       setEmail(userData.email || "");
@@ -62,71 +125,8 @@ export default function ProfileUser() {
       return;
     }
 
-    const fetchUserData = async () => {
-      setLoading(true);
-      try {
-        console.log("=== FETCHING USER PROFILE ===");
-        console.log("Username:", userName);
-        console.log("API Endpoint:", `/users/profile?username=${userName}`);
-        
-        // Try multiple endpoints since /users/profile?username= returns 403 for ROLE_MEMBER
-        let response = null;
-        const profileEndpoints = [
-          "/users/me",
-          "/users/profile", 
-          "/auth/me",
-          `/users/profile?username=${userName}`
-        ];
-        
-        for (const endpoint of profileEndpoints) {
-          try {
-            console.log(`Trying profile endpoint: ${endpoint}`);
-            response = await api.get(endpoint);
-            console.log(`✅ SUCCESS with ${endpoint}:`, response.data);
-            break;
-          } catch (err) {
-            console.log(`❌ FAILED ${endpoint}:`, err.response?.status);
-            if (endpoint === profileEndpoints[profileEndpoints.length - 1]) {
-              throw err; // Last endpoint failed, throw error
-            }
-          }
-        }
-        
-        const data = response.data.result;
-        console.log("User Data:", data);
-        
-        setUserData(data);
-        console.log("✅ User data loaded successfully");
-        
-      } catch (err) {
-        console.error("=== FETCH USER PROFILE ERROR ===");
-        console.error("Full error:", err);
-        console.error("Response:", err.response?.data);
-        console.error("Status:", err.response?.status);
-        console.error("Username used:", userName);
-        console.error("================================");
-        
-        // Show info instead of error - allow user to continue
-        toast.info("Không thể tải thông tin cũ. Bạn có thể nhập thông tin mới và lưu.", {
-          autoClose: 5000
-        });
-        
-        // Set minimal user data to allow form to work
-        setUserData({ 
-          id: "unknown", 
-          username: userName,
-          email: "",
-          phone: "",
-          fullName: "",
-          address: ""
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserData();
-  }, [navigate, user, userName]);
+  }, [navigate, user, userName, token, fetchUserData]);
 
   const handleLocationChange = (locationData) => {
     if (locationData && locationData.fullAddress) {
@@ -135,7 +135,7 @@ export default function ProfileUser() {
     }
   };
 
-  const updateFullAddress = (loc, str) => {
+  const updateFullAddress = useCallback((loc, str) => {
     const addressParts = [];
     if (loc) addressParts.push(loc);
     if (str) addressParts.push(str);
@@ -148,11 +148,11 @@ export default function ProfileUser() {
         address: newAddress,
       }));
     }
-  };
+  }, [userData]);
 
   useEffect(() => {
     updateFullAddress(location, street);
-  }, [location, street]);
+  }, [location, street, updateFullAddress]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -225,7 +225,7 @@ export default function ProfileUser() {
         
         // Refresh user data (wrap in try-catch to avoid breaking success flow)
         try {
-          await fetchUser();
+          await fetchUserData();
         } catch (fetchError) {
           console.warn("Failed to refresh user data:", fetchError);
           // Don't show error toast, update already succeeded

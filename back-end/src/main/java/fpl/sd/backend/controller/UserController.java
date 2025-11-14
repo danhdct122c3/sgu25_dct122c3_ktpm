@@ -16,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import fpl.sd.backend.service.AuthenticationService;
 
@@ -93,7 +94,13 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public APIResponse<UserResponse> getUserByUsername(@RequestParam(value = "username", required = true) String username) {
+    public APIResponse<UserResponse> getUserByUsername(
+            @RequestParam(value = "username", required = false) String username,
+            Authentication authentication) {
+        if (username == null || username.isBlank()) {
+            username = authentication != null ? authentication.getName() : null;
+        }
+
         return APIResponse.<UserResponse>builder()
                 .flag(true)
                 .code(200)

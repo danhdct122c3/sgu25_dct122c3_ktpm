@@ -109,7 +109,7 @@ public class OrderController {
      * Users can only cancel their own orders
      * Orders can only be cancelled if status is PENDING or CONFIRMED (not SHIPPED, DELIVERED, or CANCELLED)
      */
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@orderService.isOrderOwner(#orderId, authentication.principal.claims['sub']) or hasRole('MANAGER')")
     @PostMapping("/{orderId}/cancel")
     public APIResponse<OrderResponse> cancelOrder(@PathVariable String orderId) {
         OrderResponse cancelledOrder = orderService.cancelOrder(orderId);

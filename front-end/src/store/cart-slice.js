@@ -10,7 +10,7 @@ const loadCartFromStorage = () => {
           totalQuantity: 0,
           changed: false,
         };
-  } catch (error) {
+  } catch {
     return {
       items: [],
       totalQuantity: 0,

@@ -39,7 +39,7 @@ public class BrandController {
         return base + logoUrl;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping
     public APIResponse<BrandResponse> createBrand(@RequestBody @Valid BrandCreateRequest request, HttpServletRequest req) {
         BrandResponse created = brandService.createBrand(request);
@@ -76,7 +76,7 @@ public class BrandController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping(value = "/{id}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<BrandResponse> updateBrandLogo(
             @PathVariable("id") int id,
@@ -93,7 +93,7 @@ public class BrandController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<BrandResponse> createBrandWithLogo(
             @RequestParam("brandName") String brandName,
@@ -127,7 +127,7 @@ public class BrandController {
 
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/init")
     public APIResponse<String> initializeBrands() {
         brandService.initializeDefaultBrands();
@@ -139,7 +139,7 @@ public class BrandController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/fix-logos")
     public APIResponse<String> fixBrandLogos() {
         brandService.fixBrandLogos();
@@ -155,7 +155,7 @@ public class BrandController {
      * Update a brand
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}")
     public APIResponse<BrandResponse> updateBrand(
             @PathVariable int id,
@@ -175,7 +175,7 @@ public class BrandController {
      * Update brand with logo file
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping(value = "/{id}/with-logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<BrandResponse> updateBrandWithLogo(
             @PathVariable int id,
@@ -203,7 +203,7 @@ public class BrandController {
      * Protected endpoint - ADMIN only
      * Will fail if brand is in use by any shoes
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/{id}")
     public APIResponse<Void> deleteBrand(@PathVariable int id) {
         brandService.deleteBrand(id);

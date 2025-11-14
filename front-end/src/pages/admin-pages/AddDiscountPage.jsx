@@ -33,7 +33,7 @@ const schema = z.object({
   endDate: z.string(),
   active: z.enum(["true", "false"]),
   categories: z.array(z.string()).optional(), // Thêm trường categories
-  shoeIds: z.array(z.number()).optional(), // Thêm trường shoeIds
+  shoeIds: z.array(z.string()).optional(), // use string ids for consistency
 }).refine((data) => {
   if (data.discountType === "PERCENTAGE") {
     return data.percentage != null && data.fixedAmount == null;
@@ -50,8 +50,8 @@ export default function AddDiscountForm() {
     register,
     handleSubmit,
     formState: { errors },
-    
     watch,
+    setValue
   } = useForm({
     resolver: zodResolver(schema),
   });
@@ -60,44 +60,36 @@ export default function AddDiscountForm() {
   const [categories, setCategories] = useState([]);
   const [shoes, setShoes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  // normalize shoe ids as strings
   const [selectedShoes, setSelectedShoes] = useState([]);
   const navigate = useNavigate();
-  // const [value, setValue] = useState(initialValue);
-  const { setValue } = useForm();
-
+  const userRole = localStorage.getItem("token") ? JSON.parse(atob(localStorage.getItem("token").split(".")[1]))?.scope : null;
+  const normalizedRole = (userRole || "").replace("ROLE_", "");
+  const basePrefix = normalizedRole === "MANAGER" ? "/manager" : normalizedRole === "STAFF" ? "/staff" : "/admin";
 
   useEffect(() => {
-    // Nếu discountType là FIXED_AMOUNT, đảm bảo fixedAmount có thể nhập được
+    // Keep behavior: if FIXED_AMOUNT, ensure fixedAmount default
     if (watch("discountType") === "FIXED_AMOUNT") {
-      setValue("fixedAmount", 0); // Hoặc giá trị mặc định khác
+      setValue("fixedAmount", 0);
     } else {
-      setValue("fixedAmount", null); // Đặt lại giá trị nếu discountType không phải FIXED_AMOUNT
+      setValue("fixedAmount", null);
     }
-  }, [watch("discountType")]); // Theo dõi sự thay đổi của discountType
+  }, [watch("discountType")]);
 
-  // Fetch categories và shoes
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch shoes
         const shoesResponse = await api.get("/shoes");
         if (shoesResponse.data.result && Array.isArray(shoesResponse.data.result)) {
           setShoes(shoesResponse.data.result);
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        // Set fallback categories
-        setCategories([
-          { value: "SPORT", name: "Giày thể thao" },
-          { value: "RUNNING", name: "Giày chạy bộ" },
-          { value: "CASUAL", name: "Giày thường" },
-        ]);
       }
     };
     fetchData();
   }, []);
 
-  // Set available categories (hardcoded for now)
   useEffect(() => {
     setCategories([
       { value: "SPORT", name: "Giày thể thao" },
@@ -106,21 +98,34 @@ export default function AddDiscountForm() {
     ]);
   }, []);
 
+  // handlers for categories/shoes
+  const toggleCategory = (value) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(value)) return prev.filter(c => c !== value);
+      return [...prev, value];
+    });
+  };
 
+  const addShoeByValue = (value) => {
+    // value is shoe.id as string
+    if (!selectedShoes.includes(value)) setSelectedShoes(prev => [...prev, value]);
+  };
+
+  const removeShoe = (value) => {
+    setSelectedShoes(prev => prev.filter(id => id !== value));
+  };
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     const toastId = toast.loading("Adding discount...");
     try {
-      // Validate dates
       const startDate = new Date(data.startDate);
       const endDate = new Date(data.endDate);
-  
+
       if (startDate >= endDate) {
         throw new Error("Start date must be before end date");
       }
-  
-      // Format the data
+
       const formattedData = {
         code: data.code,
         description: data.description,
@@ -128,19 +133,16 @@ export default function AddDiscountForm() {
         active: data.active === "true",
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        minimumOrderAmount: data.minimumOrderAmount || 0,  // Đảm bảo giá trị không null, nếu trống thì set là 0
-        usageLimit: data.usageLimit || null, // Thêm usageLimit
+        minimumOrderAmount: data.minimumOrderAmount || 0,
+        usageLimit: data.usageLimit || null,
         percentage: data.discountType === "PERCENTAGE" ? data.percentage : null,
         fixedAmount: data.discountType === "FIXED_AMOUNT" ? data.fixedAmount : null,
-        categories: selectedCategories.length > 0 ? selectedCategories : null, // Thêm categories
-        shoeIds: selectedShoes.length > 0 ? selectedShoes : null, // Thêm shoeIds
+        categories: selectedCategories.length > 0 ? selectedCategories : null,
+        shoeIds: selectedShoes.length > 0 ? selectedShoes : null,
       };
-  
-      console.log("Sending data:", formattedData);
-  
-      // Send to API
+
       const response = await api.post("/discounts", formattedData);
-  
+
       if (response.status === 200 || response.status === 201) {
         toast.update(toastId, {
           render: "Discount added successfully!",
@@ -148,7 +150,7 @@ export default function AddDiscountForm() {
           isLoading: false,
           autoClose: 2000,
         });
-        setTimeout(() => navigate("/admin"), 2000);
+        setTimeout(() => navigate(`${basePrefix}/discount-management`), 1200);
       } else {
         throw new Error(response.data.message || "Failed to add discount");
       }
@@ -164,14 +166,10 @@ export default function AddDiscountForm() {
       setIsLoading(false);
     }
   };
-  
-  
-  
-  
 
   return (
-    <div className="p-6 max-w-full h-screen mx-auto bg-white rounded-lg shadow-md">
-      <ToastContainer 
+    <div className="p-6 max-w-5xl mx-auto bg-white rounded-lg shadow-md"> {/* constrain width and center */}
+      <ToastContainer
         position="top-right" 
         hideProgressBar={false} 
         newestOnTop={false} 
@@ -181,51 +179,34 @@ export default function AddDiscountForm() {
         draggable 
         pauseOnHover 
         theme="light" />
-         <div className="flex items-center justify-between mb-4">
-      <Link to={"/admin/discount-management"}>
-        <Button variant="ghost" className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Quay Lại
-        </Button>
+      <div className="flex items-center justify-between mb-4">
+        <Link to={`${basePrefix}/discount-management`}>
+          <Button variant="ghost" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Quay Lại
+          </Button>
         </Link>
-        <h1 className="text-4xl font-bold">Chi tiết đơn hàng</h1>
-        <div className="w-24" /> {/* Spacer for alignment */}
+        <h1 className="text-2xl md:text-4xl font-bold text-center">Thêm Mã Giảm Giá</h1>
+        <div className="w-24" />
       </div>
-      
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Thêm Mã Giảm Giá</h2>
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="code" className="block text-gray-700">Tên mã</Label>
-          <Input
-            id="code"
-            name="code"
-            placeholder="Nhập tên mã"
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            {...register("code")}
-          />
+          <Input id="code" name="code" placeholder="Nhập tên mã" className="w-full" {...register("code")} />
           {errors.code?.message && <p className="text-red-600 text-sm">{errors.code?.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="description" className="block text-gray-700">Mô tả</Label>
-          <Input
-            id="description"
-            name="description"
-            placeholder="Nhập mô tả"
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            {...register("description")}
-          />
+          <Input id="description" name="description" placeholder="Nhập mô tả" className="w-full" {...register("description")} />
           {errors.description?.message && <p className="text-red-600 text-sm">{errors.description?.message}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* responsive pairs */}
           <div className="space-y-2">
             <Label htmlFor="active" className="block text-gray-700">Trạng thái</Label>
-            <select
-              {...register("active")}
-              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
+            <select {...register("active")} className="w-full p-2 border rounded-md">
               <option value="true">Hoạt động</option>
               <option value="false">Tắt</option>
             </select>
@@ -234,93 +215,50 @@ export default function AddDiscountForm() {
 
           <div className="space-y-2">
             <Label htmlFor="discountType" className="block text-gray-700">Loại giảm giá</Label>
-            <select
-              {...register("discountType")}
-              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
+            <select {...register("discountType")} className="w-full p-2 border rounded-md">
               <option value="FIXED_AMOUNT">Số tiền cố định</option>
               <option value="PERCENTAGE">Phần trăm</option>
             </select>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="percentage" className="block text-gray-700">Phần trăm</Label>
-          <Input
-            id="percentage"
-            name="percentage"
-            type="number"
-            disabled={watch("discountType") !== "PERCENTAGE"}
-            {...register("percentage", {
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="percentage" className="block text-gray-700">Phần trăm</Label>
+            <Input id="percentage" name="percentage" type="number" disabled={watch("discountType") !== "PERCENTAGE"} {...register("percentage", {
               setValueAs: v => watch("discountType") === "PERCENTAGE" ? Number(v) : null
-            })}
-          />
-          {errors.percentage?.message && <p className="text-red-600 text-sm">{errors.percentage?.message}</p>}
-        </div>
+            })} />
+            {errors.percentage?.message && <p className="text-red-600 text-sm">{errors.percentage?.message}</p>}
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="fixedAmount" className="block text-gray-700">Số tiền cố định</Label>
-          <Input
-            id="fixedAmount"
-            name="fixedAmount"
-            type="number"
-            disabled={watch("discountType") !== "FIXED_AMOUNT"}
-            {...register("fixedAmount", {
+          <div className="space-y-2">
+            <Label htmlFor="fixedAmount" className="block text-gray-700">Số tiền cố định</Label>
+            <Input id="fixedAmount" name="fixedAmount" type="number" disabled={watch("discountType") !== "FIXED_AMOUNT"} {...register("fixedAmount", {
               setValueAs: v => watch("discountType") === "FIXED_AMOUNT" ? Number(v) : null
-            })}
-          />
-          {errors.fixedAmount?.message && <p className="text-red-600 text-sm">{errors.fixedAmount?.message}</p>}
+            })} />
+            {errors.fixedAmount?.message && <p className="text-red-600 text-sm">{errors.fixedAmount?.message}</p>}
+          </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="minimumOrderAmount" className="block text-gray-700">Số tiền đơn hàng tối thiểu</Label>
+            <Input type="number" id="minimumOrderAmount" {...register("minimumOrderAmount", { valueAsNumber: true })} />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="minimumOrderAmount" className="block text-gray-700">Số tiền đơn hàng tối thiểu</Label>
-          <Input
-  type="number"
-  name="minimumOrderAmount"
-  id="minimumOrderAmount"
-  {...register("minimumOrderAmount", {
-    valueAsNumber: true, // Đảm bảo giá trị được lấy dưới dạng số
-    validate: (value) => value >= 0 || "Minimum order amount cannot be negative", // Kiểm tra trường hợp âm
-  })}
-  defaultValue={0}  // Đảm bảo giá trị mặc định là 0
-/>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="usageLimit" className="block text-gray-700">Giới hạn sử dụng</Label>
-          <Input
-            type="number"
-            name="usageLimit"
-            id="usageLimit"
-            placeholder="Nhập số lần sử dụng tối đa (để trống nếu không giới hạn)"
-            {...register("usageLimit", {
-              valueAsNumber: true,
-              validate: (value) => !value || value > 0 || "Usage limit must be greater than 0",
-            })}
-          />
-          {errors.usageLimit?.message && <p className="text-red-600 text-sm">{errors.usageLimit?.message}</p>}
+          <div className="space-y-2">
+            <Label htmlFor="usageLimit" className="block text-gray-700">Giới hạn sử dụng</Label>
+            <Input type="number" id="usageLimit" placeholder="Để trống nếu không giới hạn" {...register("usageLimit", { valueAsNumber: true })} />
+          </div>
         </div>
 
         <div className="space-y-2">
           <Label className="block text-gray-700">Danh mục áp dụng</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {categories.map((category) => (
               <div key={category.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`category-${category.value}`}
-                  checked={selectedCategories.includes(category.value)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedCategories([...selectedCategories, category.value]);
-                    } else {
-                      setSelectedCategories(selectedCategories.filter(c => c !== category.value));
-                    }
-                  }}
-                />
-                <Label htmlFor={`category-${category.value}`} className="text-sm">
-                  {category.name}
-                </Label>
+                <Checkbox id={`category-${category.value}`} checked={selectedCategories.includes(category.value)} onCheckedChange={(checked) => toggleCategory(category.value)} />
+                <Label htmlFor={`category-${category.value}`} className="text-sm">{category.name}</Label>
               </div>
             ))}
           </div>
@@ -329,42 +267,29 @@ export default function AddDiscountForm() {
 
         <div className="space-y-2">
           <Label className="block text-gray-700">Sản phẩm cụ thể</Label>
-          <Select
-            onValueChange={(value) => {
-              const shoeId = parseInt(value);
-              if (!selectedShoes.includes(shoeId)) {
-                setSelectedShoes([...selectedShoes, shoeId]);
-              }
-            }}
-          >
+          <Select onValueChange={(value) => { addShoeByValue(value); }}>
             <SelectTrigger>
               <SelectValue placeholder="Chọn sản phẩm" />
             </SelectTrigger>
             <SelectContent>
-              {shoes.filter(shoe => !selectedShoes.includes(shoe.id)).map((shoe) => (
+              {shoes.filter(shoe => !selectedShoes.includes(String(shoe.id))).map((shoe) => (
                 <SelectItem key={shoe.id} value={shoe.id.toString()}>
                   {shoe.name} - {shoe.price?.toLocaleString()}đ
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
+
           {selectedShoes.length > 0 && (
             <div className="mt-2">
               <p className="text-sm text-gray-600 mb-2">Sản phẩm đã chọn:</p>
               <div className="flex flex-wrap gap-2">
                 {selectedShoes.map((shoeId) => {
-                  const shoe = shoes.find(s => s.id === shoeId);
+                  const shoe = shoes.find(s => s.id === Number(shoeId));
                   return shoe ? (
                     <div key={shoeId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1">
                       {shoe.name}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedShoes(selectedShoes.filter(id => id !== shoeId))}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
+                      <button type="button" onClick={() => removeShoe(shoeId)} className="text-blue-600 hover:text-blue-800">×</button>
                     </div>
                   ) : null;
                 })}
@@ -374,50 +299,20 @@ export default function AddDiscountForm() {
           <p className="text-sm text-gray-500">Để trống nếu áp dụng cho tất cả sản phẩm</p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="startDate" className="block text-gray-700">Ngày bắt đầu</Label>
-          <Input
-            id="startDate"
-            type="datetime-local"
-            {...register("startDate", {
-              validate: value => {
-                const startDate = new Date(value);
-                return startDate >= new Date() || "Start date must be in the future";
-              }
-            })}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="startDate" className="block text-gray-700">Ngày bắt đầu</Label>
+            <Input id="startDate" type="datetime-local" {...register("startDate", { validate: value => { const startDate = new Date(value); return startDate >= new Date() || "Start date must be in the future"; } })} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="endDate" className="block text-gray-700">Ngày kết thúc</Label>
+            <Input id="endDate" type="datetime-local" {...register("endDate", { validate: (value, formValues) => { const startDate = new Date(formValues.startDate); const endDate = new Date(value); return endDate > startDate || "End date must be after start date"; } })} />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="endDate" className="block text-gray-700">Ngày kết thúc</Label>
-          <Input
-            id="endDate"
-            type="datetime-local"
-            {...register("endDate", {
-              validate: (value, formValues) => {
-                const startDate = new Date(formValues.startDate);
-                const endDate = new Date(value);
-                return endDate > startDate || "End date must be after start date";
-              }
-            })}
-          />
-        </div>
-
-        <div className="flex justify-end space-x-4 mt-6">
-          {/* <Button 
-            variant="outline"
-            onClick={() => reset()}
-            className="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-300"
-          >
-            Cancel
-          </Button> */}
-          <Button 
-            type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            {isLoading ? "Saving..." : "Save Discount"}
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6">{/* responsive button layout */}
+          <Button type="submit" disabled={isLoading} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">{isLoading ? "Saving..." : "Save Discount"}</Button>
         </div>
       </form>
     </div>

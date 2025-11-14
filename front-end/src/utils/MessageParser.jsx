@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 
 export default function MessageParser({ content }) {
   const safeContent = typeof content === "string" ? content : "";
@@ -36,3 +36,7 @@ export default function MessageParser({ content }) {
   };
   return <div className="chat-message">{parseMessage(safeContent)}</div>;
 }
+
+MessageParser.propTypes = {
+  content: PropTypes.string,
+};

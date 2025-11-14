@@ -28,7 +28,7 @@ public class ShoeVariantController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/sizes/init")
     public APIResponse<String> initializeSizes() {
         sizeService.initializeDefaultSizes();
@@ -74,7 +74,7 @@ public class ShoeVariantController {
      * Create a new variant for a shoe
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/{shoeId}/variants")
     public APIResponse<fpl.sd.backend.dto.response.VariantResponse> createVariant(
             @PathVariable int shoeId,
@@ -93,7 +93,7 @@ public class ShoeVariantController {
      * Update a variant (stock quantity, etc.)
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/variants/{variantId}")
     public APIResponse<fpl.sd.backend.dto.response.VariantResponse> updateVariant(
             @PathVariable String variantId,
@@ -112,7 +112,7 @@ public class ShoeVariantController {
      * Delete a variant
      * Protected endpoint - ADMIN only
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/variants/{variantId}")
     public APIResponse<Void> deleteVariant(@PathVariable String variantId) {
         sizeService.deleteVariant(variantId);

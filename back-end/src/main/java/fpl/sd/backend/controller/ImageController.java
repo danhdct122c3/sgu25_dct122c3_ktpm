@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ImageController {
 
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<List<String>> uploadImages(
             @RequestPart("files") List<MultipartFile> files) throws IOException {
@@ -65,6 +67,7 @@ public class ImageController {
                 .build();
     }
     
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping(value = "/upload-single", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public APIResponse<String> uploadSingleImage(
             @RequestPart("file") MultipartFile file) throws IOException {

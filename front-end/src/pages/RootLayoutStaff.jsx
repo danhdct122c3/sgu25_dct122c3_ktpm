@@ -1,17 +1,17 @@
-import ManagerAside from "@/components/manager-com/ManagerAside";
+import StaffAside from "@/components/staff-com/StaffAside";
 import { Outlet } from "react-router-dom";
 
-export default function RootLayoutManager() {
-    return (
+export default function RootLayoutStaff() {
+  return (
     <div className="grid gap-4 sm:grid-cols-12 grid-cols-1 h-screen">
       <div className="sm:col-span-2 sm:block hidden h-screen">
-        <ManagerAside />
+        <StaffAside />
       </div>
       <div className="sm:col-span-10">
         <>
-            <Outlet />
+          <Outlet />
         </>
       </div>
     </div>
-    );
+  );
 }

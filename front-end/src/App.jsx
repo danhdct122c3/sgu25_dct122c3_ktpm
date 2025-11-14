@@ -3,7 +3,6 @@ import UserLogin from "./pages/shop-pages/UserLogin";
 import AdminLogin from "./pages/admin-pages/AdminLogin";
 import SignUp from "./pages/shop-pages/SignUp";
 import Profile from "./pages/shop-pages/Profile";
-import RevenueStatistics from "./pages/admin-pages/RevenueStatistics";
 import "./App.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import { RouterProvider } from "react-router-dom";
@@ -17,14 +16,12 @@ import RootLayout from "./pages/RootLayout.jsx";
 import HomePage from "./pages/shop-pages/HomePage.jsx";
 import ListShoePage from "./pages/shop-pages/ListShoePage.jsx";
 import AddShoePage from "./pages/admin-pages/AddShoePage.jsx";
-import OrderHistory from "./pages/shop-pages/OrderHistory.jsx";
-import MemberManagemant from "./pages/admin-pages/MemberManagemant";
 import RootLayoutAdmin from "./pages/RootLayoutAdmin";
+import RootLayoutManager from "./pages/RootLayoutManager.jsx";
+import WelcomeManager from "./pages/manager-pages/WelcomeManager.jsx";
+import RootLayoutStaff from "./pages/RootLayoutStaff.jsx";
 import Cart from "./pages/shop-pages/Cart";
-import DiscountManagement from "./pages/admin-pages/DiscountManagement";
-import MemberOrderHistory from "./pages/admin-pages/MemberOrderHistory";
 import DetailShoePage from "./pages/shop-pages/DetailShoePage";
-import ListManageShoePage from "./pages/admin-pages/ListManageShoePage";
 import Terms from "./pages/shop-pages/Terms";
 import Privacy from "./pages/shop-pages/Privacy";
 import CheckOut from "./pages/shop-pages/CheckOut";
@@ -93,14 +90,43 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <WelcomeAdmin /> },
+      // Admin scope: chỉ quản lý tài khoản, không truy cập đơn hàng/doanh thu
+      { path: "account-management", element: <MemberManagemantPaging /> },
+      { path: "profile", element: <Profile /> },
+    ],
+  },
+  {
+    path: "/manager",
+    element: (
+      <ProtectedRoute requiredRole="MANAGER">
+        <RootLayoutManager />
+      </ProtectedRoute>
+    ),
+    errorElement: <ErrorPage />,
+    children: [
+      { index: true, element: <WelcomeManager /> },
       { path: "discount-management", element: <DiscountPaging /> },
       { path: "discount-management/new", element: <AddDiscountPage /> },
       { path: "member-order-history", element: <MemberOrderHistoryPaging /> },
       { path: "member-order-history/detail/:orderId/:userId", element: <MemberOrderHistoryDetail /> },
-      { path: "account-management", element: <MemberManagemantPaging /> },
-      { path: "revenue-stats", element: <RevenuePage /> },
       { path: "manage-shoes", element: <ShoePaging /> },
       { path: "manage-shoes/new", element: <AddShoePage /> },
+      { path: "revenue-stats", element: <RevenuePage /> },
+      { path: "profile", element: <Profile /> },
+    ],
+  },
+  {
+    path: "/staff",
+    element: (
+      <ProtectedRoute requiredRole="STAFF">
+        <RootLayoutStaff />
+      </ProtectedRoute>
+    ),
+    errorElement: <ErrorPage />,
+    children: [
+      { index: true, element: <WelcomeAdmin /> },
+      { path: "member-order-history", element: <MemberOrderHistoryPaging /> },
+      { path: "member-order-history/detail/:orderId/:userId", element: <MemberOrderHistoryDetail /> },
       { path: "profile", element: <Profile /> },
     ],
   },

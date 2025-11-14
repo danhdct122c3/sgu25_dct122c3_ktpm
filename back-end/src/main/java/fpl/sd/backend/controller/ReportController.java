@@ -20,7 +20,7 @@ import java.util.List;
 public class ReportController {
     ReportService reportService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/daily-report")
     public APIResponse<List<DailyRevenueReportDTO>> getDailyRevenueReport() {
         return APIResponse.<List<DailyRevenueReportDTO>>builder()
@@ -31,7 +31,7 @@ public class ReportController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/top-seller")
     public APIResponse<List<ProductPerformanceDTO>> getProductPerformance() {
         return APIResponse.<List<ProductPerformanceDTO>>builder()
@@ -42,7 +42,7 @@ public class ReportController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/inventory-status")
     public APIResponse<List<InventoryStatusDTO>> getInventoryStatus() {
         return APIResponse.<List<InventoryStatusDTO>>builder()

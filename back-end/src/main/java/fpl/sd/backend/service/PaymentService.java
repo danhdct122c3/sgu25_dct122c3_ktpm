@@ -55,15 +55,43 @@ public class PaymentService {
             vnpParams.put("vnp_OrderInfo", order.getId());
             vnpParams.put("vnp_IpAddr", ipAddress);
 
-            // Tạo query string và secure hash
+            log.info("VNPay params tmnCode={}, returnUrl={}, amount={}, txnRef={} ",
+                    vnpParams.get("vnp_TmnCode"),
+                    vnpParams.get("vnp_ReturnUrl"),
+                    vnpParams.get("vnp_Amount"),
+                    vnpParams.get("vnp_TxnRef"));
+
+            // Build query string for redirect (encoded) and hash data (encoded or raw depending on config)
             String queryUrl = VNPayUtils.generateQueryUrl(vnpParams, true);
-            String hashData = VNPayUtils.generateQueryUrl(vnpParams, false);
+
+            String hashData;
+            if (vnPayConfig.isVnpHashEncode()) {
+                // encode values (and keys) when building hash data
+                hashData = VNPayUtils.generateQueryUrl(vnpParams, true);
+            } else {
+                // raw values for hash data
+                hashData = VNPayUtils.generateQueryUrl(vnpParams, false);
+            }
+
+            // Log hash data to debug signature mismatches
+            log.debug("VNPay hash data (used to compute HMAC): {}", hashData);
+
             String vnpSecureHash = VNPayUtils.hmacSHA512(vnPayConfig.getVnpHashSecret(), hashData);
+
+            // Apply uppercase conversion if configured
+            if (vnPayConfig.isVnpHashUpper()) {
+                vnpSecureHash = vnpSecureHash.toUpperCase();
+            }
+
+            // Append secure hash and optional hash type
             queryUrl += "&vnp_SecureHash=" + vnpSecureHash;
-            
-            String paymentUrl = vnPayConfig.getVnpPayUrl() + "?" + queryUrl;
+            if (vnPayConfig.isVnpSendHashType()) {
+                queryUrl += "&vnp_SecureHashType=SHA512";
+            }
+
+            String paymentUrl = vnPayConfig.getVnpPayUrl().replace("\"", "") + "?" + queryUrl;
             log.info("Created VNPay payment URL for order {}: {}", orderId, paymentUrl);
-            
+
             return paymentUrl;
         } catch (AppException e) {
             log.error("Error creating payment for order {}: {}", orderId, e.getMessage());
@@ -128,7 +156,7 @@ public class PaymentService {
 
         // Validate payment signature
         try {
-            validationService.validatePaymentSignature(request, vnPayConfig.getVnpHashSecret());
+            validationService.validatePaymentSignature(request);
             log.info("Payment signature validated successfully for order: {}", request.getOrderId());
         } catch (AppException e) {
             log.error("Payment signature validation failed for order: {} - Error: {}", 

@@ -1,23 +1,7 @@
-import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import {
-  FaUserCircle,
-  FaShoePrints,
-  FaPercentage,
-  FaHistory,
-  FaUsers,
-  FaChartLine,
-  FaHome,
-  FaSignOutAlt,
-} from "react-icons/fa";
+import {  FaUsers, FaHome, FaSignOutAlt } from "react-icons/fa";
 import "../../index.css";
 import { useDispatch, useSelector } from "react-redux";
 import { authActions } from "@/store";
@@ -57,7 +41,7 @@ export function AdminAside() {
               {name} ({cleanRole})
             </span>
           </div>
-          {/* Navigation Links */}
+          {/* Navigation Links (Admin scope only: user management, system stats) */}
           <nav className="mt-10 space-y-3">
             <ul>
               <li>
@@ -70,48 +54,13 @@ export function AdminAside() {
               </li>
               <li>
                 <Link
-                  to="/admin/manage-shoes"
+                  to="/admin/account-management"
                   className="flex items-center justify-start gap-3 text-gray-700 hover:text-red-500 p-4 rounded-none hover:bg-gray-100 transition duration-200 w-full"
                 >
-                  <FaShoePrints /> <span>Quản lý giày</span>
+                  <FaUsers /> <span>Quản lý tài khoản</span>
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/admin/discount-management"
-                  className="flex items-center justify-start gap-3 text-gray-700 hover:text-red-500 p-4 rounded-none hover:bg-gray-100 transition duration-200 w-full"
-                >
-                  <FaPercentage /> <span>Quản lý mã giảm giá</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/admin/member-order-history"
-                  className="flex items-center justify-start gap-3 text-gray-700 hover:text-red-500 p-4 rounded-none hover:bg-gray-100 transition duration-200 w-full"
-                >
-                  <FaHistory /> <span>Quản lí đơn hàng</span>
-                </Link>
-              </li>
-              {user && userRole === "ROLE_ADMIN" && (
-                <div>
-                  <li>
-                    <Link
-                      to="/admin/account-management"
-                      className="flex items-center justify-start gap-3 text-gray-700 hover:text-red-500 p-4 rounded-none hover:bg-gray-100 transition duration-200 w-full"
-                    >
-                      <FaUsers /> <span>Quản lý tài khoản</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/admin/revenue-stats"
-                      className="flex items-center justify-start gap-3 text-gray-700 hover:text-red-500 p-4 rounded-none hover:bg-gray-100 transition duration-200 w-full"
-                    >
-                      <FaChartLine /> <span>Thống kê doanh thu</span>
-                    </Link>
-                  </li>
-                </div>
-              )}
+              
               <li className="mt-12">
                 <Link
                   onClick={() => dispatch(authActions.logout())}

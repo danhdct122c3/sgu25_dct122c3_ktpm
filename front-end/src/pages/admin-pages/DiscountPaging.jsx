@@ -20,12 +20,17 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import UpdateDiscountForm from "../admin-pages/UpdateDiscountForm";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/auth";
 // import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCaption, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 // import { Checkbox } from "@/components/ui/checkbox";  
 
 
 const DiscountPaging = () => {
+  const user = useSelector(selectUser);
+  const role = (user?.scope || "").replace("ROLE_", "");
+  const basePrefix = role === "MANAGER" ? "/manager" : role === "STAFF" ? "/staff" : "/admin";
   const [discountData, setDiscountData] = useState(null);
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState("");
@@ -135,12 +140,14 @@ const DiscountPaging = () => {
       <Button onClick={handleSearch} className="w-full md:w-auto">
         Tìm kiếm
       </Button>
-      <Button variant="outline" className="hover:bg-green-600 hover:text-white ms-3">
-        <Link to={"/admin/discount-management/new"} className="flex p-4 align-items-center">
-          <IoIosAddCircleOutline className="mr-2 h-10 w-10" />
-          <span>Thêm</span>
-        </Link>
-      </Button>
+      {role === "MANAGER" && (
+        <Button variant="outline" className="hover:bg-green-600 hover:text-white ms-3">
+          <Link to={`${basePrefix}/discount-management/new`} className="flex p-4 align-items-center">
+            <IoIosAddCircleOutline className="mr-2 h-10 w-10" />
+            <span>Thêm</span>
+          </Link>
+        </Button>
+      )}
       </div>
       {/* Danh sách mã giảm giá */}
       <div className="mt-10">

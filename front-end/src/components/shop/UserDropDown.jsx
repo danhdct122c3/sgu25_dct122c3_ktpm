@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -19,9 +18,8 @@ export default function UserDropDown() {
   const user = useSelector(selectUser);
 
   const name = user ? user.sub : null;
-  console.log(name);
-  const userRole = user ? user.scope : null
-  console.log(userRole);
+  const userRole = user ? user.scope : null;
+  const normalizedRole = (userRole || "").replace("ROLE_", "");
   
 
   const handleLogout = () => {
@@ -37,11 +35,25 @@ export default function UserDropDown() {
         <DropdownMenuContent className="-translate-x-1/3">
           <DropdownMenuLabel>{name ? "Chào mừng, " + name : "Hồ sơ"}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {/* Chỉ ADMIN mới hiển thị menu quản trị (đã xóa MANAGER role) */}
-          {user && userRole === "ROLE_ADMIN" && (
+          {/* Hiển thị link portal theo vai trò đăng nhập */}
+          {user && normalizedRole === "ADMIN" && (
             <div>
               <DropdownMenuItem asChild>
                 <Link to={"/admin"} className="cursor-pointer">Quản trị viên</Link>
+              </DropdownMenuItem>
+            </div>
+          )}
+          {user && normalizedRole === "MANAGER" && (
+            <div>
+              <DropdownMenuItem asChild>
+                <Link to={"/manager"} className="cursor-pointer">Quản lý</Link>
+              </DropdownMenuItem>
+            </div>
+          )}
+          {user && normalizedRole === "STAFF" && (
+            <div>
+              <DropdownMenuItem asChild>
+                <Link to={"/staff"} className="cursor-pointer">Nhân viên</Link>
               </DropdownMenuItem>
             </div>
           )}

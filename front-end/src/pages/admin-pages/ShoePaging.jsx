@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import { useState, useEffect, useCallback } from "react";
 import api from "@/config/axios";
 
 import { Input } from "@/components/ui/input";
@@ -16,8 +15,13 @@ import { getImageUrl } from "@/utils/imageHelper";
 import UpdateShoeForm from "../admin-pages/UpdateShoeForm";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/auth";
 
 const ShoeManagement = () => {
+  const user = useSelector(selectUser);
+  const role = (user?.scope || "").replace("ROLE_", "");
+  const basePrefix = role === "MANAGER" ? "/manager" : role === "STAFF" ? "/staff" : "/admin";
   const [shoeData, setShoeData] = useState(null);
   const [brands, setBrands] = useState([]);
   const [name, setName] = useState("");
@@ -31,7 +35,7 @@ const ShoeManagement = () => {
   const isActive = status === "true";
 
   const [page, setPage] = useState(1);
-  const [size, setSize] = useState(5);
+  const [size] = useState(5);
 
   const fetchShoeData = useCallback(async () => {
     try {
@@ -226,12 +230,14 @@ const ShoeManagement = () => {
         <Button onClick={handleSearch} className="w-full md:w-auto">
           Tìm kiếm
         </Button>
-        <Button variant="outline" className="hover:bg-green-600 hover:text-white">
-          <Link to={"/admin/manage-shoes/new"} className="flex items-center gap-2 p-2">
-            <IoIosAddCircleOutline className="h-5 w-5" />
-            <span>Thêm</span>
-          </Link>
-        </Button>
+        {role !== "STAFF" && (
+          <Button variant="outline" className="hover:bg-green-600 hover:text-white">
+            <Link to={`${basePrefix}/manage-shoes/new`} className="flex items-center gap-2 p-2">
+              <IoIosAddCircleOutline className="h-5 w-5" />
+              <span>Thêm</span>
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Table: căn đều 5 cột, nội dung căn giữa */}

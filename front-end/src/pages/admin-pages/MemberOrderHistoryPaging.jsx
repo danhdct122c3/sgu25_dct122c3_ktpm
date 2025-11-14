@@ -19,9 +19,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatterToVND } from "@/utils/formatter";
 import UpdateMemberOrderHistory from "./UpdateMemberOrderHistoryForm";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/auth";
 
 const MemberOrderHistoryPaging = () => {
   const navigate = useNavigate();
+  const user = useSelector(selectUser);
+  const role = (user?.scope || "").replace("ROLE_", "");
+  const basePrefix = role === "MANAGER" ? "/manager" : role === "STAFF" ? "/staff" : "/admin";
   const [orderData, setOrderData] = useState(null);
 
   const [orderStatus, setOrderStatus] = useState("");
@@ -214,7 +219,7 @@ const MemberOrderHistoryPaging = () => {
                   <Button
                     variant="ghost"
                     onClick={() =>
-                      navigate(`/admin/member-order-history/detail/${customerOrder.id}/${customerOrder.userId}`)
+                      navigate(`${basePrefix}/member-order-history/detail/${customerOrder.id}/${customerOrder.userId}`)
                     }
                   >
                     Xem chi tiết

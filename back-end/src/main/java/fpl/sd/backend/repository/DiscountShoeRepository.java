@@ -14,4 +14,5 @@ public interface DiscountShoeRepository extends JpaRepository<DiscountShoe, Inte
     List<DiscountShoe> findByShoe(Shoe shoe);
     List<DiscountShoe> findByDiscountAndShoe(Discount discount, Shoe shoe);
     boolean existsByDiscountAndShoe(Discount discount, Shoe shoe);
+    void deleteByDiscount(Discount discount);
 }

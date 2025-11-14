@@ -23,7 +23,7 @@ const resetPasswordSlice = createSlice({
             state.isLoading = true;
             state.error = null;
         },
-        resetPasswordSuccess: (state, action) => {
+        resetPasswordSuccess: (state) => {
             state.isLoading = false;
             state.email = null;
             state.otp = null;

@@ -28,15 +28,19 @@ public class DBInitialize {
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
         log.info("Initializing DB");
         return args -> {
-            // Initialize roles first - Only 2 roles: USER and ADMIN
+            // Initialize roles first - Create CUSTOMER, STAFF, MANAGER, ADMIN
             if (roleRepository.count() == 0) {
-                Role userRole = Role.builder().roles(RoleConstants.Role.USER).build();
+                Role customerRole = Role.builder().roles(RoleConstants.Role.CUSTOMER).build();
+                Role staffRole = Role.builder().roles(RoleConstants.Role.STAFF).build();
+                Role managerRole = Role.builder().roles(RoleConstants.Role.MANAGER).build();
                 Role adminRole = Role.builder().roles(RoleConstants.Role.ADMIN).build();
 
-                roleRepository.save(userRole);
+                roleRepository.save(customerRole);
+                roleRepository.save(staffRole);
+                roleRepository.save(managerRole);
                 roleRepository.save(adminRole);
 
-                log.info("Default roles (USER, ADMIN) have been created");
+                log.info("Default roles (CUSTOMER, STAFF, MANAGER, ADMIN) have been created");
             }
 
             // Create default admin user
@@ -59,10 +63,50 @@ public class DBInitialize {
                 log.warn("Default admin user has been created with username: admin, password: admin123");
             }
 
-            // Create default regular user for testing
+            // Create default manager user for testing
+            if (userRepository.findByUsername("manager").isEmpty()) {
+                Role managerRole = roleRepository.findByRoles(RoleConstants.Role.MANAGER)
+                        .orElseThrow(() -> new RuntimeException("Manager Role not found"));
+
+                User manager = User.builder()
+                        .username("manager")
+                        .password(passwordEncoder.encode("manager123"))
+                        .createdAt(Instant.now())
+                        .email("manager@gmail.com")
+                        .address("789 Industry Rd, Springfield")
+                        .phone("0930123456")
+                        .role(managerRole)
+                        .isActive(true)
+                        .build();
+
+                userRepository.save(manager);
+                log.warn("Default manager has been created with username: manager, password: manager123");
+            }
+
+            // Create default staff user for testing
+            if (userRepository.findByUsername("staff").isEmpty()) {
+                Role staffRole = roleRepository.findByRoles(RoleConstants.Role.STAFF)
+                        .orElseThrow(() -> new RuntimeException("Staff Role not found"));
+
+                User staff = User.builder()
+                        .username("staff")
+                        .password(passwordEncoder.encode("staff123"))
+                        .createdAt(Instant.now())
+                        .email("staff@gmail.com")
+                        .address("101 Warehouse Ave, Springfield")
+                        .phone("0912345678")
+                        .role(staffRole)
+                        .isActive(true)
+                        .build();
+
+                userRepository.save(staff);
+                log.warn("Default staff has been created with username: staff, password: staff123");
+            }
+
+            // Create default customer user for testing
             if (userRepository.findByUsername("user").isEmpty()) {
-                Role userRole = roleRepository.findByRoles(RoleConstants.Role.USER)
-                        .orElseThrow(() -> new RuntimeException("User Role not found"));
+                Role customerRole = roleRepository.findByRoles(RoleConstants.Role.CUSTOMER)
+                        .orElseThrow(() -> new RuntimeException("Customer Role not found"));
 
                 User user = User.builder()
                         .username("user")
@@ -71,12 +115,12 @@ public class DBInitialize {
                         .email("user@gmail.com")
                         .address("456 Main St, Springfield")
                         .phone("0987654321")
-                        .role(userRole)
+                        .role(customerRole)
                         .isActive(true)
                         .build();
 
                 userRepository.save(user);
-                log.warn("Default user has been created with username: user, password: user123");
+                log.warn("Default customer has been created with username: user, password: user123");
             }
         };
     }

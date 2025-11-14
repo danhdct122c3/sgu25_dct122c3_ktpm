@@ -1,9 +1,8 @@
 import CarouselHomePage from "@/components/shop/CarouselHomePage";
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ListBrand from "../../components/shop/ListBrand";
 import HotShoeList from "../../components/shop/HotShoeList";
 import api from "@/config/axios";
-import { useState } from "react";
 
 
 
@@ -13,10 +12,9 @@ export default function HomePage() {
   const [newArrivals, setNewArrivals] = useState([]);
   const [cheapeastShoes, setCheapestShoes] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
-
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState(4);
+  // Các giá trị không thay đổi, bỏ setter để tránh cảnh báo unused-vars
+  const [page] = useState(1);
+  const [size] = useState(4);
 
   useEffect(() => {
     const fetchShoeCollections = async () => {
@@ -53,7 +51,7 @@ export default function HomePage() {
     };
 
     fetchShoeCollections();
-  }, [sortOrder, page, size]);
+  }, [page, size]);
 
   console.log(newArrivals);
   console.log(cheapeastShoes);
