@@ -99,12 +99,26 @@ jobs:
           for f in $REPORT_DIR/TEST-*.xml; do
             [ -e "$f" ] || continue
             echo "---- Suite: $f ----"
-            # print suite summary
-            xmlstarlet sel -t -m "/testsuite" -v "concat('tests=',@tests,' failures=',@failures,' errors=',@errors,' skipped=',@skipped,' time=',@time)" -n "$f"
-            echo "Testcases:" 
-            # print each testcase with counts of failure and error
-            xmlstarlet sel -t -m "/testsuite/testcase" -v "concat(@classname,'::',@name,'|time=',@time,'|failures=',count(failure),'|errors=',count(error))" -n "$f" | \
-              awk -F'|' '{ split($1,a,":"); status="PASSED"; if ($3+0 > 0) status="FAILED"; if ($4+0 > 0) status="ERROR"; printf "%s %s - %s\n", a[1]"::"a[2], status, $2 }'
+            xmlstarlet sel -t -m "/testsuite" \
+              -v "concat('tests=',@tests,' failures=',@failures,' errors=',@errors,' skipped=',@skipped,' time=',@time)" -n "$f"
+
+            echo "Testcases:"
+            xmlstarlet sel -t -m "/testsuite/testcase" \
+              -v "concat(@classname,'::',@name,'|time=',@time,'|failures=',count(failure),'|errors=',count(error))" -n "$f" | \
+              awk -F'|' '{
+                split($1,a,"::");
+                class=a[1]; name=a[2];
+                split($2,b,"=");
+                time=b[2];
+                split($3,c,"=");
+                failures=c[2]+0;
+                split($4,d,"=");
+                errors=d[2]+0;
+                status="PASSED";
+                if (failures>0) status="FAILED";
+                if (errors>0) status="ERROR";
+                printf "- %s.%s | status=%s | time=%ss\n", class, name, status, time;
+              }'
             echo
           done
 
