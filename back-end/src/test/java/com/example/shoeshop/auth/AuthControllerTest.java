@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import fpl.sd.backend.BackEndApplication;
 import fpl.sd.backend.constant.RoleConstants;
-import fpl.sd.backend.entity.InvalidatedToken;
 import fpl.sd.backend.entity.Role;
 import fpl.sd.backend.entity.User;
 import fpl.sd.backend.repository.InvalidatedTokenRepository;
@@ -23,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -51,6 +49,8 @@ public class AuthControllerTest {
     private InvalidatedTokenRepository invalidatedTokenRepository;
 
 
+    // Use explicit username for authentication (tests should use username)
+    private final String TEST_USERNAME = "testuser";
     private final String TEST_EMAIL = "testuser@example.com";
     private final String RAW_PASSWORD = "12345678";
 
@@ -71,7 +71,7 @@ public class AuthControllerTest {
         String encoded = new BCryptPasswordEncoder(10).encode(RAW_PASSWORD);
 
         User u = User.builder()
-                .username(TEST_EMAIL) // AuthenticationService uses username field for login
+                .username(TEST_USERNAME) // AuthenticationService uses username field for login
                 .password(encoded)
                 .email(TEST_EMAIL)
                 .address(null)
@@ -89,7 +89,7 @@ public class AuthControllerTest {
     public void login_success_shouldReturnToken() throws Exception {
         // Given
         String json = objectMapper.writeValueAsString(
-                new LoginPayload(TEST_EMAIL, RAW_PASSWORD)
+                new LoginPayload(TEST_USERNAME, RAW_PASSWORD)
         );
 
         // When
@@ -110,13 +110,13 @@ public class AuthControllerTest {
 
         // Validate token structure parseable
         SignedJWT signedJWT = SignedJWT.parse(token);
-        assertThat(signedJWT.getJWTClaimsSet().getSubject()).isEqualTo(TEST_EMAIL);
+        assertThat(signedJWT.getJWTClaimsSet().getSubject()).isEqualTo(TEST_USERNAME);
     }
 
     @Test
     public void login_fail_wrongPassword() throws Exception {
         String json = objectMapper.writeValueAsString(
-                new LoginPayload(TEST_EMAIL, "wrongpassword")
+                new LoginPayload(TEST_USERNAME, "wrongpassword")
         );
 
         mockMvc.perform(post("/auth/token")
@@ -128,7 +128,7 @@ public class AuthControllerTest {
     @Test
     public void login_fail_userNotFound() throws Exception {
         String json = objectMapper.writeValueAsString(
-                new LoginPayload("unknown@example.com", "whatever")
+                new LoginPayload("unknownuser", "whatever")
         );
 
         mockMvc.perform(post("/auth/token")
@@ -140,7 +140,7 @@ public class AuthControllerTest {
     @Test
     public void logout_success_shouldInvalidateToken() throws Exception {
         // First login to obtain token
-        String loginJson = objectMapper.writeValueAsString(new LoginPayload(TEST_EMAIL, RAW_PASSWORD));
+        String loginJson = objectMapper.writeValueAsString(new LoginPayload(TEST_USERNAME, RAW_PASSWORD));
         var mvcResult = mockMvc.perform(post("/auth/token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
@@ -178,13 +178,11 @@ public class AuthControllerTest {
 
         // Expect the security filter/decoder to reject the token and throw an exception during processing.
         // We assert that performing the request results in an exception (JwtException / AuthenticationServiceException).
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
-            mockMvc.perform(post("/auth/logout")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header("Authorization", "Bearer " + badToken)
-                            .content(logoutJson))
-                    .andReturn();
-        });
+        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> mockMvc.perform(post("/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + badToken)
+                .content(logoutJson))
+                .andReturn());
     }
 
     // small helper DTOs for request payloads
