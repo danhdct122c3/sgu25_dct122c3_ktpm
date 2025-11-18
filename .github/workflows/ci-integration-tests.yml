@@ -73,3 +73,51 @@ jobs:
         run: mvn -Dspring.profiles.active=test -DskipTests=false test
         # If you want to run a single test class to speed up CI, replace the command with:
         # mvn -Dspring.profiles.active=test -DskipTests=false -Dtest=AuthControllerTest test
+
+      - name: Run auth JUnit test (maven)
+        working-directory: back-end
+        env:
+          TEST_DB_URL: ${{ env.TEST_DB_URL }}
+          TEST_DB_USERNAME: ${{ env.TEST_DB_USERNAME }}
+          TEST_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+        run: |
+          # Run only the AuthControllerTest to speed up CI and make debugging faster
+          mvn -Dspring.profiles.active=test -DskipTests=false -Dtest=AuthControllerTest test
+
+      - name: Print JUnit test summary (parse surefire XML)
+        if: always()
+        run: |
+          echo "=== JUnit surefire summary ==="
+          sudo apt-get update -y
+          sudo apt-get install -y xmlstarlet || true
+          REPORT_DIR=back-end/target/surefire-reports
+          if [ ! -d "$REPORT_DIR" ]; then
+            echo "No surefire reports found at $REPORT_DIR"
+            exit 0
+          fi
+
+          for f in $REPORT_DIR/TEST-*.xml; do
+            [ -e "$f" ] || continue
+            echo "---- Suite: $f ----"
+            # print suite summary
+            xmlstarlet sel -t -m "/testsuite" -v "concat('tests=',@tests,' failures=',@failures,' errors=',@errors,' skipped=',@skipped,' time=',@time)" -n "$f"
+            echo "Testcases:" 
+            # print each testcase with counts of failure and error
+            xmlstarlet sel -t -m "/testsuite/testcase" -v "concat(@classname,'::',@name,'|time=',@time,'|failures=',count(failure),'|errors=',count(error))" -n "$f" | \
+              awk -F'|' '{ split($1,a,":"); status="PASSED"; if ($3+0 > 0) status="FAILED"; if ($4+0 > 0) status="ERROR"; printf "%s %s - %s\n", a[1]"::"a[2], status, $2 }'
+            echo
+          done
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: back-end/target/surefire-reports/**
+
+      - name: Upload full target (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: back-end-target
+          path: back-end/target/**
