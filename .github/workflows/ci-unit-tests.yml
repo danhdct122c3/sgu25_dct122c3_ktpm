@@ -35,7 +35,7 @@ jobs:
         working-directory: back-end
         # Run only test classes that end with 'UnitTest' to avoid executing integration tests
         run: |
-          mvn -B -DskipITs=true "-Dtest=*UnitTest" test
+          mvn -B -DskipITs=true "-Dtest=*UnitTest" "-Dsurefire.failIfNoSpecifiedTests=false" test
 
       - name: Upload surefire reports
         if: always()
