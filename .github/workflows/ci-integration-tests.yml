@@ -1,0 +1,75 @@
+# CI workflow: run backend integration tests against MySQL service
+# - Starts a MySQL service container
+# - Waits for DB readiness
+# - Creates the `shoeshop_test` database
+# - Runs `mvn` in the back-end module with profile `test`
+name: Backend Integration Tests (MySQL)
+
+on:
+  push:
+    branches: [ main, develop, junit-integration-tests ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch: {}
+
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/shoeshop_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      TEST_DB_USERNAME: root
+      TEST_DB_PASSWORD: 123456
+      MAVEN_OPTS: -Xmx2g
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Wait for MySQL to be ready
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y default-mysql-client
+          for i in $(seq 1 30); do
+            mysql -h 127.0.0.1 -P 3306 -u root -p"${{ env.TEST_DB_PASSWORD }}" -e "SELECT 1" && break
+            echo "Waiting for MySQL... ($i)"
+            sleep 2
+          done
+
+      - name: Create test database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p"${{ env.TEST_DB_PASSWORD }}" -e "CREATE DATABASE IF NOT EXISTS shoeshop_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+      - name: Run backend tests (maven)
+        working-directory: back-end
+        run: mvn -Dspring.profiles.active=test -DskipTests=false test
+        # If you want to run a single test class to speed up CI, replace the command with:
+        # mvn -Dspring.profiles.active=test -DskipTests=false -Dtest=AuthControllerTest test
