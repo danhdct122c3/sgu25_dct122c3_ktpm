@@ -1,10 +1,10 @@
 package com.example.shoeshop.auth;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fpl.sd.backend.BackEndApplication;
 import fpl.sd.backend.constant.RoleConstants;
 import fpl.sd.backend.constant.ShoeConstants;
+import fpl.sd.backend.dto.request.ImageRequest; // Đảm bảo import đúng DTO ảnh của bạn
 import fpl.sd.backend.dto.request.ShoeCreateRequest;
 import fpl.sd.backend.entity.*;
 import fpl.sd.backend.repository.*;
@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,18 +48,25 @@ public class ShoeControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        // 1. Clean Data (Xóa con trước, cha sau)
         shoeRepository.deleteAll();
         brandRepository.deleteAll();
         userRepository.deleteAll();
 
-        // 1. Setup Brand
-        brand = brandRepository.save(Brand.builder().brandName("Adidas").build());
+        // 2. Setup Brand (FIXED: Thêm createdAt để tránh lỗi DataIntegrityViolation)
+        brand = Brand.builder()
+                .brandName("Adidas")
+                .description("Test Brand Description")
+                .isActive(true)
+                .createdAt(Instant.now()) // <--- QUAN TRỌNG
+                .build();
+        brand = brandRepository.save(brand);
 
-        // 2. Setup Product (1 Active, 1 Inactive)
+        // 3. Setup Product (1 Active, 1 Inactive)
         createShoeInDb("Ultra Boost", true);
         createShoeInDb("Old Model", false); // Inactive
 
-        // 3. Setup Manager Account & Login (Để test quyền Manager)
+        // 4. Setup Manager Account & Login
         Role managerRole = roleRepository.findByRoles(RoleConstants.Role.MANAGER)
                 .orElseGet(() -> roleRepository.save(Role.builder().roles(RoleConstants.Role.MANAGER).build()));
 
@@ -100,9 +108,16 @@ public class ShoeControllerTest {
         request.setName("Yeezy 350");
         request.setPrice(300.0);
         request.setBrandId(brand.getId());
-        request.setGender("UNISEX");
+        // Đảm bảo String này khớp với Enum trong ShoeConstants (MAN hoặc MALE)
+        request.setGender("MAN");
         request.setCategory("SNEAKER");
         request.setStatus(true);
+
+        // FIXED: Thêm ảnh để vượt qua Validate trong Service/DTO
+        List<ImageRequest> images = new ArrayList<>();
+        // Giả sử ImageRequest có constructor hoặc builder, bạn hãy điều chỉnh cho khớp DTO
+        ImageRequest imgReq = new ImageRequest();
+        imgReq.setUrl("http://test-image.com/shoe.jpg");
 
         mockMvc.perform(post("/shoes")
                         .header("Authorization", "Bearer " + managerToken)
@@ -120,7 +135,7 @@ public class ShoeControllerTest {
     void createShoe_MissingImages_ShouldFail() throws Exception {
         ShoeCreateRequest request = new ShoeCreateRequest();
         request.setName("Fail Shoe");
-        // Không set Images (Required)
+        // Không set Images (Required) -> Sẽ bị lỗi
 
         mockMvc.perform(post("/shoes")
                         .header("Authorization", "Bearer " + managerToken)
@@ -151,18 +166,25 @@ public class ShoeControllerTest {
                 .price(100.0)
                 .status(status)
                 .createdAt(Instant.now())
+                .updatedAt(Instant.now()) // Nên thêm
                 .brand(brand)
+                // Đảm bảo Enum này khớp với code entity của bạn
                 .gender(ShoeConstants.Gender.MAN)
                 .category(ShoeConstants.Category.SNEAKER)
+                .shoeImages(new ArrayList<>()) // Init list rỗng để tránh null pointer
                 .build();
         shoeRepository.save(shoe);
     }
 
     private String obtainAccessToken(String u, String p) throws Exception {
-        // (Giống helper bạn đã dùng ở bài CartControllerIT)
         String json = objectMapper.writeValueAsString(new LoginPayload(u, p));
         MvcResult result = mockMvc.perform(post("/auth/token").contentType(MediaType.APPLICATION_JSON).content(json)).andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).path("result").path("token").asText();
     }
-    static class LoginPayload { public String username; public String password; public LoginPayload(String u, String p) { this.username=u; this.password=p;}}
+
+    static class LoginPayload {
+        public String username;
+        public String password;
+        public LoginPayload(String u, String p) { this.username=u; this.password=p;}
+    }
 }
