@@ -83,6 +83,8 @@ public class CartControllerIntegrationTest {
                 .fullName("Integration Tester")
                 .isActive(true)
                 .role(role)
+                .createdAt(java.time.Instant.now()) // <--- THÊM DÒNG NÀY (hoặc LocalDateTime.now() tùy kiểu dữ liệu Entity của bạn)
+                .updatedAt(java.time.Instant.now())
                 .build();
         userRepository.save(user);
 
