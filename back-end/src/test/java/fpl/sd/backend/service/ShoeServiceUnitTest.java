@@ -1,6 +1,7 @@
-        package fpl.sd.backend.service;
+package fpl.sd.backend.service;
 
 import fpl.sd.backend.constant.ShoeConstants;
+import fpl.sd.backend.dto.request.ImageRequest; // Import đúng class ImageRequest
 import fpl.sd.backend.dto.request.ShoeCreateRequest;
 import fpl.sd.backend.dto.response.ShoeResponse;
 import fpl.sd.backend.entity.*;
@@ -31,11 +32,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ShoeServiceUnitTest {
 
-    // --- MOCK CÁC REPOSITORY CẦN THIẾT ---
+    // --- MOCK CÁC REPOSITORY ---
     @Mock private ShoeRepository shoeRepository;
     @Mock private BrandRepository brandRepository;
     @Mock private ShoeImageRepository shoeImageRepository;
-    // Thêm các Mock bị thiếu gây ra lỗi NullPointer
     @Mock private ShoeVariantRepository shoeVariantRepository;
     @Mock private SizeChartRepository sizeChartRepository;
 
@@ -62,8 +62,9 @@ class ShoeServiceUnitTest {
                 .name("Air Jordan")
                 .status(true)
                 .brand(brand)
+                // Giả định Enum là MAN. Nếu code của bạn dùng MALE, hãy sửa thành Gender.MALE
                 .gender(ShoeConstants.Gender.MAN)
-                .category(ShoeConstants.Category.SNEAKER)
+                .category(ShoeConstants.Category.RUNNING)
                 .shoeImages(new ArrayList<>())
                 .build();
     }
@@ -101,7 +102,6 @@ class ShoeServiceUnitTest {
                 .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
-    // --- ĐÃ SỬA LỖI: Mock thêm imageMapper và truyền đúng Enum String ---
     @Test
     void createShoe_ValidRequest_ShouldSave() {
         // Arrange
@@ -109,18 +109,29 @@ class ShoeServiceUnitTest {
         request.setName("New Shoe");
         request.setPrice(100.0);
         request.setBrandId(1);
-        // Đảm bảo chuỗi này khớp với Enum trong ShoeConstants (thường là chữ in hoa)
-        request.setGender("MALE");
+
+        // String này phải khớp với tên Enum trong ShoeConstants (ví dụ "MAN" hoặc "MALE")
+        request.setGender("MAN");
         request.setCategory("SNEAKER");
         request.setStatus(true);
-        // Use empty list to avoid null validation while not referencing ShoeImageRequest type
-        request.setImages(new ArrayList<>());
 
+        // --- SỬA: Tạo List<ImageRequest> không rỗng ---
+        // Dùng ImageRequest thay vì ShoeImageRequest để khớp với DTO của bạn
+        ImageRequest imgReq = new ImageRequest();
+        imgReq.setUrl("http://test-image.com/shoe.jpg");
+
+        List<ImageRequest> images = new ArrayList<>();
+        images.add(imgReq);
+        request.setImages(images);
+        // ---------------------------------------------
+
+        // Mock behavior
         when(brandRepository.findById(1)).thenReturn(Optional.of(brand));
-        // Mock hành vi save shoe trả về chính nó
         when(shoeRepository.save(any(Shoe.class))).thenAnswer(i -> i.getArguments()[0]);
-        // Mock mapper ảnh để không bị lỗi null khi map
-        when(imageMapper.toShoeImage(any())).thenReturn(new ShoeImage());
+
+        // Mock mapper: Trả về object ShoeImage rỗng khi map từ ImageRequest
+        when(imageMapper.toShoeImage(any(ImageRequest.class))).thenReturn(new ShoeImage());
+
         when(shoeHelper.getShoeResponse(any())).thenReturn(new ShoeResponse());
 
         // Act
@@ -131,13 +142,12 @@ class ShoeServiceUnitTest {
         verify(shoeImageRepository).saveAll(any());
     }
 
-    // --- ĐÃ SỬA LỖI: Mock shoeVariantRepository ---
     @Test
     void deleteShoe_ShouldMarkStatusFalse() {
         // Arrange
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
 
-        // QUAN TRỌNG: Mock hàm tìm variant để không bị NullPointerException
+        // Mock list variant rỗng để tránh NullPointerException khi service gọi findShoeVariantByShoeId
         when(shoeVariantRepository.findShoeVariantByShoeId(1)).thenReturn(Collections.emptyList());
 
         // Act
@@ -146,7 +156,6 @@ class ShoeServiceUnitTest {
         // Assert
         assertThat(shoe.isStatus()).isFalse(); // Kiểm tra soft delete
         verify(shoeRepository).save(shoe);
-        // Kiểm tra xem có gọi hàm xóa variants không
         verify(shoeVariantRepository).saveAll(any());
     }
 }
