@@ -112,7 +112,7 @@ class ShoeServiceUnitTest {
 
         // String này phải khớp với tên Enum trong ShoeConstants (ví dụ "MAN" hoặc "MALE")
         request.setGender("MAN");
-        request.setCategory("SNEAKER");
+        request.setCategory("RUNNING");
         request.setStatus(true);
 
         // --- SỬA: Tạo List<ImageRequest> không rỗng ---
