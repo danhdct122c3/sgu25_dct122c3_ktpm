@@ -247,10 +247,19 @@ public class CartControllerIntegrationTest {
 
     // ================= HELPER METHODS =================
 
+    // Thay thế hàm cũ bằng hàm này ở cuối file CartControllerIntegrationTest.java
     private void createCartItemInDb(int quantity) {
         User user = userRepository.findByUsername(TEST_USERNAME).orElseThrow();
+
+        // Tìm hoặc tạo Cart
         Cart cart = cartRepository.findByUserId(user.getId())
-                .orElseGet(() -> cartRepository.save(Cart.builder().user(user).items(new ArrayList<>()).build()));
+                .orElseGet(() -> {
+                    Cart newCart = Cart.builder()
+                            .user(user)
+                            .items(new ArrayList<>()) // Khởi tạo list rỗng
+                            .build();
+                    return cartRepository.save(newCart);
+                });
 
         ShoeVariant variant = shoeVariantRepository.findById(variantId).orElseThrow();
 
@@ -259,7 +268,18 @@ public class CartControllerIntegrationTest {
                 .variant(variant)
                 .quantity(quantity)
                 .build();
-        cartItemRepository.save(item);
+
+        // QUAN TRỌNG: Lưu Item xong phải add vào list của Cart để đồng bộ bộ nhớ
+        item = cartItemRepository.save(item);
+
+        // Nếu list đang null thì khởi tạo, sau đó add item vào
+        if (cart.getItems() == null) {
+            cart.setItems(new ArrayList<>());
+        }
+        cart.getItems().add(item);
+
+        // Save ngược lại Cart để Hibernate nhận biết sự thay đổi trong list
+        cartRepository.save(cart);
     }
 
     static class LoginPayload {
