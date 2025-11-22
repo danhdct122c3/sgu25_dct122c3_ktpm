@@ -69,8 +69,8 @@ public class ShoeControllerTest {
 
         // 3. Setup ADMIN Account
         // Service yêu cầu ADMIN cho các hàm quản lý, nên dùng quyền cao nhất để test
-        Role adminRole = roleRepository.findByRoles(RoleConstants.Role.ADMIN)
-                .orElseGet(() -> roleRepository.save(Role.builder().roles(RoleConstants.Role.ADMIN).build()));
+        Role adminRole = roleRepository.findByRoles(RoleConstants.Role.MANAGER)
+                .orElseGet(() -> roleRepository.save(Role.builder().roles(RoleConstants.Role.MANAGER).build()));
 
         User admin = User.builder()
                 .username("admin_test")
@@ -96,7 +96,7 @@ public class ShoeControllerTest {
         // --- FIX QUAN TRỌNG: Lấy đúng tên Enum từ ShoeConstants ---
         // Sẽ lấy chuỗi "MAN" và "SNEAKER"
         request.setGender(ShoeConstants.Gender.MAN.name());
-        request.setCategory(ShoeConstants.Category.SNEAKER.name());
+        request.setCategory(ShoeConstants.Category.RUNNING.name());
 
         // Thêm ảnh để validate thành công
         List<ImageRequest> images = new ArrayList<>();
