@@ -1,4 +1,4 @@
-package fpl.sd.backend.service;
+        package fpl.sd.backend.service;
 
 import fpl.sd.backend.constant.ShoeConstants;
 import fpl.sd.backend.dto.request.ShoeCreateRequest;
@@ -7,7 +7,9 @@ import fpl.sd.backend.entity.*;
 import fpl.sd.backend.exception.AppException;
 import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.mapper.ShoeImageMapper;
+import fpl.sd.backend.mapper.ShoeVariantMapper;
 import fpl.sd.backend.repository.*;
+import fpl.sd.backend.utils.SKUGenerators;
 import fpl.sd.backend.utils.ShoeHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,11 +31,19 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ShoeServiceUnitTest {
 
+    // --- MOCK CÁC REPOSITORY CẦN THIẾT ---
     @Mock private ShoeRepository shoeRepository;
     @Mock private BrandRepository brandRepository;
     @Mock private ShoeImageRepository shoeImageRepository;
-    @Mock private ShoeHelper shoeHelper; // Mock Helper vì nó dùng để map response
+    // Thêm các Mock bị thiếu gây ra lỗi NullPointer
+    @Mock private ShoeVariantRepository shoeVariantRepository;
+    @Mock private SizeChartRepository sizeChartRepository;
+
+    // --- MOCK CÁC UTILS/MAPPERS ---
+    @Mock private ShoeHelper shoeHelper;
     @Mock private ShoeImageMapper imageMapper;
+    @Mock private ShoeVariantMapper shoeVariantMapper;
+    @Mock private SKUGenerators skuGenerators;
 
     @InjectMocks
     private ShoeService shoeService;
@@ -57,51 +68,40 @@ class ShoeServiceUnitTest {
                 .build();
     }
 
-    // --- TC_PC_001: View Product List (Customer View) ---
     @Test
     void getAllShoes_ShouldReturnActiveShoesOnly() {
-        // Arrange
         when(shoeRepository.findByStatusTrue()).thenReturn(List.of(shoe));
         when(shoeHelper.getShoeResponse(any())).thenReturn(new ShoeResponse());
 
-        // Act
         List<ShoeResponse> result = shoeService.getAllShoes();
 
-        // Assert
         assertThat(result).hasSize(1);
-        verify(shoeRepository).findByStatusTrue(); // Đảm bảo chỉ gọi hàm lấy SP active
+        verify(shoeRepository).findByStatusTrue();
     }
 
-    // --- TC_PC_002: View Product Details (Success) ---
     @Test
     void getShoeById_WhenExists_ShouldReturnShoe() {
-        // Arrange
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
         ShoeResponse resp = new ShoeResponse();
         resp.setName("Air Jordan");
         when(shoeHelper.getShoeResponse(shoe)).thenReturn(resp);
 
-        // Act
         ShoeResponse response = shoeService.getShoeById(1);
 
-        // Assert
         assertThat(response.getName()).isEqualTo("Air Jordan");
     }
 
-    // --- TC_PC_003: View Product Details (Not Found) ---
     @Test
     void getShoeById_WhenNotExists_ShouldThrowException() {
-        // Arrange
         when(shoeRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThatThrownBy(() -> shoeService.getShoeById(999))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
-    // --- TC_PC_004: Add New Product (Success) ---
+    // --- ĐÃ SỬA LỖI: Mock thêm imageMapper và truyền đúng Enum String ---
     @Test
     void createShoe_ValidRequest_ShouldSave() {
         // Arrange
@@ -109,10 +109,17 @@ class ShoeServiceUnitTest {
         request.setName("New Shoe");
         request.setPrice(100.0);
         request.setBrandId(1);
-        request.setGender("MAN");
+        // Đảm bảo chuỗi này khớp với Enum trong ShoeConstants (thường là chữ in hoa)
+        request.setGender("MALE");
         request.setCategory("SNEAKER");
+        request.setStatus(true);
+        // Use empty list to avoid null validation while not referencing ShoeImageRequest type
+        request.setImages(new ArrayList<>());
+
         when(brandRepository.findById(1)).thenReturn(Optional.of(brand));
+        // Mock hành vi save shoe trả về chính nó
         when(shoeRepository.save(any(Shoe.class))).thenAnswer(i -> i.getArguments()[0]);
+        // Mock mapper ảnh để không bị lỗi null khi map
         when(imageMapper.toShoeImage(any())).thenReturn(new ShoeImage());
         when(shoeHelper.getShoeResponse(any())).thenReturn(new ShoeResponse());
 
@@ -120,21 +127,26 @@ class ShoeServiceUnitTest {
         shoeService.createShoe(request);
 
         // Assert
-        verify(shoeRepository).save(any(Shoe.class)); // Kiểm tra hàm save được gọi
-        verify(shoeImageRepository).saveAll(any());   // Kiểm tra ảnh được lưu
+        verify(shoeRepository).save(any(Shoe.class));
+        verify(shoeImageRepository).saveAll(any());
     }
 
-    // --- TC_PC_007: Delete Product (Soft Delete) ---
+    // --- ĐÃ SỬA LỖI: Mock shoeVariantRepository ---
     @Test
     void deleteShoe_ShouldMarkStatusFalse() {
         // Arrange
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
 
+        // QUAN TRỌNG: Mock hàm tìm variant để không bị NullPointerException
+        when(shoeVariantRepository.findShoeVariantByShoeId(1)).thenReturn(Collections.emptyList());
+
         // Act
         shoeService.deleteShoe(1);
 
         // Assert
-        assertThat(shoe.isStatus()).isFalse(); // Quan trọng: Kiểm tra soft delete
-        verify(shoeRepository).save(shoe);     // Phải gọi save để update trạng thái
+        assertThat(shoe.isStatus()).isFalse(); // Kiểm tra soft delete
+        verify(shoeRepository).save(shoe);
+        // Kiểm tra xem có gọi hàm xóa variants không
+        verify(shoeVariantRepository).saveAll(any());
     }
 }
