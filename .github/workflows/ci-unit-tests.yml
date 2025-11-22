@@ -3,7 +3,7 @@ name: backend-unit-tests
 # Run unit tests only (no DB). Triggers on pushes to main/develop/junit-integration-tests and PRs to main/develop.
 on:
   push:
-    branches: [ main, develop, junit-integration-tests,unit-integration-test ]
+    branches: [ main, develop, junit-integration-tests,unit-integration-test,shoeUnitIntergrationTest ]
   pull_request:
     branches: [ main, develop ]
 
