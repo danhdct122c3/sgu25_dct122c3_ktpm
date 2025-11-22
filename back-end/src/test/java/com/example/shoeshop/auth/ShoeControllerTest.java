@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fpl.sd.backend.BackEndApplication;
 import fpl.sd.backend.constant.RoleConstants;
 import fpl.sd.backend.constant.ShoeConstants;
-import fpl.sd.backend.dto.request.ImageRequest; // Đảm bảo import đúng DTO ảnh của bạn
+import fpl.sd.backend.dto.request.ImageRequest;
 import fpl.sd.backend.dto.request.ShoeCreateRequest;
 import fpl.sd.backend.entity.*;
 import fpl.sd.backend.repository.*;
@@ -48,25 +48,27 @@ public class ShoeControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // 1. Clean Data (Xóa con trước, cha sau)
+        // 1. Clean Data
         shoeRepository.deleteAll();
         brandRepository.deleteAll();
         userRepository.deleteAll();
 
-        // 2. Setup Brand (FIXED: Thêm createdAt để tránh lỗi DataIntegrityViolation)
+        // 2. Setup Brand
+        // FIX: Thêm logoUrl để tránh lỗi DataIntegrityViolation
         brand = Brand.builder()
                 .brandName("Adidas")
                 .description("Test Brand Description")
                 .isActive(true)
-                .createdAt(Instant.now()) // <--- QUAN TRỌNG
+                .logoUrl("http://example.com/logo.png") // <--- ĐÃ THÊM DÒNG NÀY
+                .createdAt(Instant.now())
                 .build();
         brand = brandRepository.save(brand);
 
-        // 3. Setup Product (1 Active, 1 Inactive)
+        // 3. Setup Product
         createShoeInDb("Ultra Boost", true);
-        createShoeInDb("Old Model", false); // Inactive
+        createShoeInDb("Old Model", false);
 
-        // 4. Setup Manager Account & Login
+        // 4. Setup Manager Account
         Role managerRole = roleRepository.findByRoles(RoleConstants.Role.MANAGER)
                 .orElseGet(() -> roleRepository.save(Role.builder().roles(RoleConstants.Role.MANAGER).build()));
 
@@ -83,41 +85,39 @@ public class ShoeControllerTest {
         managerToken = obtainAccessToken("manager", "123456");
     }
 
-    // --- TC_PC_001: View Product List (Public) ---
     @Test
     void getAllShoes_Public_ShouldReturnOnlyActiveShoes() throws Exception {
         mockMvc.perform(get("/shoes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1))) // Chỉ trả về 1 Active
+                .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].name").value("Ultra Boost"));
     }
 
-    // --- TC_PC_008: View All Shoes (Admin/Manager) ---
     @Test
     void getAllShoesForAdmin_Manager_ShouldReturnAll() throws Exception {
         mockMvc.perform(get("/shoes/admin/all")
                         .header("Authorization", "Bearer " + managerToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(2))); // Trả về cả Active và Inactive
+                .andExpect(jsonPath("$.result", hasSize(2)));
     }
 
-    // --- TC_PC_004: Create Product (Success) ---
     @Test
     void createShoe_Manager_ShouldSuccess() throws Exception {
         ShoeCreateRequest request = new ShoeCreateRequest();
         request.setName("Yeezy 350");
         request.setPrice(300.0);
         request.setBrandId(brand.getId());
-        // Đảm bảo String này khớp với Enum trong ShoeConstants (MAN hoặc MALE)
         request.setGender("MAN");
         request.setCategory("SNEAKER");
         request.setStatus(true);
 
-        // FIXED: Thêm ảnh để vượt qua Validate trong Service/DTO
+        // FIX: Thêm ảnh vào list và gán vào request
         List<ImageRequest> images = new ArrayList<>();
-        // Giả sử ImageRequest có constructor hoặc builder, bạn hãy điều chỉnh cho khớp DTO
         ImageRequest imgReq = new ImageRequest();
         imgReq.setUrl("http://test-image.com/shoe.jpg");
+        images.add(imgReq); // <--- ĐÃ THÊM DÒNG NÀY (Add item to list)
+
+        request.setImages(images); // <--- ĐÃ THÊM DÒNG NÀY (Set list to request)
 
         mockMvc.perform(post("/shoes")
                         .header("Authorization", "Bearer " + managerToken)
@@ -127,51 +127,45 @@ public class ShoeControllerTest {
                 .andExpect(jsonPath("$.result.name").value("Yeezy 350"));
 
         // Verify DB
-        assertThat(shoeRepository.findAll()).hasSize(3); // 2 cũ + 1 mới
+        assertThat(shoeRepository.findAll()).hasSize(3);
     }
 
-    // --- TC_PC_005: Create Product (Validation Error) ---
     @Test
     void createShoe_MissingImages_ShouldFail() throws Exception {
         ShoeCreateRequest request = new ShoeCreateRequest();
         request.setName("Fail Shoe");
-        // Không set Images (Required) -> Sẽ bị lỗi
+        // Không set Images (Required)
 
         mockMvc.perform(post("/shoes")
                         .header("Authorization", "Bearer " + managerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is4xxClientError()); // Expect 400 Bad Request
+                .andExpect(status().is4xxClientError());
     }
 
-    // --- TC_PC_007: Delete Product (Soft Delete) ---
     @Test
     void deleteShoe_Manager_ShouldSoftDelete() throws Exception {
-        // Lấy ID của giày đang Active
         Shoe activeShoe = shoeRepository.findByStatusTrue().get(0);
 
         mockMvc.perform(delete("/shoes/" + activeShoe.getId())
                         .header("Authorization", "Bearer " + managerToken))
                 .andExpect(status().isOk());
 
-        // Verify DB: Status phải chuyển thành false
         Shoe deletedShoe = shoeRepository.findById(activeShoe.getId()).orElseThrow();
         assertThat(deletedShoe.isStatus()).isFalse();
     }
 
-    // --- Helper Methods ---
     private void createShoeInDb(String name, boolean status) {
         Shoe shoe = Shoe.builder()
                 .name(name)
                 .price(100.0)
                 .status(status)
                 .createdAt(Instant.now())
-                .updatedAt(Instant.now()) // Nên thêm
+                .updatedAt(Instant.now())
                 .brand(brand)
-                // Đảm bảo Enum này khớp với code entity của bạn
                 .gender(ShoeConstants.Gender.MAN)
                 .category(ShoeConstants.Category.SNEAKER)
-                .shoeImages(new ArrayList<>()) // Init list rỗng để tránh null pointer
+                .shoeImages(new ArrayList<>())
                 .build();
         shoeRepository.save(shoe);
     }
