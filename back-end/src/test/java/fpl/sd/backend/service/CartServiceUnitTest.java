@@ -1,0 +1,220 @@
+package fpl.sd.backend.service;
+
+import fpl.sd.backend.dto.request.AddToCartRequest;
+import fpl.sd.backend.dto.request.UpdateCartItemRequest;
+import fpl.sd.backend.dto.response.CartResponse;
+import fpl.sd.backend.entity.*;
+import fpl.sd.backend.exception.AppException;
+import fpl.sd.backend.exception.ErrorCode;
+import fpl.sd.backend.repository.CartItemRepository;
+import fpl.sd.backend.repository.CartRepository;
+import fpl.sd.backend.repository.ShoeVariantRepository;
+import fpl.sd.backend.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class CartServiceUnitTest {
+
+    @Mock
+    private CartRepository cartRepository;
+    @Mock
+    private CartItemRepository cartItemRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ShoeVariantRepository shoeVariantRepository;
+
+    @InjectMocks
+    private CartService cartService;
+
+    // Dummy Data
+    private User user;
+    private Cart cart;
+    private ShoeVariant shoeVariant;
+    private Shoe shoe;
+    private CartItem cartItem;
+    private final String TEST_USERNAME = "unit_test_user";
+    private final String VARIANT_ID = "variant-001";
+
+    @BeforeEach
+    void setUp() {
+        // 1. Setup User
+        user = User.builder()
+                .id("user-123")
+                .username(TEST_USERNAME)
+                .build();
+
+        // 2. Setup Shoe & Variant (Product info)
+        shoe = Shoe.builder()
+                .id(1)
+                .name("Nike Air Jordan")
+                .price(200.0)
+                .shoeImages(new ArrayList<>()) // Tránh NullPointerException khi map response
+                .build();
+
+        SizeChart size = SizeChart.builder().sizeNumber(42).build();
+
+        shoeVariant = ShoeVariant.builder()
+                .id(VARIANT_ID)
+                .shoe(shoe)
+                .sizeChart(size)
+                .stockQuantity(10) // Tồn kho mặc định là 10
+                .build();
+
+        // 3. Setup Cart
+        cart = Cart.builder()
+                .id("cart-001")
+                .user(user)
+                .items(new ArrayList<>()) // List rỗng ban đầu
+                .build();
+
+        // 4. Setup CartItem (dùng cho các case update/remove)
+        cartItem = CartItem.builder()
+                .id(String.valueOf(100L))
+                .cart(cart)
+                .variant(shoeVariant)
+                .quantity(2)
+                .build();
+    }
+
+    @Test
+    void addToCart_newItem_shouldSaveCartItem() {
+        // Arrange
+        AddToCartRequest request = new AddToCartRequest();
+        request.setVariantId(VARIANT_ID);
+        request.setQuantity(2);
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(shoeVariantRepository.findById(VARIANT_ID)).thenReturn(Optional.of(shoeVariant));
+        // Giả lập chưa có item này trong giỏ
+        when(cartItemRepository.findByCartIdAndVariantId(cart.getId(), VARIANT_ID)).thenReturn(Optional.empty());
+
+        // Mock save để trả về chính item đó (cho luồng chạy tiếp không lỗi)
+        when(cartItemRepository.save(any(CartItem.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // Act
+        CartResponse response = cartService.addToCart(TEST_USERNAME, request);
+
+        // Assert
+        assertThat(response).isNotNull();
+
+        // Capture lại đối tượng được save để kiểm tra kỹ hơn
+        ArgumentCaptor<CartItem> cartItemCaptor = ArgumentCaptor.forClass(CartItem.class);
+        verify(cartItemRepository, times(1)).save(cartItemCaptor.capture());
+
+        CartItem savedItem = cartItemCaptor.getValue();
+        assertThat(savedItem.getVariant().getId()).isEqualTo(VARIANT_ID);
+        assertThat(savedItem.getQuantity()).isEqualTo(2);
+    }
+
+    @Test
+    void addToCart_existingItem_shouldUpdateQuantity() {
+        // Arrange
+        AddToCartRequest request = new AddToCartRequest();
+        request.setVariantId(VARIANT_ID);
+        request.setQuantity(3); // Thêm 3 cái nữa
+
+        // Add sẵn 1 item vào giỏ ảo để tính toán total price không bị lỗi
+        cart.addItem(cartItem);
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(shoeVariantRepository.findById(VARIANT_ID)).thenReturn(Optional.of(shoeVariant));
+        // Giả lập ĐÃ có item trong giỏ (đang có số lượng 2)
+        when(cartItemRepository.findByCartIdAndVariantId(cart.getId(), VARIANT_ID)).thenReturn(Optional.of(cartItem));
+
+        // Act
+        cartService.addToCart(TEST_USERNAME, request);
+
+        // Assert
+        // Kiểm tra quantity: 2 (cũ) + 3 (mới) = 5
+        assertThat(cartItem.getQuantity()).isEqualTo(5);
+        verify(cartItemRepository, times(1)).save(cartItem);
+    }
+
+    @Test
+    void addToCart_exceedStock_shouldThrowAppException() {
+        // Arrange
+        AddToCartRequest request = new AddToCartRequest();
+        request.setVariantId(VARIANT_ID);
+        request.setQuantity(15); // Mua 15 > Tồn kho 10
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(shoeVariantRepository.findById(VARIANT_ID)).thenReturn(Optional.of(shoeVariant));
+        when(cartItemRepository.findByCartIdAndVariantId(anyString(), anyString())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> cartService.addToCart(TEST_USERNAME, request))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.OUT_OF_STOCK);
+
+        // Đảm bảo không có lệnh save nào được gọi
+        verify(cartItemRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCartItem_validQuantity_shouldUpdateSuccess() {
+        // Arrange
+        UpdateCartItemRequest request = new UpdateCartItemRequest();
+        request.setVariantId(VARIANT_ID);
+        request.setQuantity(5);
+
+        cart.addItem(cartItem); // Giỏ hàng đang chứa item
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(cartItemRepository.findByCartIdAndVariantId(cart.getId(), VARIANT_ID)).thenReturn(Optional.of(cartItem));
+
+        // Act
+        cartService.updateCartItem(TEST_USERNAME, request);
+
+        // Assert
+        assertThat(cartItem.getQuantity()).isEqualTo(5);
+        verify(cartItemRepository).save(cartItem);
+    }
+
+    @Test
+    void removeFromCart_itemExists_shouldDelete() {
+        // Arrange
+        cart.addItem(cartItem);
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(cartItemRepository.findByCartIdAndVariantId(cart.getId(), VARIANT_ID)).thenReturn(Optional.of(cartItem));
+
+        // Act
+        cartService.removeFromCart(TEST_USERNAME, VARIANT_ID);
+
+        // Assert
+        verify(cartItemRepository, times(1)).delete(cartItem);
+        assertThat(cart.getItems()).doesNotContain(cartItem); // Item phải bị xóa khỏi list trong object cart
+    }
+
+    @Test
+    void getCart_userNotFound_shouldThrowUserNotExisted() {
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cartService.getCart("unknown"))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_EXISTED);
+    }
+}
