@@ -2,6 +2,10 @@ package com.example.shoeshop.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import fpl.sd.backend.BackEndApplication;
 import fpl.sd.backend.constant.RoleConstants;
@@ -10,21 +14,30 @@ import fpl.sd.backend.entity.User;
 import fpl.sd.backend.repository.InvalidatedTokenRepository;
 import fpl.sd.backend.repository.RoleRepository;
 import fpl.sd.backend.repository.UserRepository;
+import fpl.sd.backend.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+
+
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = BackEndApplication.class)
@@ -48,11 +61,16 @@ public class AuthControllerTest {
     @Autowired
     private InvalidatedTokenRepository invalidatedTokenRepository;
 
+    @Autowired
+    private AuthenticationService authenticationService;
+
 
     // Use explicit username for authentication (tests should use username)
     private final String TEST_USERNAME = "testuser";
     private final String TEST_EMAIL = "testuser@example.com";
     private final String RAW_PASSWORD = "12345678";
+    @Value("${jwt.signerKey}")
+    private  String SIGNER_KEY;
 
     @BeforeEach
     public void setUp() {
@@ -203,4 +221,52 @@ public class AuthControllerTest {
             this.token = token;
         }
     }
+
+
+    @Test
+    void TC_AUTH_008_accessProtectedEndpointWithoutLogin_shouldReturn401() throws Exception {
+
+        // Act + Assert
+        mockMvc.perform(get("/cart")   // <-- endpoint bảo vệ
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());  // 401
+    }
+
+
+    private String generateCustomerToken(String username) throws Exception {
+
+        // Claims giống hệt generateToken() thật
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject(username)
+                .issuer("superteam.com")
+                .issueTime(new Date())
+                .expirationTime(new Date(Instant.now().plus(3600, ChronoUnit.SECONDS).toEpochMilli()))
+                .jwtID(UUID.randomUUID().toString())
+                .claim("scope", "ROLE_CUSTOMER")     // <<<<<< CHUẨN QUAN TRỌNG
+                .build();
+
+        // Header dùng HS512 giống code thật
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+        // Build JWT
+        SignedJWT signedJWT = new SignedJWT(header, claims);
+
+        // Ký bằng signerKey thật (@Value inject từ application-test.yaml)
+        signedJWT.sign(new MACSigner(SIGNER_KEY.getBytes()));
+
+        return signedJWT.serialize();
+    }
+
+
+    @Test
+    void TC_AUTH_009_customerAccessAdminPage_shouldReturn403() throws Exception {
+
+        String token = generateCustomerToken("customerUser");
+
+        mockMvc.perform(get("/users")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());  // 403
+    }
+
+
 }

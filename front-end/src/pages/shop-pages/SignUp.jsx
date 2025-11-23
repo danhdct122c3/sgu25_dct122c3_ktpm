@@ -19,11 +19,11 @@ import { ToastContainer, toast } from "react-toastify";
 
 //!?
 const schema = z.object({
-  username: z.string().min(1, { message: "Tên người dùng là bắt buộc" }),
+  username: z.string().min(3, { message: "Tên người dùng là bắt buộc" }),
   email: z.string().email({ message: "Địa chỉ email không hợp lệ" }),
   password: z
     .string()
-    .min(3, { message: "Mật khẩu phải có ít nhất 3 ký tự" }),
+    .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: "Bạn phải chấp nhận các điều khoản và điều kiện",
   }),
