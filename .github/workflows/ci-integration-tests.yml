@@ -7,7 +7,7 @@ name: Backend Integration Tests (MySQL)
 
 on:
   push:
-    branches: [ main, develop, junit-integration-tests ]
+    branches: [ main, develop, junit-integration-tests,unit-integration-test, shoeUnitIntergrationTest ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch: {}

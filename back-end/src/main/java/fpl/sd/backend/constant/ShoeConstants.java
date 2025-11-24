@@ -13,7 +13,7 @@ public class ShoeConstants {
     }
 
     public enum Category {
-        RUNNING, CASUAL, SPORT
+        RUNNING, CASUAL, SNEAKER, SPORT
     }
 
     public static Gender getGenderFromString(String genderString) {
