@@ -145,6 +145,30 @@
                     <release>21</release>
                 </configuration>
             </plugin>
+            <!-- Maven Surefire Plugin for detailed test reports -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!-- Generate XML reports for CI/CD -->
+                    <reportFormat>xml</reportFormat>
+                    <!-- Print test results to console -->
+                    <printSummary>true</printSummary>
+                    <!-- Show test details -->
+                    <useFile>true</useFile>
+                    <!-- Include test method names in reports -->
+                    <trimStackTrace>false</trimStackTrace>
+                    <!-- USE DISPLAY NAME from @DisplayName annotation -->
+                    <statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+                        <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+                        <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
+                    </statelessTestsetReporter>
+                    <!-- Parallel execution (optional) -->
+                    <parallel>methods</parallel>
+                    <threadCount>4</threadCount>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
