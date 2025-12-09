@@ -37,9 +37,106 @@ jobs:
         run: |
           mvn -B -DskipITs=true "-Dtest=*UnitTest" "-Dsurefire.failIfNoSpecifiedTests=false" test
 
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: back-end/target/surefire-reports/TEST-*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+      - name: Generate Detailed Test Report (Markdown Table)
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET
+          import glob
+          import os
+          
+          report_dir = "back-end/target/surefire-reports"
+          
+          if not os.path.exists(report_dir):
+              print("No test reports found")
+              exit(0)
+          
+          print("\n## 📊 Chi tiết kết quả Unit Test\n")
+          print("| Tên hàm test | Mô tả | Dữ liệu nhập | Kết quả mong đợi | Kết quả chạy | Failed/Pass |")
+          print("|--------------|-------|--------------|------------------|--------------|-------------|")
+          
+          xml_files = glob.glob(f"{report_dir}/TEST-*.xml")
+          total_tests = 0
+          total_passed = 0
+          total_failed = 0
+          total_errors = 0
+          
+          for xml_file in sorted(xml_files):
+              try:
+                  tree = ET.parse(xml_file)
+                  root = tree.getroot()
+                  
+                  for testcase in root.findall('testcase'):
+                      total_tests += 1
+                      classname = testcase.get('classname', '')
+                      name = testcase.get('name', '')
+                      time = testcase.get('time', '0')
+                      
+                      # Extract class short name
+                      class_short = classname.split('.')[-1] if classname else ''
+                      
+                      # Check for failures or errors
+                      failure = testcase.find('failure')
+                      error = testcase.find('error')
+                      
+                      # Parse test name to extract description (from naming convention)
+                      # Example: addToCart_userNotFound_shouldThrowUserNotExisted
+                      parts = name.split('_')
+                      if len(parts) >= 2:
+                          method = parts[0]
+                          scenario = '_'.join(parts[1:-1]) if len(parts) > 2 else parts[1]
+                          expected = parts[-1] if len(parts) > 1 else ''
+                          desc = scenario.replace('_', ' ')
+                          data_input = scenario
+                      else:
+                          method = name
+                          desc = name.replace('_', ' ')
+                          data_input = "N/A"
+                          expected = "See test"
+                      
+                      if failure is not None:
+                          status = "❌ FAILED"
+                          total_failed += 1
+                          error_msg = failure.get('message', '')[:50].replace('|', '\\|')
+                          result = f"Exception: {error_msg}"
+                      elif error is not None:
+                          status = "⚠️ ERROR"
+                          total_errors += 1
+                          error_msg = error.get('message', '')[:50].replace('|', '\\|')
+                          result = f"Error: {error_msg}"
+                      else:
+                          status = "✅ PASS"
+                          total_passed += 1
+                          result = "Test passed successfully"
+                      
+                      # Format the expected result from test name
+                      expected_result = expected.replace('should', '').replace('_', ' ') if expected else "See test method"
+                      
+                      print(f"| `{name}` | {desc} | `{data_input}` | {expected_result} | {result} ({time}s) | {status} |")
+              except Exception as e:
+                  print(f"Error parsing {xml_file}: {e}")
+          
+          print("\n### 📈 Tổng kết\n")
+          print(f"- **Tổng số test:** {total_tests}")
+          print(f"- **✅ Passed:** {total_passed}")
+          print(f"- **❌ Failed:** {total_failed}")
+          print(f"- **⚠️ Errors:** {total_errors}")
+          success_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
+          print(f"- **Tỷ lệ thành công:** {success_rate:.1f}%")
+          EOF
+
       - name: Upload surefire reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: surefire-reports
+          name: unit-surefire-reports
           path: back-end/target/surefire-reports
