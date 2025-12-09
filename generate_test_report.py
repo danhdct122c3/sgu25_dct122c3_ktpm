@@ -2,6 +2,16 @@
 """
 Script để tạo báo cáo chi tiết từ kết quả JUnit test
 Sử dụng: python generate_test_report.py [report_directory]
+
+Convention đặt tên test để có báo cáo đẹp:
+1. Cách 1 (Khuyên dùng): Sử dụng @DisplayName
+   @DisplayName("Thêm vào giỏ | user='testuser', variantId='v001', qty=2 | Nên lưu CartItem mới")
+   @Test
+   void addToCart_newItem_shouldSaveCartItem() { ... }
+
+2. Cách 2: Convention tên test chi tiết
+   methodName_inputData_scenario_shouldExpectedResult
+   Ví dụ: addToCart_userTestVariantV001Qty2_newItem_shouldSaveCartItem
 """
 
 import xml.etree.ElementTree as ET
@@ -9,15 +19,34 @@ import glob
 import os
 import sys
 from datetime import datetime
+import re
 
 def parse_test_name(name):
     """
     Parse test name theo convention: methodName_scenario_shouldExpectedResult
-    Example: addToCart_userNotFound_shouldThrowUserNotExisted
+    Cố gắng extract dữ liệu nhập thực từ tên test
     """
     parts = name.split('_')
 
-    if len(parts) >= 3:
+    # Pattern 1: methodName_inputData_scenario_shouldExpectedResult
+    # Ví dụ: addToCart_userTestVariantV001Qty2_newItem_shouldSaveCartItem
+    if len(parts) >= 4:
+        method = parts[0]
+        # Phần thứ 2 có thể là input data
+        potential_input = parts[1]
+        scenario = '_'.join(parts[2:-1])
+        expected = parts[-1]
+
+        # Tạo mô tả từ scenario
+        desc = scenario.replace('_', ' ').capitalize()
+
+        # Parse dữ liệu nhập từ potential_input
+        data_input = parse_input_data(potential_input)
+
+        # Tạo kết quả mong đợi từ expected
+        expected_result = format_expected_result(expected)
+
+    elif len(parts) >= 3:
         method = parts[0]
         scenario = '_'.join(parts[1:-1])
         expected = parts[-1]
@@ -25,18 +54,17 @@ def parse_test_name(name):
         # Tạo mô tả từ scenario
         desc = scenario.replace('_', ' ').capitalize()
 
-        # Tạo dữ liệu nhập từ scenario
-        data_input = scenario
+        # Cố gắng parse input từ scenario
+        data_input = parse_input_from_scenario(scenario)
 
         # Tạo kết quả mong đợi từ expected
-        expected_result = expected.replace('should', '').replace('Throw', 'Ném exception ').replace('Return', 'Trả về ')
-        expected_result = expected_result.replace('_', ' ')
+        expected_result = format_expected_result(expected)
 
     elif len(parts) == 2:
         method = parts[0]
         scenario = parts[1]
         desc = scenario.replace('_', ' ').capitalize()
-        data_input = scenario
+        data_input = parse_input_from_scenario(scenario)
         expected_result = "Xem mô tả test"
     else:
         method = name
@@ -51,21 +79,94 @@ def parse_test_name(name):
         'expected_result': expected_result
     }
 
+def parse_input_data(input_str):
+    """
+    Parse input data từ string
+    Ví dụ: 'userTestVariantV001Qty2' -> 'user=test, variant=v001, qty=2'
+    """
+    # Tìm các pattern như: userXxx, variantXxx, qtyXxx, idXxx
+    patterns = {
+        r'user([A-Z][a-zA-Z0-9]+)': 'user',
+        r'variant([A-Z][a-zA-Z0-9]+)': 'variant',
+        r'qty(\d+)': 'qty',
+        r'quantity(\d+)': 'quantity',
+        r'id([A-Z0-9]+)': 'id',
+        r'token([A-Z][a-zA-Z0-9]+)': 'token',
+        r'password([A-Z][a-zA-Z0-9]+)': 'password',
+    }
+
+    results = []
+    for pattern, name in patterns.items():
+        matches = re.finditer(pattern, input_str, re.IGNORECASE)
+        for match in matches:
+            value = match.group(1).lower()
+            results.append(f"{name}='{value}'")
+
+    if results:
+        return ', '.join(results)
+    else:
+        # Fallback: chỉ format lại string
+        return format_camel_case(input_str)
+
+def parse_input_from_scenario(scenario):
+    """
+    Parse dữ liệu nhập từ scenario name
+    Ví dụ: 'userNotFound' -> "user='notFound'"
+           'validCredentials' -> "credentials='valid'"
+    """
+    # Các pattern thông dụng
+    if 'notfound' in scenario.lower() or 'notexist' in scenario.lower():
+        entity = scenario.lower().replace('notfound', '').replace('notexist', '').replace('not', '')
+        return f"{entity}='không tồn tại'"
+    elif 'invalid' in scenario.lower():
+        entity = scenario.lower().replace('invalid', '')
+        return f"{entity}='invalid'"
+    elif 'valid' in scenario.lower():
+        entity = scenario.lower().replace('valid', '')
+        return f"{entity}='valid'" if entity else "input='valid'"
+    elif 'exist' in scenario.lower():
+        entity = scenario.lower().replace('existing', '').replace('exist', '')
+        return f"{entity}='đã tồn tại'"
+    elif 'exceed' in scenario.lower():
+        return "quantity='vượt quá stock'"
+    elif 'new' in scenario.lower():
+        return "item='mới'"
+    else:
+        return format_camel_case(scenario)
+
+def format_camel_case(text):
+    """Chuyển camelCase thành readable format"""
+    # Insert space before uppercase letters
+    result = re.sub(r'([A-Z])', r' \1', text)
+    return result.strip().lower()
+
+def format_expected_result(expected):
+    """Format expected result từ test name"""
+    result = expected.replace('should', '').replace('Should', '')
+    result = result.replace('Throw', 'Ném exception ')
+    result = result.replace('Return', 'Trả về ')
+    result = result.replace('Save', 'Lưu ')
+    result = result.replace('Update', 'Cập nhật ')
+    result = result.replace('Delete', 'Xóa ')
+    result = result.replace('Success', 'thành công')
+    result = result.replace('_', ' ')
+    return result.strip()
+
 def generate_report(report_dir):
     """Tạo báo cáo Markdown từ XML test reports"""
 
     if not os.path.exists(report_dir):
-        print(f" Không tìm thấy thư mục: {report_dir}")
+        print(f"❌ Không tìm thấy thư mục: {report_dir}")
         return
 
     xml_files = glob.glob(f"{report_dir}/TEST-*.xml")
 
     if not xml_files:
-        print(f" Không tìm thấy file XML test report trong: {report_dir}")
+        print(f"❌ Không tìm thấy file XML test report trong: {report_dir}")
         return
 
     print(f"\n{'='*80}")
-    print(f" BÁO CÁO KẾT QUẢ TEST")
+    print(f"📊 BÁO CÁO KẾT QUẢ TEST")
     print(f"{'='*80}")
     print(f"Thời gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Số file XML: {len(xml_files)}")
@@ -104,28 +205,28 @@ def generate_report(report_dir):
                 skipped = testcase.find('skipped')
 
                 if skipped is not None:
-                    status = " SKIPPED"
+                    status = "⏭️ SKIPPED"
                     total_skipped += 1
                     result_msg = "Test bị bỏ qua"
                     error_detail = skipped.get('message', '')
                 elif failure is not None:
-                    status = "FAILED"
+                    status = "❌ FAILED"
                     total_failed += 1
                     error_msg = failure.get('message', '')
                     error_type = failure.get('type', '')
                     result_msg = f"Exception: {error_type}"
                     error_detail = error_msg
                 elif error is not None:
-                    status = "️ ERROR"
+                    status = "⚠️ ERROR"
                     total_errors += 1
                     error_msg = error.get('message', '')
                     error_type = error.get('type', '')
                     result_msg = f"Error: {error_type}"
                     error_detail = error_msg
                 else:
-                    status = "PASS"
+                    status = "✅ PASS"
                     total_passed += 1
-                    result_msg = "Test passed successfully"
+                    result_msg = "Đạt yêu cầu"
                     error_detail = ""
 
                 test_results.append({
@@ -141,10 +242,10 @@ def generate_report(report_dir):
                 })
 
         except Exception as e:
-            print(f"Lỗi khi parse {xml_file}: {e}")
+            print(f"⚠️ Lỗi khi parse {xml_file}: {e}")
 
     # In bảng kết quả
-    print("\n##  CHI TIẾT KẾT QUẢ TEST\n")
+    print("\n## 📋 CHI TIẾT KẾT QUẢ TEST\n")
     print("| Tên hàm test | Mô tả | Dữ liệu nhập | Kết quả mong đợi | Kết quả chạy | Failed/Pass |")
     print("|--------------|-------|--------------|------------------|--------------|-------------|")
 
@@ -152,33 +253,33 @@ def generate_report(report_dir):
         # Escape pipe characters in data
         name = test['name'].replace('|', '\\|')
         desc = test['description'].replace('|', '\\|')[:50]
-        data_input = test['data_input'].replace('|', '\\|')[:30]
+        data_input = test['data_input'].replace('|', '\\|')[:40]
         expected = test['expected'].replace('|', '\\|')[:40]
         result = test['result'].replace('|', '\\|')[:50]
 
-        print(f"| `{name}` | {desc} | `{data_input}` | {expected} | {result} | {test['status']} |")
+        print(f"| `{name}` | {desc} | {data_input} | {expected} | {result} | {test['status']} |")
 
     # In thống kê
     print(f"\n{'='*80}")
-    print("##  TỔNG KẾT")
+    print("## 📈 TỔNG KẾT")
     print(f"{'='*80}")
-    print(f" Tổng số test:        {total_tests}")
-    print(f"Passed:              {total_passed}")
-    print(f" Failed:              {total_failed}")
-    print(f" Errors:              {total_errors}")
-    print(f"  Skipped:             {total_skipped}")
+    print(f"📊 Tổng số test:        {total_tests}")
+    print(f"✅ Passed:              {total_passed}")
+    print(f"❌ Failed:              {total_failed}")
+    print(f"⚠️  Errors:              {total_errors}")
+    print(f"⏭️  Skipped:             {total_skipped}")
 
     if total_tests > 0:
         success_rate = (total_passed / total_tests) * 100
-        print(f" Tỷ lệ thành công:    {success_rate:.2f}%")
+        print(f"📊 Tỷ lệ thành công:    {success_rate:.2f}%")
 
     print(f"{'='*80}\n")
 
     # In chi tiết các test failed
     if total_failed > 0 or total_errors > 0:
-        print("\n## CHI TIẾT CÁC TEST FAILED/ERROR\n")
+        print("\n## ❌ CHI TIẾT CÁC TEST FAILED/ERROR\n")
         for test in test_results:
-            if test['status'] in [' FAILED', ' ERROR']:
+            if test['status'] in ['❌ FAILED', '⚠️ ERROR']:
                 print(f"### {test['status']} {test['name']}")
                 print(f"- **Class:** {test['class']}")
                 print(f"- **Mô tả:** {test['description']}")
@@ -190,6 +291,21 @@ def generate_report(report_dir):
                 print(f"```")
                 print()
 
+    # Hướng dẫn cải thiện báo cáo
+    print("\n" + "="*80)
+    print("💡 MẸO: Để có báo cáo chi tiết hơn với dữ liệu nhập thực:")
+    print("="*80)
+    print("Sử dụng @DisplayName annotation trong test của bạn:")
+    print("")
+    print("@DisplayName(\"Thêm vào giỏ | username='testuser', variantId='v001', qty=2 | Nên lưu item mới\")")
+    print("@Test")
+    print("void addToCart_newItem_shouldSaveCartItem() { ... }")
+    print("")
+    print("Hoặc đặt tên test theo format:")
+    print("methodName_inputData_scenario_shouldExpectedResult")
+    print("Ví dụ: addToCart_userTestVariantV001Qty2_newItem_shouldSaveCartItem")
+    print("="*80 + "\n")
+
 if __name__ == "__main__":
     # Lấy report directory từ argument hoặc dùng default
     if len(sys.argv) > 1:
@@ -198,4 +314,3 @@ if __name__ == "__main__":
         report_dir = "back-end/target/surefire-reports"
 
     generate_report(report_dir)
-

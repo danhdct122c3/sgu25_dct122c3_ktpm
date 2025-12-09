@@ -11,6 +11,7 @@ import fpl.sd.backend.repository.CartRepository;
 import fpl.sd.backend.repository.ShoeVariantRepository;
 import fpl.sd.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -92,6 +93,7 @@ public class CartServiceUnitTest {
                 .build();
     }
 
+    @DisplayName("Thêm item mới vào giỏ | username='unit_test_user', variantId='variant-001', quantity=2, stock=10 | Lưu CartItem mới với quantity=2")
     @Test
     void addToCart_newItem_shouldSaveCartItem() {
         // Arrange
@@ -123,6 +125,7 @@ public class CartServiceUnitTest {
         assertThat(savedItem.getQuantity()).isEqualTo(2);
     }
 
+    @DisplayName("Thêm item đã tồn tại trong giỏ | username='unit_test_user', variantId='variant-001', oldQty=2, addQty=3, stock=10 | Cập nhật quantity từ 2 lên 5")
     @Test
     void addToCart_existingItem_shouldUpdateQuantity() {
         // Arrange
@@ -148,6 +151,7 @@ public class CartServiceUnitTest {
         verify(cartItemRepository, times(1)).save(cartItem);
     }
 
+    @DisplayName("Thêm vào giỏ vượt quá stock | username='unit_test_user', variantId='variant-001', quantity=15, stock=10 | Ném AppException với ErrorCode.OUT_OF_STOCK")
     @Test
     void addToCart_exceedStock_shouldThrowAppException() {
         // Arrange
@@ -170,6 +174,7 @@ public class CartServiceUnitTest {
         verify(cartItemRepository, never()).save(any());
     }
 
+    @DisplayName("Thêm vào giỏ khi user không tồn tại | username='unknown_user' | Ném AppException với ErrorCode.USER_NOT_EXISTED")
     @Test
     void addToCart_userNotFound_shouldThrowUserNotExisted() {
         // Arrange - Đường 1: User không tồn tại
@@ -191,6 +196,7 @@ public class CartServiceUnitTest {
         verify(cartItemRepository, never()).save(any());
     }
 
+    @DisplayName("Thêm vào giỏ khi variant không tồn tại | username='unit_test_user', variantId='non_existent_variant', quantity=2 | Ném AppException với ErrorCode.VARIANT_NOT_FOUND")
     @Test
     void addToCart_variantNotFound_shouldThrowVariantNotFound() {
         // Arrange - Đường 2: Variant không tồn tại
@@ -213,6 +219,7 @@ public class CartServiceUnitTest {
         verify(cartItemRepository, never()).save(any());
     }
 
+    @DisplayName("Thêm item đã tồn tại vượt stock | username='unit_test_user', variantId='variant-001', oldQty=2, addQty=9, stock=10 | Ném AppException với ErrorCode.OUT_OF_STOCK")
     @Test
     void addToCart_existingItemExceedStock_shouldThrowOutOfStock() {
         // Arrange - Đường 6: Item đã tồn tại trong giỏ, cộng thêm vượt quá stock
@@ -238,6 +245,7 @@ public class CartServiceUnitTest {
         verify(cartItemRepository, never()).save(any());
     }
 
+    @DisplayName("Cập nhật số lượng item hợp lệ | username='unit_test_user', variantId='variant-001', oldQty=2, newQty=5, stock=10 | Cập nhật thành công quantity=5")
     @Test
     void updateCartItem_validQuantity_shouldUpdateSuccess() {
         // Arrange
@@ -259,6 +267,7 @@ public class CartServiceUnitTest {
         verify(cartItemRepository).save(cartItem);
     }
 
+    @DisplayName("Xóa item khỏi giỏ hàng | username='unit_test_user', variantId='variant-001' | Xóa CartItem thành công khỏi database và cart.items")
     @Test
     void removeFromCart_itemExists_shouldDelete() {
         // Arrange
@@ -276,6 +285,7 @@ public class CartServiceUnitTest {
         assertThat(cart.getItems()).doesNotContain(cartItem); // Item phải bị xóa khỏi list trong object cart
     }
 
+    @DisplayName("Lấy giỏ hàng khi user không tồn tại | username='unknown' | Ném AppException với ErrorCode.USER_NOT_EXISTED")
     @Test
     void getCart_userNotFound_shouldThrowUserNotExisted() {
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
