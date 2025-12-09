@@ -84,6 +84,15 @@ jobs:
           # Run only the AuthControllerTest to speed up CI and make debugging faster
           mvn -Dspring.profiles.active=test -DskipTests=false -Dtest=AuthControllerTest test
 
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Maven Tests
+          path: back-end/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
       - name: Print JUnit test summary (parse surefire XML)
         if: always()
         run: |
@@ -135,5 +144,3 @@ jobs:
         with:
           name: back-end-target
           path: back-end/target/**
-
-
