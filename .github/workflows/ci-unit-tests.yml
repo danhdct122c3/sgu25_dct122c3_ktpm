@@ -87,27 +87,9 @@ jobs:
                       name = testcase.get('name', '')
                       time = testcase.get('time', '0')
                       
-                      # Extract class short name
-                      class_short = classname.split('.')[-1] if classname else ''
-                      
                       # Check for failures or errors
                       failure = testcase.find('failure')
                       error = testcase.find('error')
-                      
-                      # Parse test name to extract description (from naming convention)
-                      # Example: addToCart_userNotFound_shouldThrowUserNotExisted
-                      parts = name.split('_')
-                      if len(parts) >= 2:
-                          method = parts[0]
-                          scenario = '_'.join(parts[1:-1]) if len(parts) > 2 else parts[1]
-                          expected = parts[-1] if len(parts) > 1 else ''
-                          desc = scenario.replace('_', ' ')
-                          data_input = scenario
-                      else:
-                          method = name
-                          desc = name.replace('_', ' ')
-                          data_input = "N/A"
-                          expected = "See test"
                       
                       if failure is not None:
                           status = "❌ FAILED"
@@ -122,12 +104,42 @@ jobs:
                       else:
                           status = "✅ PASS"
                           total_passed += 1
-                          result = "Test passed successfully"
+                          result = "Đạt yêu cầu"
                       
-                      # Format the expected result from test name
-                      expected_result = expected.replace('should', '').replace('_', ' ') if expected else "See test method"
+                      # Parse @DisplayName format: "Mô tả | dữ liệu nhập | kết quả mong đợi"
+                      if ' | ' in name:
+                          parts = name.split(' | ')
+                          if len(parts) == 3:
+                              desc = parts[0].strip()
+                              data_input = parts[1].strip()
+                              expected_result = parts[2].strip()
+                          elif len(parts) == 2:
+                              desc = parts[0].strip()
+                              data_input = "Xem test"
+                              expected_result = parts[1].strip()
+                          else:
+                              desc = name
+                              data_input = "Xem test"
+                              expected_result = "Xem test"
+                      else:
+                          # Fallback: parse từ tên method cũ
+                          parts = name.split('_')
+                          if len(parts) >= 3:
+                              desc = '_'.join(parts[1:-1]).replace('_', ' ')
+                              data_input = parts[1].replace('_', ' ')
+                              expected_result = parts[-1].replace('should', '').replace('_', ' ')
+                          else:
+                              desc = name.replace('_', ' ')
+                              data_input = "N/A"
+                              expected_result = "Xem test"
                       
-                      print(f"| `{name}` | {desc} | `{data_input}` | {expected_result} | {result} ({time}s) | {status} |")
+                      # Escape pipes in output
+                      name_safe = name.replace('|', '\\|')[:80]
+                      desc_safe = desc.replace('|', '\\|')[:50]
+                      data_safe = data_input.replace('|', '\\|')[:60]
+                      expected_safe = expected_result.replace('|', '\\|')[:60]
+                      
+                      print(f"| `{name_safe}` | {desc_safe} | {data_safe} | {expected_safe} | {result} ({time}s) | {status} |")
               except Exception as e:
                   print(f"Error parsing {xml_file}: {e}")
           

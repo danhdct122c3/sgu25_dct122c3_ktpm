@@ -165,12 +165,12 @@ def generate_report(report_dir):
         print(f"❌ Không tìm thấy file XML test report trong: {report_dir}")
         return
 
-    print(f"\n{'='*80}")
+    print(f"\n{'='*100}")
     print(f"📊 BÁO CÁO KẾT QUẢ TEST")
-    print(f"{'='*80}")
+    print(f"{'='*100}")
     print(f"Thời gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Số file XML: {len(xml_files)}")
-    print(f"{'='*80}\n")
+    print(f"{'='*100}\n")
 
     # Thống kê tổng
     total_tests = 0
@@ -187,17 +187,12 @@ def generate_report(report_dir):
             tree = ET.parse(xml_file)
             root = tree.getroot()
 
-            suite_name = root.get('name', '')
-
             for testcase in root.findall('testcase'):
                 total_tests += 1
 
                 classname = testcase.get('classname', '')
                 name = testcase.get('name', '')
                 time = float(testcase.get('time', '0'))
-
-                # Parse test name
-                parsed = parse_test_name(name)
 
                 # Check status
                 failure = testcase.find('failure')
@@ -229,12 +224,39 @@ def generate_report(report_dir):
                     result_msg = "Đạt yêu cầu"
                     error_detail = ""
 
+                # Parse @DisplayName format: "Mô tả | dữ liệu nhập | kết quả mong đợi"
+                if ' | ' in name:
+                    parts = name.split(' | ')
+                    if len(parts) == 3:
+                        description = parts[0].strip()
+                        data_input = parts[1].strip()
+                        expected = parts[2].strip()
+                    elif len(parts) == 2:
+                        description = parts[0].strip()
+                        data_input = "Xem test"
+                        expected = parts[1].strip()
+                    else:
+                        description = name
+                        data_input = "Xem test"
+                        expected = "Xem test"
+                else:
+                    # Fallback: parse từ tên method cũ
+                    parts = name.split('_')
+                    if len(parts) >= 3:
+                        description = '_'.join(parts[1:-1]).replace('_', ' ').capitalize()
+                        data_input = parts[1].replace('_', ' ')
+                        expected = parts[-1].replace('should', '').replace('_', ' ')
+                    else:
+                        description = name.replace('_', ' ').capitalize()
+                        data_input = "N/A"
+                        expected = "Xem test"
+
                 test_results.append({
                     'class': classname.split('.')[-1],
                     'name': name,
-                    'description': parsed['description'],
-                    'data_input': parsed['data_input'],
-                    'expected': parsed['expected_result'],
+                    'description': description,
+                    'data_input': data_input,
+                    'expected': expected,
                     'result': result_msg,
                     'status': status,
                     'time': time,
@@ -250,19 +272,19 @@ def generate_report(report_dir):
     print("|--------------|-------|--------------|------------------|--------------|-------------|")
 
     for test in test_results:
-        # Escape pipe characters in data
-        name = test['name'].replace('|', '\\|')
-        desc = test['description'].replace('|', '\\|')[:50]
-        data_input = test['data_input'].replace('|', '\\|')[:40]
-        expected = test['expected'].replace('|', '\\|')[:40]
-        result = test['result'].replace('|', '\\|')[:50]
+        # Escape pipe characters and limit length
+        name = test['name'][:80].replace('|', '\\|')
+        desc = test['description'][:50].replace('|', '\\|')
+        data_input = test['data_input'][:60].replace('|', '\\|')
+        expected = test['expected'][:60].replace('|', '\\|')
+        result = test['result'][:50].replace('|', '\\|')
 
         print(f"| `{name}` | {desc} | {data_input} | {expected} | {result} | {test['status']} |")
 
     # In thống kê
-    print(f"\n{'='*80}")
+    print(f"\n{'='*100}")
     print("## 📈 TỔNG KẾT")
-    print(f"{'='*80}")
+    print(f"{'='*100}")
     print(f"📊 Tổng số test:        {total_tests}")
     print(f"✅ Passed:              {total_passed}")
     print(f"❌ Failed:              {total_failed}")
@@ -273,7 +295,7 @@ def generate_report(report_dir):
         success_rate = (total_passed / total_tests) * 100
         print(f"📊 Tỷ lệ thành công:    {success_rate:.2f}%")
 
-    print(f"{'='*80}\n")
+    print(f"{'='*100}\n")
 
     # In chi tiết các test failed
     if total_failed > 0 or total_errors > 0:
@@ -291,20 +313,13 @@ def generate_report(report_dir):
                 print(f"```")
                 print()
 
-    # Hướng dẫn cải thiện báo cáo
-    print("\n" + "="*80)
-    print("💡 MẸO: Để có báo cáo chi tiết hơn với dữ liệu nhập thực:")
-    print("="*80)
-    print("Sử dụng @DisplayName annotation trong test của bạn:")
-    print("")
-    print("@DisplayName(\"Thêm vào giỏ | username='testuser', variantId='v001', qty=2 | Nên lưu item mới\")")
-    print("@Test")
-    print("void addToCart_newItem_shouldSaveCartItem() { ... }")
-    print("")
-    print("Hoặc đặt tên test theo format:")
-    print("methodName_inputData_scenario_shouldExpectedResult")
-    print("Ví dụ: addToCart_userTestVariantV001Qty2_newItem_shouldSaveCartItem")
-    print("="*80 + "\n")
+    # Hướng dẫn
+    print("\n" + "="*100)
+    print("💡 LƯU Ý: Format @DisplayName để có báo cáo đẹp:")
+    print("="*100)
+    print('@DisplayName("Mô tả ngắn gọn | dữ liệu nhập chi tiết | kết quả mong đợi")')
+    print("VD: @DisplayName(\"Thêm item mới | username='test', variantId='v001', qty=2 | Lưu CartItem thành công\")")
+    print("="*100 + "\n")
 
 if __name__ == "__main__":
     # Lấy report directory từ argument hoặc dùng default
