@@ -171,6 +171,74 @@ public class CartServiceUnitTest {
     }
 
     @Test
+    void addToCart_userNotFound_shouldThrowUserNotExisted() {
+        // Arrange - Đường 1: User không tồn tại
+        AddToCartRequest request = new AddToCartRequest();
+        request.setVariantId(VARIANT_ID);
+        request.setQuantity(2);
+
+        when(userRepository.findByUsername("unknown_user")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> cartService.addToCart("unknown_user", request))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_EXISTED);
+
+        // Đảm bảo không gọi các repository khác
+        verify(cartRepository, never()).findByUserId(anyString());
+        verify(shoeVariantRepository, never()).findById(anyString());
+        verify(cartItemRepository, never()).save(any());
+    }
+
+    @Test
+    void addToCart_variantNotFound_shouldThrowVariantNotFound() {
+        // Arrange - Đường 2: Variant không tồn tại
+        AddToCartRequest request = new AddToCartRequest();
+        request.setVariantId("non_existent_variant");
+        request.setQuantity(2);
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(shoeVariantRepository.findById("non_existent_variant")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> cartService.addToCart(TEST_USERNAME, request))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.VARIANT_NOT_FOUND);
+
+        // Đảm bảo không có lệnh save nào được gọi
+        verify(cartItemRepository, never()).findByCartIdAndVariantId(anyString(), anyString());
+        verify(cartItemRepository, never()).save(any());
+    }
+
+    @Test
+    void addToCart_existingItemExceedStock_shouldThrowOutOfStock() {
+        // Arrange - Đường 6: Item đã tồn tại trong giỏ, cộng thêm vượt quá stock
+        AddToCartRequest request = new AddToCartRequest();
+        request.setVariantId(VARIANT_ID);
+        request.setQuantity(9); // Item hiện có 2, thêm 9 = 11 > stock (10)
+
+        cart.addItem(cartItem); // Giỏ đang có item với quantity = 2
+
+        when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(user));
+        when(cartRepository.findByUserId(user.getId())).thenReturn(Optional.of(cart));
+        when(shoeVariantRepository.findById(VARIANT_ID)).thenReturn(Optional.of(shoeVariant));
+        when(cartItemRepository.findByCartIdAndVariantId(cart.getId(), VARIANT_ID)).thenReturn(Optional.of(cartItem));
+
+        // Act & Assert
+        assertThatThrownBy(() -> cartService.addToCart(TEST_USERNAME, request))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.OUT_OF_STOCK);
+
+        // Đảm bảo quantity không thay đổi và không có lệnh save
+        assertThat(cartItem.getQuantity()).isEqualTo(2); // Vẫn giữ nguyên quantity cũ
+        verify(cartItemRepository, never()).save(any());
+    }
+
+    @Test
     void updateCartItem_validQuantity_shouldUpdateSuccess() {
         // Arrange
         UpdateCartItemRequest request = new UpdateCartItemRequest();

@@ -135,3 +135,35 @@ jobs:
         with:
           name: back-end-target
           path: back-end/target/**
+
+      - name: Generate Markdown test report
+        if: always()
+        run: |
+          echo "| Test Name | Description | Expected | Result | Status |" > test_report.md
+          echo "|-----------|-------------|----------|--------|--------|" >> test_report.md
+
+          REPORT_DIR=back-end/target/surefire-reports
+          for f in $REPORT_DIR/TEST-*.xml; do
+            TEST_NAME=$(xmlstarlet sel -t -v "/testsuite/testcase/@name" "$f")
+            CLASS_NAME=$(xmlstarlet sel -t -v "/testsuite/testcase/@classname" "$f")
+            ERRORS=$(xmlstarlet sel -t -v "count(/testsuite/testcase/error)" "$f")
+            FAILURES=$(xmlstarlet sel -t -v "count(/testsuite/testcase/failure)" "$f")
+
+            if [ "$ERRORS" -gt 0 ] || [ "$FAILURES" -gt 0 ]; then
+              STATUS="❌ FAIL"
+            else
+              STATUS="✅ PASS"
+            fi
+
+            echo "| $TEST_NAME | auto | auto | auto | $STATUS |" >> test_report.md
+          done
+
+          cat test_report.md
+
+      - name: Upload Markdown report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: markdown-test-report
+          path: test_report.md
+
