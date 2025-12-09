@@ -1,7 +1,7 @@
 package fpl.sd.backend.service;
 
 import fpl.sd.backend.constant.ShoeConstants;
-import fpl.sd.backend.dto.request.ImageRequest; // Import đúng class ImageRequest
+import fpl.sd.backend.dto.request.ImageRequest;
 import fpl.sd.backend.dto.request.ShoeCreateRequest;
 import fpl.sd.backend.dto.response.ShoeResponse;
 import fpl.sd.backend.entity.*;
@@ -13,6 +13,7 @@ import fpl.sd.backend.repository.*;
 import fpl.sd.backend.utils.SKUGenerators;
 import fpl.sd.backend.utils.ShoeHelper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,14 +33,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ShoeServiceUnitTest {
 
-    // --- MOCK CÁC REPOSITORY ---
     @Mock private ShoeRepository shoeRepository;
     @Mock private BrandRepository brandRepository;
     @Mock private ShoeImageRepository shoeImageRepository;
     @Mock private ShoeVariantRepository shoeVariantRepository;
     @Mock private SizeChartRepository sizeChartRepository;
 
-    // --- MOCK CÁC UTILS/MAPPERS ---
     @Mock private ShoeHelper shoeHelper;
     @Mock private ShoeImageMapper imageMapper;
     @Mock private ShoeVariantMapper shoeVariantMapper;
@@ -62,13 +61,13 @@ class ShoeServiceUnitTest {
                 .name("Air Jordan")
                 .status(true)
                 .brand(brand)
-                // Giả định Enum là MAN. Nếu code của bạn dùng MALE, hãy sửa thành Gender.MALE
                 .gender(ShoeConstants.Gender.MAN)
                 .category(ShoeConstants.Category.RUNNING)
                 .shoeImages(new ArrayList<>())
                 .build();
     }
 
+    @DisplayName("Lấy tất cả giày đang active | status=true | Trả về danh sách ShoeResponse chỉ chứa giày có status=true")
     @Test
     void getAllShoes_ShouldReturnActiveShoesOnly() {
         when(shoeRepository.findByStatusTrue()).thenReturn(List.of(shoe));
@@ -80,6 +79,7 @@ class ShoeServiceUnitTest {
         verify(shoeRepository).findByStatusTrue();
     }
 
+    @DisplayName("Lấy giày theo ID tồn tại | shoeId=1, name='Air Jordan' | Trả về ShoeResponse với tên 'Air Jordan'")
     @Test
     void getShoeById_WhenExists_ShouldReturnShoe() {
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
@@ -92,6 +92,7 @@ class ShoeServiceUnitTest {
         assertThat(response.getName()).isEqualTo("Air Jordan");
     }
 
+    @DisplayName("Lấy giày theo ID không tồn tại | shoeId=999 | Ném AppException với ErrorCode.PRODUCT_NOT_FOUND")
     @Test
     void getShoeById_WhenNotExists_ShouldThrowException() {
         when(shoeRepository.findById(999)).thenReturn(Optional.empty());
@@ -102,59 +103,44 @@ class ShoeServiceUnitTest {
                 .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
+    @DisplayName("Tạo giày mới hợp lệ | name='New Shoe', price=100.0, brandId=1, gender='MAN', category='RUNNING', images=[1 image] | Lưu Shoe và ShoeImage thành công")
     @Test
     void createShoe_ValidRequest_ShouldSave() {
-        // Arrange
         ShoeCreateRequest request = new ShoeCreateRequest();
         request.setName("New Shoe");
         request.setPrice(100.0);
         request.setBrandId(1);
-
-        // String này phải khớp với tên Enum trong ShoeConstants (ví dụ "MAN" hoặc "MALE")
         request.setGender("MAN");
         request.setCategory("RUNNING");
         request.setStatus(true);
 
-        // --- SỬA: Tạo List<ImageRequest> không rỗng ---
-        // Dùng ImageRequest thay vì ShoeImageRequest để khớp với DTO của bạn
         ImageRequest imgReq = new ImageRequest();
         imgReq.setUrl("http://test-image.com/shoe.jpg");
 
         List<ImageRequest> images = new ArrayList<>();
         images.add(imgReq);
         request.setImages(images);
-        // ---------------------------------------------
 
-        // Mock behavior
         when(brandRepository.findById(1)).thenReturn(Optional.of(brand));
         when(shoeRepository.save(any(Shoe.class))).thenAnswer(i -> i.getArguments()[0]);
-
-        // Mock mapper: Trả về object ShoeImage rỗng khi map từ ImageRequest
         when(imageMapper.toShoeImage(any(ImageRequest.class))).thenReturn(new ShoeImage());
-
         when(shoeHelper.getShoeResponse(any())).thenReturn(new ShoeResponse());
 
-        // Act
         shoeService.createShoe(request);
 
-        // Assert
         verify(shoeRepository).save(any(Shoe.class));
         verify(shoeImageRepository).saveAll(any());
     }
 
+    @DisplayName("Xóa giày (soft delete) | shoeId=1 | Đặt status=false cho Shoe và tất cả ShoeVariant")
     @Test
     void deleteShoe_ShouldMarkStatusFalse() {
-        // Arrange
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
-
-        // Mock list variant rỗng để tránh NullPointerException khi service gọi findShoeVariantByShoeId
         when(shoeVariantRepository.findShoeVariantByShoeId(1)).thenReturn(Collections.emptyList());
 
-        // Act
         shoeService.deleteShoe(1);
 
-        // Assert
-        assertThat(shoe.isStatus()).isFalse(); // Kiểm tra soft delete
+        assertThat(shoe.isStatus()).isFalse();
         verify(shoeRepository).save(shoe);
         verify(shoeVariantRepository).saveAll(any());
     }
