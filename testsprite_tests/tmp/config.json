@@ -1,0 +1,17 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8080",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "sgu25_dct122c3_ktpm",
+    "projectPath": "C:\\Users\\dell\\Desktop\\KTPM\\sgu25_dct122c3_ktpm",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-ujHbp6LEdBrNgSzwwgP7ft9GvHzxQ0ugS_C-OP-GgeeIyiaBkgqut78V93EN4fXjOcjotwqd9jWw76wMiWiRURVZ9D2iFc_1kUQzSoHTVG0NvqO6wxU3SZ9Ss0Mi0rMRU1c"
+    }
+  },
+  "proxy": "http://571c8f11-ab6f-44c2-8de4-82518d7705c0:HsozehEB9X9He2DdT4ZHCOx0umUpDC7H@tun.testsprite.com:8080"
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "authenticate user with valid credentials",
+    "description": "Test the /auth/token POST endpoint to verify that a user can successfully authenticate with valid username and password, receiving a 200 success response and a valid token."
+  },
+  {
+    "id": "TC002",
+    "title": "get shoes list with brand and gender filters",
+    "description": "Test the /shoes GET endpoint to retrieve a list of shoes filtered by brandId and gender query parameters, ensuring correct filtering and response format."
+  },
+  {
+    "id": "TC003",
+    "title": "add item to cart with valid variant and quantity",
+    "description": "Test the /cart POST endpoint to add a shoe variant to the shopping cart with a specified quantity, verifying the cart updates correctly and persists the session."
+  },
+  {
+    "id": "TC004",
+    "title": "create order with valid shipping and payment method",
+    "description": "Test the /orders/create POST endpoint to create a new order with valid shipping address and payment method, ensuring order is created with status CREATED and proper authorization is enforced."
+  },
+  {
+    "id": "TC005",
+    "title": "cancel order with valid order id and status",
+    "description": "Test the /orders/{orderId}/cancel POST endpoint to cancel an order that is in a cancellable status (CREATED or CONFIRMED), verifying the order status updates correctly and authorization is enforced."
+  },
+  {
+    "id": "TC006",
+    "title": "get orders by username with authorization",
+    "description": "Test the /order-details/user/{username} GET endpoint to retrieve all orders for a specific user, ensuring the response includes correct order data and access control is enforced."
+  },
+  {
+    "id": "TC007",
+    "title": "update order status with valid status transition",
+    "description": "Test the /order-details/order/{orderId} PUT endpoint to update the status of an order, verifying that only valid state transitions are allowed and unauthorized transitions are rejected."
+  },
+  {
+    "id": "TC008",
+    "title": "register new user with valid data",
+    "description": "Test the /users POST endpoint to register a new user with valid user details, ensuring the user is created successfully and validation rules are enforced."
+  },
+  {
+    "id": "TC009",
+    "title": "create payment with valid order and amount",
+    "description": "Test the /payment/create POST endpoint to initiate a VNPay payment for a given order with a valid amount and optional bank code, verifying payment creation and authorization."
+  },
+  {
+    "id": "TC010",
+    "title": "handle payment callback with valid secure hash",
+    "description": "Test the /payment/payment-callback POST endpoint to process VNPay payment callbacks, verifying that the secure hash is validated and payment status is updated accordingly."
+  }
+]

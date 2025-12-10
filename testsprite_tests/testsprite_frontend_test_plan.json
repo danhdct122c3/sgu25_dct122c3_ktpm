@@ -1,0 +1,512 @@
+[
+  {
+    "id": "TC001",
+    "title": "Customer Login with Valid Credentials",
+    "description": "Verify that a customer can successfully log in using valid username and password and access permitted features.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to customer login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter valid username and password"
+      },
+      {
+        "type": "action",
+        "description": "Click on login button"
+      },
+      {
+        "type": "assertion",
+        "description": "User is authenticated and redirected to the customer homepage"
+      },
+      {
+        "type": "assertion",
+        "description": "Customer-specific features are accessible and staff/admin features are not"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Login Invalid Credentials",
+    "description": "Verify that the system prevents login with invalid username or password and shows appropriate error message.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter invalid username or password"
+      },
+      {
+        "type": "action",
+        "description": "Click on login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Login is rejected and error message 'Invalid credentials' is displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Admin Role Access Control Enforcement",
+    "description": "Verify that admin users can access user management features but cannot access customer-only pages.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin user with valid credentials"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access admin user management pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Admin user successfully accesses user management pages"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access customer shopping pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Admin user is redirected or access denied for customer-only pages"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Product Catalog Filters and Sorting Performance",
+    "description": "Ensure the product catalog page loads and responds to filters and sorting inputs within 2 seconds.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to product catalog page"
+      },
+      {
+        "type": "assertion",
+        "description": "Product list loads fully within 2 seconds"
+      },
+      {
+        "type": "action",
+        "description": "Apply shoe size filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Filtered product list updates within 2 seconds with correct results"
+      },
+      {
+        "type": "action",
+        "description": "Apply price sorting ascending"
+      },
+      {
+        "type": "assertion",
+        "description": "Product list updates within 2 seconds and sorted by price ascending"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Add, Update, and Remove Items in Shopping Cart",
+    "description": "Verify that customers can add items to the cart, update quantities, remove items, and the cart totals and discounts update in real-time.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as customer"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to a shoe product detail page"
+      },
+      {
+        "type": "action",
+        "description": "Add 2 quantities of product to cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Shopping cart shows 2 units of product with correct price calculation"
+      },
+      {
+        "type": "action",
+        "description": "Increase quantity of product in cart to 3"
+      },
+      {
+        "type": "assertion",
+        "description": "Cart updates totals instantly reflecting 3 units"
+      },
+      {
+        "type": "action",
+        "description": "Remove the product from cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Cart is empty and totals reset to zero"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Apply Valid and Invalid Discount Codes in Cart",
+    "description": "Verify discount code application validates eligibility conditions, updates cart totals when valid, and shows errors when invalid or expired.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Add products to shopping cart"
+      },
+      {
+        "type": "action",
+        "description": "Apply a valid discount code meeting all conditions"
+      },
+      {
+        "type": "assertion",
+        "description": "Discount is applied and cart totals decrease accordingly"
+      },
+      {
+        "type": "action",
+        "description": "Apply an expired discount code"
+      },
+      {
+        "type": "assertion",
+        "description": "Error message 'Discount code expired' is displayed and no discount applied"
+      },
+      {
+        "type": "action",
+        "description": "Apply a discount code exceeding usage limit"
+      },
+      {
+        "type": "assertion",
+        "description": "Error message 'Discount usage limit reached' is displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Checkout Process with Shipping Info and Payment Methods",
+    "description": "Verify that the checkout process accepts shipping information and correctly processes orders using both Cash on Delivery (COD) and VNPay payment methods securely.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Add products to shopping cart and proceed to checkout"
+      },
+      {
+        "type": "action",
+        "description": "Enter valid shipping information"
+      },
+      {
+        "type": "action",
+        "description": "Select Cash on Delivery (COD) payment method"
+      },
+      {
+        "type": "action",
+        "description": "Confirm order"
+      },
+      {
+        "type": "assertion",
+        "description": "Order is created with status CREATED and confirmation is shown"
+      },
+      {
+        "type": "action",
+        "description": "Repeat checkout selecting VNPay payment method"
+      },
+      {
+        "type": "assertion",
+        "description": "User is redirected to VNPay gateway securely and payment is processed"
+      },
+      {
+        "type": "assertion",
+        "description": "Order status updates accordingly after payment confirmation"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Order State Lifecycle and Cancellation Rules",
+    "description": "Verify that order state transitions follow the defined workflow and that customers can only cancel orders in allowable early states.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Place new order"
+      },
+      {
+        "type": "assertion",
+        "description": "Order initial status is CREATED"
+      },
+      {
+        "type": "action",
+        "description": "Staff verifies stock and updates order status to CONFIRMED"
+      },
+      {
+        "type": "assertion",
+        "description": "Order status changes to CONFIRMED"
+      },
+      {
+        "type": "action",
+        "description": "Customer attempts to cancel order in CONFIRMED status"
+      },
+      {
+        "type": "assertion",
+        "description": "Cancellation allowed and order status updates to CANCELED"
+      },
+      {
+        "type": "action",
+        "description": "Attempt invalid order state transition from DELIVERED back to CREATED"
+      },
+      {
+        "type": "assertion",
+        "description": "System disallows invalid transition with error message or blocked action"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Staff and Manager Order Management Workflows",
+    "description": "Verify staff and managers can view, update, and report on orders according to permitted roles and restricted actions for unauthorized roles.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as staff user"
+      },
+      {
+        "type": "action",
+        "description": "Access order management interface"
+      },
+      {
+        "type": "assertion",
+        "description": "Staff can view orders and update statuses within permitted workflow"
+      },
+      {
+        "type": "action",
+        "description": "Login as manager user"
+      },
+      {
+        "type": "action",
+        "description": "Access order management and reporting pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Manager can create reports on order statuses and usage"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to perform unauthorized action like deleting order"
+      },
+      {
+        "type": "assertion",
+        "description": "Action is blocked and appropriate error message shown"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Admin User Management for Roles and Locking",
+    "description": "Verify that admin users can create, update, lock/unlock user accounts, assign roles and ensure role-based access control is enforced.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin"
+      },
+      {
+        "type": "action",
+        "description": "Create a new user with Staff role"
+      },
+      {
+        "type": "assertion",
+        "description": "New user is created and visible in user management list"
+      },
+      {
+        "type": "action",
+        "description": "Update existing user details and change role to Manager"
+      },
+      {
+        "type": "assertion",
+        "description": "User role is updated and access rights reflect new role"
+      },
+      {
+        "type": "action",
+        "description": "Lock a user account"
+      },
+      {
+        "type": "assertion",
+        "description": "Locked user cannot log in and receives locked account notification"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Manager Discount Code Creation and Suspension",
+    "description": "Verify that managers can create new discount codes with conditions, edit existing codes, suspend and resume discount codes, and track usage accurately.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as manager user"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to discount management page"
+      },
+      {
+        "type": "action",
+        "description": "Create a new discount code with usage limits and eligibility conditions"
+      },
+      {
+        "type": "assertion",
+        "description": "New discount code appears in list with correct details"
+      },
+      {
+        "type": "action",
+        "description": "Edit discount code to change usage limit"
+      },
+      {
+        "type": "assertion",
+        "description": "Discount code details updated correctly"
+      },
+      {
+        "type": "action",
+        "description": "Suspend the discount code"
+      },
+      {
+        "type": "assertion",
+        "description": "Suspended discount code cannot be applied by customers"
+      },
+      {
+        "type": "action",
+        "description": "Resume the discount code"
+      },
+      {
+        "type": "assertion",
+        "description": "Discount code is active and can be applied"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Manager Shoe Product Addition and Stock Update",
+    "description": "Verify that managers can add new shoe products, modify existing product details including stock quantities, and changes reflect in catalog.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as manager"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to add new shoe product page"
+      },
+      {
+        "type": "action",
+        "description": "Input all mandatory product details and stock information"
+      },
+      {
+        "type": "action",
+        "description": "Submit new product form"
+      },
+      {
+        "type": "assertion",
+        "description": "Product is created and appears in product catalog"
+      },
+      {
+        "type": "action",
+        "description": "Modify an existing product's stock quantity"
+      },
+      {
+        "type": "assertion",
+        "description": "Stock quantity is updated and reflected in product detail and availability"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Session Management and Logout Functionality",
+    "description": "Verify that session is maintained correctly during user activities and logout invalidates session and restricts access.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as customer"
+      },
+      {
+        "type": "action",
+        "description": "Navigate through various pages maintaining session"
+      },
+      {
+        "type": "assertion",
+        "description": "User remains authenticated and session data persists"
+      },
+      {
+        "type": "action",
+        "description": "Perform logout action"
+      },
+      {
+        "type": "assertion",
+        "description": "User session is terminated and accessing protected pages redirects to login"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Secure Payment Data Integrity and Redirection Handling",
+    "description": "Verify that payment data is securely handled during VNPay redirection and that transaction integrity is maintained.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Initiate checkout and select VNPay payment method"
+      },
+      {
+        "type": "action",
+        "description": "System redirects user to VNPay payment gateway"
+      },
+      {
+        "type": "assertion",
+        "description": "Redirect uses secured HTTPS and correct transaction parameters"
+      },
+      {
+        "type": "action",
+        "description": "Complete payment on VNPay gateway"
+      },
+      {
+        "type": "action",
+        "description": "System receives payment confirmation callback"
+      },
+      {
+        "type": "assertion",
+        "description": "Order payment status updates correctly and reflects in backend"
+      },
+      {
+        "type": "action",
+        "description": "Simulate payment failure scenario"
+      },
+      {
+        "type": "assertion",
+        "description": "System notifies user of payment failure and order remains unpaid"
+      }
+    ]
+  }
+]

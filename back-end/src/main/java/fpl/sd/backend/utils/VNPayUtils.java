@@ -15,7 +15,7 @@ public class VNPayUtils {
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
-                throw new NullPointerException();
+                throw new NullPointerException("HMAC key or data is null");
             }
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
             // Use UTF-8 for the key bytes to ensure consistent HMAC across platforms
@@ -26,11 +26,13 @@ public class VNPayUtils {
             byte[] result = hmac512.doFinal(dataBytes);
             StringBuilder sb = new StringBuilder(2 * result.length);
             for (byte b : result) {
-                sb.append(String.format("%02x", b & 0xff)); // lowercase hex to match fastfood project
+                // uppercase hex (VNPay examples use uppercase)
+                sb.append(String.format("%02X", b & 0xff));
             }
             return sb.toString();
         } catch (Exception ex) {
-            return "";
+            // don't swallow exceptions: rethrow as runtime so caller logs it
+            throw new RuntimeException("Failed to calculate HMAC-SHA512", ex);
         }
     }
 
@@ -68,11 +70,13 @@ public class VNPayUtils {
 
     private static String urlEncode(String s) {
         try {
+            // URLEncoder encodes space as '+' by default; VNPay expects %20. Also preserve RFC3986 unreserved chars
             return URLEncoder.encode(s, StandardCharsets.UTF_8.toString())
                     .replace("+", "%20")
-                    .replace("%7E", "~");
+                    .replace("%7E", "~")
+                    .replace("%2F", "/");
         } catch (Exception ex) {
-            return s;
+            throw new RuntimeException("Failed to URL encode: " + s, ex);
         }
     }
 

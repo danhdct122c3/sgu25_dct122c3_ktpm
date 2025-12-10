@@ -1,0 +1,277 @@
+{
+  "tech_stack": ["Java", "Spring Boot", "MySQL", "JWT"],
+  "features": [
+    {
+      "name": "Authentication API",
+      "description": "Handles user login, token introspection, logout, password management",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/AuthenticationController.java"],
+      "api_doc": {
+        "paths": {
+          "/auth/token": {
+            "post": {
+              "summary": "Authenticate user",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "username": {"type": "string"},
+                        "password": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Success"}
+              }
+            }
+          },
+          "/auth/introspect": {
+            "post": {
+              "summary": "Introspect token",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "token": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Product Catalog API",
+      "description": "Provides product listing, filtering, details",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/ShoeController.java"],
+      "api_doc": {
+        "paths": {
+          "/shoes": {
+            "get": {
+              "summary": "Get shoes list",
+              "parameters": [
+                {"name": "brandId", "in": "query", "schema": {"type": "integer"}},
+                {"name": "gender", "in": "query", "schema": {"type": "string"}}
+              ]
+            }
+          },
+          "/shoes/{id}": {
+            "get": {
+              "summary": "Get shoe by ID",
+              "parameters": [
+                {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Cart API",
+      "description": "Manages shopping cart operations",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/CartController.java"],
+      "api_doc": {
+        "paths": {
+          "/cart": {
+            "get": {"summary": "Get cart"},
+            "post": {
+              "summary": "Add to cart",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "variantId": {"type": "string"},
+                        "quantity": {"type": "integer"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Order API",
+      "description": "Handles order creation, discount application, cancellation",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/OrderController.java"],
+      "api_doc": {
+        "paths": {
+          "/orders/create": {
+            "post": {
+              "summary": "Create order",
+              "security": [{"bearerAuth": []}],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "shippingAddress": {"type": "string"},
+                        "paymentMethod": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/orders/{orderId}/cancel": {
+            "post": {
+              "summary": "Cancel order",
+              "security": [{"bearerAuth": []}],
+              "parameters": [
+                {"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Order Detail API",
+      "description": "Manages order tracking and status updates",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/OrderDetailController.java"],
+      "api_doc": {
+        "paths": {
+          "/order-details/user/{username}": {
+            "get": {
+              "summary": "Get orders by user",
+              "security": [{"bearerAuth": []}],
+              "parameters": [
+                {"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}
+              ]
+            }
+          },
+          "/order-details": {
+            "get": {
+              "summary": "Get all orders",
+              "security": [{"bearerAuth": []}]
+            }
+          },
+          "/order-details/order/{orderId}": {
+            "get": {
+              "summary": "Get order by ID",
+              "security": [{"bearerAuth": []}],
+              "parameters": [
+                {"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}
+              ]
+            },
+            "put": {
+              "summary": "Update order status",
+              "security": [{"bearerAuth": []}],
+              "parameters": [
+                {"name": "orderId", "in": "path", "required": true, "schema": {"type": "string"}}
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "status": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "User Management API",
+      "description": "Admin user management",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/UserController.java"],
+      "api_doc": {
+        "paths": {
+          "/users": {
+            "get": {
+              "summary": "Get all users",
+              "security": [{"bearerAuth": []}]
+            },
+            "post": {
+              "summary": "Register user"
+            }
+          },
+          "/users/{userId}": {
+            "get": {
+              "summary": "Get user by ID",
+              "security": [{"bearerAuth": []}],
+              "parameters": [
+                {"name": "userId", "in": "path", "required": true, "schema": {"type": "string"}}
+              ]
+            },
+            "put": {
+              "summary": "Update user",
+              "security": [{"bearerAuth": []}],
+              "parameters": [
+                {"name": "userId", "in": "path", "required": true, "schema": {"type": "string"}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Payment API",
+      "description": "Handles VNPay payment processing",
+      "files": ["back-end/src/main/java/fpl/sd/backend/controller/VNPayController.java"],
+      "api_doc": {
+        "paths": {
+          "/payment/create": {
+            "post": {
+              "summary": "Create payment",
+              "security": [{"bearerAuth": []}],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "orderId": {"type": "string"},
+                        "amount": {"type": "number"},
+                        "bankCode": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/payment/payment-callback": {
+            "post": {
+              "summary": "Payment callback",
+              "requestBody": {
+                "content": {
+                  "application/x-www-form-urlencoded": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "vnp_ResponseCode": {"type": "string"},
+                        "vnp_TxnRef": {"type": "string"},
+                        "vnp_SecureHash": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,45 +1,57 @@
 server:
-  port: 0  # Random port for tests
+  port: 8080
+  servlet:
+    context-path: /api/v1
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
+    url: jdbc:mysql://localhost:3307/shop_shoe_superteam?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&createDatabaseIfnNotExist=true
+    username: root
+    password: khang141204
+#    url: jdbc:mysql://206.189.42.99/shop_shoe_superteam?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+#    username: root
+    driverClassName: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    database-platform: org.hibernate.dialect.H2Dialect
+      ddl-auto: create
+    show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-
-  h2:
-    console:
-      enabled: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  sql:
+    init:
+      mode: never
+logging:
+  level:
+    org.springframework.jdbc.datasource: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.zaxxer.hikari: DEBUG
 
 jwt:
-  signerKey: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
-  validDuration: 3600
-  refreshableDuration: 86400
+    signerKey: "1cLc5GX0Em888Eol5qUD7MmqprRtdyV7mFEBWftpuHDlmdbSZdXrTa74uv5q9/rD"
+    validDuration: 3600
+    refreshableDuration: 36000
+
 
 vnPay:
-  version: 2.1.0
-  command: pay
-  orderType: other
-  currCode: VND
-  hash-secret: ANAIDKYHLTU5HVKRMUM4NVRMLCN0SJU1
-  tmn-code: 8VWZT7KJ
-  payment-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-  return-url: http://localhost:3000/checkout/payment-callback
-  hash-encode: true
-  hash-upper: true
-  send-hash-type: true
-  demo: false
-  timezone: GMT+7
+  version: ${VNP_VERSION:2.1.0}
+  command: ${VNP_COMMAND:pay}
+  orderType: ${VNP_ORDER_TYPE:other}
+  currCode: ${VNP_CURR_CODE:VND}
+  hash-secret: ${VNP_HASH_SECRET:ANAIDKYHLTU5HVKRMUM4NVRMLCN0SJU1}
+  tmn-code: ${VNP_TMN_CODE:8VWZT7KJ}
+  payment-url: ${VNP_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  return-url: ${VNP_RETURN_URL:http://localhost:3000/checkout/payment-callback}
+  # Debug / compatibility flags (try variations if signature fails):
+  # When true, values will be percent-encoded during HMAC calculation (some sandboxes expect this)
+  hash-encode: ${VNP_HASH_ENCODE:true}
+  # When true, HMAC hex will be converted to uppercase before sending to VNPay
+  hash-upper: ${VNP_HASH_UPPER:true}
+  # When true, add &vnp_SecureHashType=SHA512 to the payment URL
+  send-hash-type: ${VNP_SEND_HASH_TYPE:true}
+  demo: ${VNPAY_DEMO:false}
+  timezone: ${VNPAY_TIMEZONE:GMT+7}
 
 mail:
   apiKey: ""
@@ -49,8 +61,13 @@ ai:
     endpoint: "https://api.openai.com/v1/chat/completions"
     api-key: ""
 
+# Thêm cấu hình swagger
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
+    path: /v3/api-docs   # đường dẫn JSON docs
   swagger-ui:
-    enabled: false
+    enabled: true
+    path: /swagger-ui.html   # đường dẫn UI
+    operations-sorter: method
+    tags-sorter: alpha
