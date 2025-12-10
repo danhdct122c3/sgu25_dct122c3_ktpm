@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -70,11 +71,17 @@ class ShoeServiceUnitTest {
     @DisplayName("getAllShoes_ShouldReturnActiveShoesOnly | Lấy tất cả giày đang active | status=true | Trả về danh sách ShoeResponse chỉ chứa giày có status=true")
     @Test
     void getAllShoes_ShouldReturnActiveShoesOnly() {
+        // Arrange
         when(shoeRepository.findByStatusTrue()).thenReturn(List.of(shoe));
         when(shoeHelper.getShoeResponse(any())).thenReturn(new ShoeResponse());
 
+        // Act
         List<ShoeResponse> result = shoeService.getAllShoes();
 
+        // ==> IN KẾT QUẢ THỰC TẾ
+        System.out.println("[ACTUAL] Result list size: " + result.size());
+
+        // Assert
         assertThat(result).hasSize(1);
         verify(shoeRepository).findByStatusTrue();
     }
@@ -82,30 +89,44 @@ class ShoeServiceUnitTest {
     @DisplayName("getShoeById_WhenExists_ShouldReturnShoe | Lấy giày theo ID tồn tại | shoeId=1, name='Air Jordan' | Trả về ShoeResponse với tên 'Air Jordan'")
     @Test
     void getShoeById_WhenExists_ShouldReturnShoe() {
+        // Arrange
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
         ShoeResponse resp = new ShoeResponse();
         resp.setName("Air Jordan");
         when(shoeHelper.getShoeResponse(shoe)).thenReturn(resp);
 
+        // Act
         ShoeResponse response = shoeService.getShoeById(1);
 
+        // ==> IN KẾT QUẢ THỰC TẾ
+        System.out.println("[ACTUAL] Retrieved Shoe Name: " + response.getName());
+
+        // Assert
         assertThat(response.getName()).isEqualTo("Air Jordan");
     }
 
     @DisplayName("getShoeById_WhenNotExists_ShouldThrowException | Lấy giày theo ID không tồn tại | shoeId=999 | Ném AppException với ErrorCode.PRODUCT_NOT_FOUND")
     @Test
     void getShoeById_WhenNotExists_ShouldThrowException() {
+        // Arrange
         when(shoeRepository.findById(999)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> shoeService.getShoeById(999))
-                .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorCode())
-                .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
+        // Act & Capture Exception
+        AppException exception = assertThrows(AppException.class, () -> {
+            shoeService.getShoeById(999);
+        });
+
+        // ==> IN KẾT QUẢ THỰC TẾ
+        System.out.println("[ACTUAL] Exception: " + exception.getErrorCode().getMessage() + " (" + exception.getErrorCode() + ")");
+
+        // Assert
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
-    @DisplayName("createShoe_ValidRequest_ShouldSave | Tạo giày mới hợp lệ | name='New Shoe', price=100.0, brandId=1, gender='MAN', category='RUNNING', images=[1 image] | Lưu Shoe và ShoeImage thành công")
+    @DisplayName("createShoe_ValidRequest_ShouldSave | Tạo giày mới hợp lệ | name='New Shoe', price=100.0, brandId=1 | Lưu Shoe và ShoeImage thành công")
     @Test
     void createShoe_ValidRequest_ShouldSave() {
+        // Arrange
         ShoeCreateRequest request = new ShoeCreateRequest();
         request.setName("New Shoe");
         request.setPrice(100.0);
@@ -116,30 +137,44 @@ class ShoeServiceUnitTest {
 
         ImageRequest imgReq = new ImageRequest();
         imgReq.setUrl("http://test-image.com/shoe.jpg");
-
-        List<ImageRequest> images = new ArrayList<>();
-        images.add(imgReq);
-        request.setImages(images);
+        request.setImages(List.of(imgReq));
 
         when(brandRepository.findById(1)).thenReturn(Optional.of(brand));
+        // Mock save để trả về object được truyền vào
         when(shoeRepository.save(any(Shoe.class))).thenAnswer(i -> i.getArguments()[0]);
         when(imageMapper.toShoeImage(any(ImageRequest.class))).thenReturn(new ShoeImage());
         when(shoeHelper.getShoeResponse(any())).thenReturn(new ShoeResponse());
 
+        // Act
         shoeService.createShoe(request);
 
-        verify(shoeRepository).save(any(Shoe.class));
+        // Capture saved item
+        ArgumentCaptor<Shoe> shoeCaptor = ArgumentCaptor.forClass(Shoe.class);
+        verify(shoeRepository).save(shoeCaptor.capture());
+        Shoe savedShoe = shoeCaptor.getValue();
+
+        // ==> IN KẾT QUẢ THỰC TẾ
+        System.out.println("[ACTUAL] Created Shoe: " + savedShoe.getName() + ", Price: " + savedShoe.getPrice() + ", Brand: " + savedShoe.getBrand().getBrandName());
+
+        // Assert
+        assertThat(savedShoe.getName()).isEqualTo("New Shoe");
         verify(shoeImageRepository).saveAll(any());
     }
 
     @DisplayName("deleteShoe_ShouldMarkStatusFalse | Xóa giày (soft delete) | shoeId=1 | Đặt status=false cho Shoe và tất cả ShoeVariant")
     @Test
     void deleteShoe_ShouldMarkStatusFalse() {
+        // Arrange
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
         when(shoeVariantRepository.findShoeVariantByShoeId(1)).thenReturn(Collections.emptyList());
 
+        // Act
         shoeService.deleteShoe(1);
 
+        // ==> IN KẾT QUẢ THỰC TẾ
+        System.out.println("[ACTUAL] Shoe ID " + shoe.getId() + " status after delete: " + shoe.isStatus());
+
+        // Assert
         assertThat(shoe.isStatus()).isFalse();
         verify(shoeRepository).save(shoe);
         verify(shoeVariantRepository).saveAll(any());
