@@ -3,7 +3,7 @@ name: backend-unit-tests
 # Run unit tests only (no DB). Triggers on pushes to main/develop/junit-integration-tests and PRs to main/develop.
 on:
   push:
-    branches: [ main, develop, junit-integration-tests,unit-integration-test,shoeUnitIntergrationTest ]
+    branches: [ main, develop, junit-integration-tests, unit-integration-test, shoeUnitIntergrationTest ]
   pull_request:
     branches: [ main, develop ]
 
@@ -67,8 +67,8 @@ jobs:
               exit(0)
           
           print("\n## 📊 Chi tiết kết quả Unit Test\n")
-          print("| Tên hàm test | Mô tả | Dữ liệu nhập | Kết quả mong đợi | Kết quả chạy | Failed/Pass |")
-          print("|--------------|-------|--------------|------------------|--------------|-------------|")
+          print("| Tên hàm test | Mô tả | Dữ liệu nhập | Kết quả mong đợi | Kết quả chạy | Trạng thái |")
+          print("|---|---|---|---|---|---|")
           
           xml_files = glob.glob(f"{report_dir}/TEST-*.xml")
           total_tests = 0
@@ -80,74 +80,85 @@ jobs:
               try:
                   tree = ET.parse(xml_file)
                   root = tree.getroot()
-                  
+          
                   for testcase in root.findall('testcase'):
                       total_tests += 1
-                      classname = testcase.get('classname', '')
-                      name = testcase.get('name', '')
+                      # Trong Junit 5 với @DisplayName, attribute 'name' sẽ chứa chuỗi full trong annotation
+                      full_name = testcase.get('name', '')
                       time = testcase.get('time', '0')
-                      
+          
                       # Check for failures or errors
                       failure = testcase.find('failure')
                       error = testcase.find('error')
-                      
+          
                       if failure is not None:
-                          status = "❌ FAILED"
+                          status = " FAIL"
                           total_failed += 1
                           error_msg = failure.get('message', '')[:50].replace('|', '\\|')
                           result = f"Exception: {error_msg}"
                       elif error is not None:
-                          status = "⚠️ ERROR"
+                          status = " ERROR"
                           total_errors += 1
                           error_msg = error.get('message', '')[:50].replace('|', '\\|')
                           result = f"Error: {error_msg}"
                       else:
-                          status = "✅ PASS"
+                          status = " PASS"
                           total_passed += 1
                           result = "Đạt yêu cầu"
-                      
-                      # Parse @DisplayName format: "Mô tả | dữ liệu nhập | kết quả mong đợi"
-                      if ' | ' in name:
-                          parts = name.split(' | ')
-                          if len(parts) == 3:
+          
+                      # Xử lý format từ @DisplayName: "MethodName | Mô tả | Input | Expected"
+                      method_name_display = full_name
+                      desc = ""
+                      data_input = ""
+                      expected_result = ""
+
+                      if ' | ' in full_name:
+                          parts = full_name.split(' | ')
+                          # Trường hợp chuẩn 4 phần như file Java của bạn
+                          if len(parts) == 4:
+                              method_name_display = parts[0].strip()
+                              desc = parts[1].strip()
+                              data_input = parts[2].strip()
+                              expected_result = parts[3].strip()
+                          # Trường hợp thiếu tên hàm (3 phần)
+                          elif len(parts) == 3:
+                              method_name_display = "Test Case"
                               desc = parts[0].strip()
                               data_input = parts[1].strip()
                               expected_result = parts[2].strip()
-                          elif len(parts) == 2:
-                              desc = parts[0].strip()
-                              data_input = "Xem test"
-                              expected_result = parts[1].strip()
                           else:
-                              desc = name
-                              data_input = "Xem test"
-                              expected_result = "Xem test"
+                              desc = full_name
+                              data_input = "Xem chi tiết"
+                              expected_result = "Xem chi tiết"
                       else:
-                          # Fallback: parse từ tên method cũ
-                          parts = name.split('_')
+                          # Fallback: parse từ tên method cũ kiểu camelCase_snake_case
+                          parts = full_name.split('_')
                           if len(parts) >= 3:
+                              method_name_display = full_name
                               desc = '_'.join(parts[1:-1]).replace('_', ' ')
                               data_input = parts[1].replace('_', ' ')
                               expected_result = parts[-1].replace('should', '').replace('_', ' ')
                           else:
-                              desc = name.replace('_', ' ')
+                              method_name_display = full_name
+                              desc = full_name.replace('_', ' ')
                               data_input = "N/A"
-                              expected_result = "Xem test"
-                      
-                      # Escape pipes in output
-                      name_safe = name.replace('|', '\\|')[:80]
-                      desc_safe = desc.replace('|', '\\|')[:50]
-                      data_safe = data_input.replace('|', '\\|')[:60]
-                      expected_safe = expected_result.replace('|', '\\|')[:60]
-                      
-                      print(f"| `{name_safe}` | {desc_safe} | {data_safe} | {expected_safe} | {result} ({time}s) | {status} |")
+                              expected_result = "N/A"
+          
+                      # Escape pipes in output để không vỡ bảng Markdown
+                      name_safe = method_name_display.replace('|', '\\|')
+                      desc_safe = desc.replace('|', '\\|')
+                      data_safe = data_input.replace('|', '\\|')
+                      expected_safe = expected_result.replace('|', '\\|')
+          
+                      print(f"| `{name_safe}` | {desc_safe} | {data_safe} | {expected_safe} | {result} | {status} |")
               except Exception as e:
                   print(f"Error parsing {xml_file}: {e}")
           
-          print("\n### 📈 Tổng kết\n")
+          print("\n###  Tổng kết\n")
           print(f"- **Tổng số test:** {total_tests}")
-          print(f"- **✅ Passed:** {total_passed}")
-          print(f"- **❌ Failed:** {total_failed}")
-          print(f"- **⚠️ Errors:** {total_errors}")
+          print(f"- ** Passed:** {total_passed}")
+          print(f"- ** Failed:** {total_failed}")
+          print(f"- ** Errors:** {total_errors}")
           success_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
           print(f"- **Tỷ lệ thành công:** {success_rate:.1f}%")
           EOF
