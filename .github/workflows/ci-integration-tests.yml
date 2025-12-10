@@ -72,7 +72,6 @@ jobs:
     - name: 🔧 Configure Test Database
       run: |
         cd back-end
-        # Create application.yml that matches local configuration
         mkdir -p src/test/resources
         cat > src/test/resources/application.yml << 'EOF'
         spring:
@@ -84,30 +83,16 @@ jobs:
           jpa:
             hibernate:
               ddl-auto: update
-            show-sql: true
+            show-sql: false
             properties:
               hibernate:
-                format_sql: true
+                format_sql: false
                 dialect: org.hibernate.dialect.MySQL8Dialect
           sql:
             init:
               mode: never
-        logging:
-          level:
-            org.springframework: INFO
-            org.hibernate: INFO
-            fpl.sd.backend: DEBUG
         EOF
         echo "✅ Created application.yml for test environment"
-        
-        # Verify MySQL connection with test credentials
-        echo "🔍 Testing MySQL connection..."
-        mysql -h127.0.0.1 -P3306 -uroot -pkhang141204 -e "SELECT VERSION();" || {
-          echo "❌ MySQL connection failed!"
-          exit 1
-        }
-        
-        echo "✅ MySQL connection successful!"
 
     - name: 🧪 Run CartManagementIntegrationTest
       id: run-tests
