@@ -1,6 +1,0 @@
-INSERT INTO shop_shoe_superteam.`user` (id,address,created_at,email,full_name,is_active,otp_code,otp_expiry_date,password,phone,updated_at,username,role_id) VALUES
-	 ('290a19af-68aa-421a-a517-393b32f71778','This field need to be updated','2025-09-20 13:51:57.755544','danh123@gmail.com',NULL,1,NULL,NULL,'$2a$10$XWgklNHU4w7m8Xo6FFbg1.nSZPlaU2xFs03Kvj/WRZEZaiUwO1s0W',NULL,NULL,'danh vo',3),
-	 ('6698f5cf-6a8d-49a5-9c86-ac895ca15263','Admin Address','2025-09-20 15:24:07.439820','admin@example.com','Administrator',1,NULL,NULL,'$2a$10$FT6WerTL672r5eW4ZedgGuggLPZnu7ERUAzoWLQqXmrFURllIKZw2','0000000000',NULL,'admin',4),
-	 ('73f42b3e-950c-4fe2-b2d9-913e56879e67','789 Main St, Springfield','2025-09-20 11:56:13.442694','manager123@yopmail.com',NULL,1,NULL,NULL,'$2a$10$GEuZqe3sbw1A8t8FNUqWTO2TKu6Bjz32yfQZ6y9etopLc8eM2CSOa','0987654321',NULL,'manager',3),
-	 ('a6903f7e-9b5c-47e5-ab62-f28c306060d9','This field need to be updated','2025-09-20 13:52:40.867864','danh22123@gmail.com',NULL,1,NULL,NULL,'$2a$10$0evS8hyGntJfIxjUWxB5KuNnCDgs/54dgwp5ouK8w35QyTpUS1ZTq',NULL,NULL,'danh123',3),
-	 ('f9e9f47b-8bb9-42c1-b98f-d13907b0f0cb','Tỉnh Yên Bái, Huyện Trạm Tấu, Xã Bản Công','2025-09-20 13:58:32.120057','danh1523@gmail.com','đâsd',1,NULL,NULL,'$2a$10$peGeWJcde.Q8BFxDY0YNNejNMGGbg7DPUI7cdLSgE6KBSIUdjoWLW','12312','2025-09-20 16:51:58.160475','test',2);
