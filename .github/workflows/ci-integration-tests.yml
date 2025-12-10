@@ -1,5 +1,7 @@
 name: CI - Cart Management Integration Tests
 
+# Trigger: Push to junit-integration-tests branch with back-end changes
+
 on:
   push:
     branches: [ junit-integration-tests ]
