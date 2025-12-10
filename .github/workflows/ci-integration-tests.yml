@@ -87,51 +87,25 @@ jobs:
               hibernate:
                 format_sql: true
         EOF
-        echo "✅ Created application.yml for test environment"
+        echo " Created application.yml for test environment"
 
-    - name: 🧪 Run CartManagementIntegrationTest
+    - name: Run CartManagementIntegrationTest
       id: run-tests
       run: |
         cd back-end
-        echo "🏃 Running CartManagementIntegrationTest..."
-        echo "📊 Test Command: mvn -B clean test -Dtest=CartManagementIntegrationTest"
-        
-        # Temporarily rename broken test file to exclude it from compilation
-        if [ -f "src/test/java/fpl/sd/backend/service/OrderDetailServiceUnitTest.java" ]; then
-          mv src/test/java/fpl/sd/backend/service/OrderDetailServiceUnitTest.java \
-             src/test/java/fpl/sd/backend/service/OrderDetailServiceUnitTest.java.bak
-          echo "⚠️ Temporarily excluded OrderDetailServiceUnitTest.java (has compilation errors)"
-        fi
-        
-        # Run tests WITHOUT spring.profiles.active (like local environment)
-        mvn -B clean test \
-          -Dtest=CartManagementIntegrationTest \
-          -Dmaven.test.failure.ignore=false \
-          2>&1 | tee test-output.log
-        
-        # Capture exit code
+        echo " Running CartManagementIntegrationTest..."
+        mvn -B clean test -Dtest=CartManagementIntegrationTest 2>&1 | tee test-output.log
         TEST_EXIT_CODE=${PIPESTATUS[0]}
         echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
-        
-        # Restore the backed up test file
-        if [ -f "src/test/java/fpl/sd/backend/service/OrderDetailServiceUnitTest.java.bak" ]; then
-          mv src/test/java/fpl/sd/backend/service/OrderDetailServiceUnitTest.java.bak \
-             src/test/java/fpl/sd/backend/service/OrderDetailServiceUnitTest.java
-          echo "✅ Restored OrderDetailServiceUnitTest.java"
-        fi
-        
-        if [ $TEST_EXIT_CODE -eq 0 ]; then
-          echo "✅ All tests passed!"
-        else
-          echo "❌ Tests failed with exit code: $TEST_EXIT_CODE"
+        if [ $TEST_EXIT_CODE -ne 0 ]; then
           exit $TEST_EXIT_CODE
         fi
 
-    - name: 📊 Generate Test Summary
+    - name:  Generate Test Summary
       if: always()
       run: |
         cd back-end
-        echo "## 📊 Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "##  Test Execution Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         if [ -d target/surefire-reports ]; then
@@ -150,10 +124,10 @@ jobs:
             echo "4. ✅ testApplyInvalidDiscountCode" >> $GITHUB_STEP_SUMMARY
           fi
         else
-          echo "⚠️ No test reports found in target/surefire-reports" >> $GITHUB_STEP_SUMMARY
+          echo " No test reports found in target/surefire-reports" >> $GITHUB_STEP_SUMMARY
         fi
 
-    - name: 📤 Upload Test Reports (XML + TXT)
+    - name:  Upload Test Reports (XML + TXT)
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -165,17 +139,17 @@ jobs:
         retention-days: 30
         if-no-files-found: warn
 
-    - name: 📊 Publish Test Dashboard
+    - name:  Publish Test Dashboard
       if: success()
       uses: dorny/test-reporter@v1
       with:
-        name: 🎯 Cart Integration Test Results
+        name:  Cart Integration Test Results
         path: back-end/target/surefire-reports/TEST-*.xml
         reporter: java-junit
         fail-on-error: false
         max-annotations: 50
 
-    - name: 🚨 Create Detailed Issue on Test Failure
+    - name:  Create Detailed Issue on Test Failure
       if: failure() && steps.run-tests.outcome == 'failure'
       uses: actions/github-script@v7
       with:
@@ -193,12 +167,12 @@ jobs:
             testOutput = lines.slice(-100).join('\n');
           }
 
-          const issueTitle = `🚨 CI FAILED: CartManagementIntegrationTest - Run #${context.runNumber} (${context.ref.replace('refs/heads/', '')})`;
+          const issueTitle = ` CI FAILED: CartManagementIntegrationTest - Run #${context.runNumber} (${context.ref.replace('refs/heads/', '')})`;
 
           const issueBody = `
-          ## ❌ Cart Management Integration Test Failure
+          ##  Cart Management Integration Test Failure
 
-          ### 🔍 CI Execution Details
+          ###  CI Execution Details
           | Property | Value |
           |----------|-------|
           | **Workflow** | ${context.workflow} |
@@ -208,24 +182,24 @@ jobs:
           | **Triggered By** | @${context.actor} |
           | **Run URL** | [View Logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) |
 
-          ### 📋 Test Information
+          ###  Test Information
           - **Test Class:** \`CartManagementIntegrationTest\`
           - **Location:** \`back-end/src/test/java/com/example/shoeshop/auth/CartManagementIntegrationTest.java\`
-          - **Status:** ❌ **FAILED**
+          - **Status:**  **FAILED**
           - **Use Case:** UC2 - Quản lý và Cập nhật Giỏ hàng
 
-          ### 🎯 Expected Test Methods (4 total)
+          ###  Expected Test Methods (4 total)
           - [ ] \`testSuccessfulCartManagementAndCheckout\` - Full cart workflow
           - [ ] \`testAddOutOfStockProduct\` - Stock validation
           - [ ] \`testUpdateQuantityExceedingStock\` - Quantity limits
           - [ ] \`testApplyInvalidDiscountCode\` - Discount validation
 
-          ### 📁 Test Reports & Artifacts
+          ###  Test Reports & Artifacts
           - **Artifact Name:** \`cart-test-reports-${context.runNumber}\`
           - **Download:** [Click here](${context.payload.repository.html_url}/actions/runs/${context.runId})
           - **Contains:** JUnit XML reports, text reports, and full test output log
 
-          ### 🔧 Recent Test Output
+          ###  Recent Test Output
           <details>
           <summary>Click to view last 100 lines of test execution</summary>
 
@@ -234,7 +208,7 @@ jobs:
           \`\`\`
           </details>
 
-          ### 🛠️ Troubleshooting Steps
+          ### ️ Troubleshooting Steps
           1. **Check the logs:**
              \`\`\`bash
              # View the Actions run logs at:
@@ -262,13 +236,13 @@ jobs:
              - Verify test data setup in \`@BeforeEach setUp()\`
              - Check foreign key constraints are handled
 
-          ### 📂 Files to Review
+          ###  Files to Review
           - \`back-end/src/test/java/com/example/shoeshop/auth/CartManagementIntegrationTest.java\`
           - \`back-end/src/test/resources/application-test.yml\`
           - \`back-end/pom.xml\` (check test dependencies)
           - Controller endpoints: \`CartController.java\`, \`OrderController.java\`
 
-          ### 🔄 Common Issues & Solutions
+          ###  Common Issues & Solutions
           | Issue | Solution |
           |-------|----------|
           | Foreign key constraint violations | Check cleanup order in \`setUp()\` method |
@@ -280,9 +254,9 @@ jobs:
           Please assign this to the QA team or developer who last modified the test file.
 
           ---
-          🤖 **Auto-generated by GitHub Actions CI**
-          📅 **Created:** ${new Date().toISOString()}
-          🏷️ **Labels:** ci, integration-test, bug, cart-management, automated
+           **Auto-generated by GitHub Actions CI**
+           **Created:** ${new Date().toISOString()}
+          🏷 **Labels:** ci, integration-test, bug, cart-management, automated
           `;
 
           // Check for existing open issues to avoid duplicates
@@ -307,65 +281,65 @@ jobs:
               labels: ['ci', 'integration-test', 'bug', 'cart-management', 'automated', 'test-failure']
             });
             
-            console.log(`✅ Created issue #${newIssue.data.number}: ${issueTitle}`);
+            console.log(` Created issue #${newIssue.data.number}: ${issueTitle}`);
           } else {
-            console.log(`⚠️ Duplicate issue already exists: #${duplicateIssue.number}`);
+            console.log(`⚠ Duplicate issue already exists: #${duplicateIssue.number}`);
             
             // Add a comment to existing issue instead
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: duplicateIssue.number,
-              body: `🔄 **Another failure occurred in Run #${context.runNumber}**\n\n[View latest run](${context.payload.repository.html_url}/actions/runs/${context.runId})`
+              body: ` **Another failure occurred in Run #${context.runNumber}**\n\n[View latest run](${context.payload.repository.html_url}/actions/runs/${context.runId})`
             });
           }
 
-    - name: 💬 Comment on PR (Success)
+    - name:  Comment on PR (Success)
       if: success() && github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
           const comment = `
-          ## ✅ Cart Integration Tests Passed!
+          ##  Cart Integration Tests Passed!
 
-          ### 🎯 Test Execution Summary
+          ###  Test Execution Summary
           | Metric | Value |
           |--------|-------|
-          | **Status** | ✅ **ALL TESTS PASSED** |
+          | **Status** |  **ALL TESTS PASSED** |
           | **Test Class** | CartManagementIntegrationTest |
           | **Total Tests** | 4 |
           | **Success Rate** | 100% |
           | **Coverage** | UC2 Cart Management (Complete) |
-          | **Database** | MySQL 8.0 ✅ |
+          | **Database** | MySQL 8.0  |
           | **Run** | [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId}) |
 
-          ### 📊 Test Details
+          ###  Test Details
           | # | Test Method | Status | Purpose |
           |---|-------------|--------|---------|
-          | 1 | testSuccessfulCartManagementAndCheckout | ✅ PASS | Complete cart workflow with discount |
-          | 2 | testAddOutOfStockProduct | ✅ PASS | Stock availability validation |
-          | 3 | testUpdateQuantityExceedingStock | ✅ PASS | Quantity limit enforcement |
-          | 4 | testApplyInvalidDiscountCode | ✅ PASS | Discount code validation |
+          | 1 | testSuccessfulCartManagementAndCheckout |  PASS | Complete cart workflow with discount |
+          | 2 | testAddOutOfStockProduct |  PASS | Stock availability validation |
+          | 3 | testUpdateQuantityExceedingStock |  PASS | Quantity limit enforcement |
+          | 4 | testApplyInvalidDiscountCode |  PASS | Discount code validation |
 
-          ### 📁 Test Reports Available
+          ###  Test Reports Available
           **Download Artifacts:** [cart-test-reports-${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
           - JUnit XML reports
           - Detailed text reports
           - Full test execution log
 
-          ### ✨ What This Means
-          - ✅ All cart management features working correctly
-          - ✅ Database integration successful
-          - ✅ Foreign key constraints properly handled
-          - ✅ API endpoints responding as expected
-          - ✅ Error handling validated
+          ###  What This Means
+          -  All cart management features working correctly
+          -  Database integration successful
+          -  Foreign key constraints properly handled
+          -  API endpoints responding as expected
+          -  Error handling validated
 
-          ### 🚀 Ready for Merge
+          ###  Ready for Merge
           All integration tests passed! The cart management functionality is stable and ready for deployment.
 
           ---
-          🤖 *CI Bot - Cart Integration Tests*
-          📅 *${new Date().toISOString()}*
+           *CI Bot - Cart Integration Tests*
+           *${new Date().toISOString()}*
           `;
 
           await github.rest.issues.createComment({
@@ -375,36 +349,36 @@ jobs:
             body: comment
           });
 
-    - name: 💬 Comment on PR (Failure)
+    - name:  Comment on PR (Failure)
       if: failure() && github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
           const comment = `
-          ## ❌ Cart Integration Tests Failed
+          ##  Cart Integration Tests Failed
 
-          ### 🔴 Test Execution Summary
+          ###  Test Execution Summary
           | Metric | Value |
           |--------|-------|
-          | **Status** | ❌ **TESTS FAILED** |
+          | **Status** |  **TESTS FAILED** |
           | **Test Class** | CartManagementIntegrationTest |
           | **Run** | [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId}) |
 
-          ### 🚨 Action Required
-          - 📋 An issue has been automatically created with detailed failure information
-          - 📁 Download test reports from [Artifacts](${context.payload.repository.html_url}/actions/runs/${context.runId})
-          - 🔍 Review the [Actions logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details
+          ###  Action Required
+          -  An issue has been automatically created with detailed failure information
+          -  Download test reports from [Artifacts](${context.payload.repository.html_url}/actions/runs/${context.runId})
+          -  Review the [Actions logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details
 
-          ### 🛠️ Quick Debug
+          ###  Quick Debug
           \`\`\`bash
           cd back-end
           mvn clean test -Dtest=CartManagementIntegrationTest
           \`\`\`
 
-          ⚠️ **Please fix the failing tests before merging this PR.**
+           **Please fix the failing tests before merging this PR.**
 
           ---
-          🤖 *CI Bot - Cart Integration Tests*
+           *CI Bot - Cart Integration Tests*
           `;
 
           await github.rest.issues.createComment({
