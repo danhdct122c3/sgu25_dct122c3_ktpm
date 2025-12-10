@@ -10,6 +10,7 @@ import fpl.sd.backend.exception.ErrorCode;
 import fpl.sd.backend.repository.InvalidatedTokenRepository;
 import fpl.sd.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -55,6 +56,7 @@ public class AuthenticationServiceUnitTest {
         ReflectionTestUtils.setField(authenticationService, "refreshableDuration", 7200L);
     }
 
+    @DisplayName("login_withValidCredentials_shouldReturnToken | Đăng nhập với thông tin hợp lệ | username='unit_test_user', password='123456' | Trả về token JWT hợp lệ")
     @Test
     void login_withValidCredentials_shouldReturnToken() throws Exception {
         // Arrange: create a User with password encoded using same BCrypt strength used in service (10)
@@ -83,6 +85,7 @@ public class AuthenticationServiceUnitTest {
         verify(userRepository, times(1)).findByUsername(TEST_USERNAME);
     }
 
+    @DisplayName("login_withInvalidPassword_shouldThrowUnauthenticated | Đăng nhập với mật khẩu sai | username='unit_test_user', password='wrong' | Ném AppException với ErrorCode.UNAUTHENTICATED")
     @Test
     void login_withInvalidPassword_shouldThrowUnauthenticated() {
         String encoded = new BCryptPasswordEncoder(10).encode("otherpassword");
@@ -98,6 +101,7 @@ public class AuthenticationServiceUnitTest {
         verify(userRepository, times(1)).findByUsername(TEST_USERNAME);
     }
 
+    @DisplayName("login_userNotFound_shouldThrow | Đăng nhập với user không tồn tại | username='unknown' | Ném AppException với ErrorCode.USER_NOT_FOUND")
     @Test
     void login_userNotFound_shouldThrow() {
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
@@ -110,6 +114,7 @@ public class AuthenticationServiceUnitTest {
         verify(userRepository, times(1)).findByUsername("unknown");
     }
 
+    @DisplayName("logout_withValidToken_shouldSaveInvalidatedToken | Đăng xuất với token hợp lệ | token=validJWT | Lưu InvalidatedToken vào database")
     @Test
     void logout_withValidToken_shouldSaveInvalidatedToken() throws Exception {
         // First, prepare a valid token by authenticating a user
@@ -135,6 +140,7 @@ public class AuthenticationServiceUnitTest {
         assertThat(saved.getExpiryTime().after(new Date())).isTrue();
     }
 
+    @DisplayName("logout_withInvalidToken_shouldThrowParseException_and_notSave | Đăng xuất với token không hợp lệ | token='not.a.valid.token' | Ném ParseException và không lưu")
     @Test
     void logout_withInvalidToken_shouldThrowParseException_and_notSave() throws Exception {
         String badToken = "not.a.valid.token";

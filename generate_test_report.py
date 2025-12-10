@@ -225,20 +225,46 @@ def generate_report(report_dir):
                     error_detail = ""
 
                 # Parse @DisplayName format: "Mô tả | dữ liệu nhập | kết quả mong đợi"
+                # hoặc "methodName | Mô tả | dữ liệu nhập | kết quả mong đợi"
+                method_name = name  # Default to full name
+
                 if ' | ' in name:
                     parts = name.split(' | ')
-                    if len(parts) == 3:
-                        description = parts[0].strip()
-                        data_input = parts[1].strip()
-                        expected = parts[2].strip()
-                    elif len(parts) == 2:
-                        description = parts[0].strip()
-                        data_input = "Xem test"
-                        expected = parts[1].strip()
+
+                    # Check if first part looks like a method name (contains underscore and no spaces)
+                    if '_' in parts[0] and ' ' not in parts[0]:
+                        # Format: "methodName | description | input | expected"
+                        method_name = parts[0].strip()
+                        if len(parts) == 4:
+                            description = parts[1].strip()
+                            data_input = parts[2].strip()
+                            expected = parts[3].strip()
+                        elif len(parts) == 3:
+                            description = parts[1].strip()
+                            data_input = parts[2].strip()
+                            expected = "Xem test"
+                        elif len(parts) == 2:
+                            description = parts[1].strip()
+                            data_input = "Xem test"
+                            expected = "Xem test"
+                        else:
+                            description = parts[1] if len(parts) > 1 else name
+                            data_input = "Xem test"
+                            expected = "Xem test"
                     else:
-                        description = name
-                        data_input = "Xem test"
-                        expected = "Xem test"
+                        # Format: "description | input | expected" (no method name)
+                        if len(parts) == 3:
+                            description = parts[0].strip()
+                            data_input = parts[1].strip()
+                            expected = parts[2].strip()
+                        elif len(parts) == 2:
+                            description = parts[0].strip()
+                            data_input = "Xem test"
+                            expected = parts[1].strip()
+                        else:
+                            description = name
+                            data_input = "Xem test"
+                            expected = "Xem test"
                 else:
                     # Fallback: parse từ tên method cũ
                     parts = name.split('_')
@@ -253,7 +279,7 @@ def generate_report(report_dir):
 
                 test_results.append({
                     'class': classname.split('.')[-1],
-                    'name': name,
+                    'name': method_name,
                     'description': description,
                     'data_input': data_input,
                     'expected': expected,

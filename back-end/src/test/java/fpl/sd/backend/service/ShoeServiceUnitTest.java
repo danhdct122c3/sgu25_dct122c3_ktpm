@@ -67,7 +67,7 @@ class ShoeServiceUnitTest {
                 .build();
     }
 
-    @DisplayName("Lấy tất cả giày đang active | status=true | Trả về danh sách ShoeResponse chỉ chứa giày có status=true")
+    @DisplayName("getAllShoes_ShouldReturnActiveShoesOnly | Lấy tất cả giày đang active | status=true | Trả về danh sách ShoeResponse chỉ chứa giày có status=true")
     @Test
     void getAllShoes_ShouldReturnActiveShoesOnly() {
         when(shoeRepository.findByStatusTrue()).thenReturn(List.of(shoe));
@@ -79,7 +79,7 @@ class ShoeServiceUnitTest {
         verify(shoeRepository).findByStatusTrue();
     }
 
-    @DisplayName("Lấy giày theo ID tồn tại | shoeId=1, name='Air Jordan' | Trả về ShoeResponse với tên 'Air Jordan'")
+    @DisplayName("getShoeById_WhenExists_ShouldReturnShoe | Lấy giày theo ID tồn tại | shoeId=1, name='Air Jordan' | Trả về ShoeResponse với tên 'Air Jordan'")
     @Test
     void getShoeById_WhenExists_ShouldReturnShoe() {
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
@@ -92,7 +92,7 @@ class ShoeServiceUnitTest {
         assertThat(response.getName()).isEqualTo("Air Jordan");
     }
 
-    @DisplayName("Lấy giày theo ID không tồn tại | shoeId=999 | Ném AppException với ErrorCode.PRODUCT_NOT_FOUND")
+    @DisplayName("getShoeById_WhenNotExists_ShouldThrowException | Lấy giày theo ID không tồn tại | shoeId=999 | Ném AppException với ErrorCode.PRODUCT_NOT_FOUND")
     @Test
     void getShoeById_WhenNotExists_ShouldThrowException() {
         when(shoeRepository.findById(999)).thenReturn(Optional.empty());
@@ -103,7 +103,7 @@ class ShoeServiceUnitTest {
                 .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
-    @DisplayName("Tạo giày mới hợp lệ | name='New Shoe', price=100.0, brandId=1, gender='MAN', category='RUNNING', images=[1 image] | Lưu Shoe và ShoeImage thành công")
+    @DisplayName("createShoe_ValidRequest_ShouldSave | Tạo giày mới hợp lệ | name='New Shoe', price=100.0, brandId=1, gender='MAN', category='RUNNING', images=[1 image] | Lưu Shoe và ShoeImage thành công")
     @Test
     void createShoe_ValidRequest_ShouldSave() {
         ShoeCreateRequest request = new ShoeCreateRequest();
@@ -132,7 +132,7 @@ class ShoeServiceUnitTest {
         verify(shoeImageRepository).saveAll(any());
     }
 
-    @DisplayName("Xóa giày (soft delete) | shoeId=1 | Đặt status=false cho Shoe và tất cả ShoeVariant")
+    @DisplayName("deleteShoe_ShouldMarkStatusFalse | Xóa giày (soft delete) | shoeId=1 | Đặt status=false cho Shoe và tất cả ShoeVariant")
     @Test
     void deleteShoe_ShouldMarkStatusFalse() {
         when(shoeRepository.findById(1)).thenReturn(Optional.of(shoe));
