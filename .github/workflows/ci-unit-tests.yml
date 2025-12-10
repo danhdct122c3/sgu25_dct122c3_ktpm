@@ -1,6 +1,5 @@
 name: backend-unit-tests
 
-# Run unit tests only (no DB). Triggers on pushes to main/develop/junit-integration-tests and PRs to main/develop.
 on:
   push:
     branches: [ main, develop, junit-integration-tests, unit-integration-test, shoeUnitIntergrationTest ]
@@ -22,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21 (Temurin)
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -37,20 +36,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Run backend unit tests (skip integration tests)
+      - name: Run backend unit tests
         working-directory: back-end
-        # Run only test classes that end with 'UnitTest' to avoid executing integration tests
         run: |
           mvn -B -DskipITs=true "-Dtest=*UnitTest" "-Dsurefire.failIfNoSpecifiedTests=false" test
-
-      - name: Publish Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Unit Test Results
-          path: back-end/target/surefire-reports/TEST-*.xml
-          reporter: java-junit
-          fail-on-error: true
 
       - name: Generate Detailed Test Report (Markdown Table)
         if: always()
@@ -67,14 +56,13 @@ jobs:
               exit(0)
           
           print("\n## 📊 Chi tiết kết quả Unit Test\n")
-          print("| Tên hàm test | Mô tả | Dữ liệu nhập | Kết quả mong đợi | Kết quả chạy | Trạng thái |")
+          print("| Tên hàm test | Mô tả | Dữ liệu nhập | Kết quả mong đợi | Kết quả chạy thực tế | Trạng thái |")
           print("|---|---|---|---|---|---|")
           
           xml_files = glob.glob(f"{report_dir}/TEST-*.xml")
           total_tests = 0
           total_passed = 0
           total_failed = 0
-          total_errors = 0
           
           for xml_file in sorted(xml_files):
               try:
@@ -83,84 +71,74 @@ jobs:
           
                   for testcase in root.findall('testcase'):
                       total_tests += 1
-                      # Trong Junit 5 với @DisplayName, attribute 'name' sẽ chứa chuỗi full trong annotation
                       full_name = testcase.get('name', '')
-                      time = testcase.get('time', '0')
           
-                      # Check for failures or errors
+                      # Check status
                       failure = testcase.find('failure')
                       error = testcase.find('error')
           
-                      if failure is not None:
-                          status = " FAIL"
-                          total_failed += 1
-                          error_msg = failure.get('message', '')[:50].replace('|', '\\|')
-                          result = f"Exception: {error_msg}"
-                      elif error is not None:
-                          status = " ERROR"
-                          total_errors += 1
-                          error_msg = error.get('message', '')[:50].replace('|', '\\|')
-                          result = f"Error: {error_msg}"
-                      else:
-                          status = " PASS"
-                          total_passed += 1
-                          result = "Đạt yêu cầu"
+                      # --- Xử lý Kết quả chạy thực tế (Actual Result) ---
+                      # 1. Mặc định
+                      actual_result = "Đạt yêu cầu"
           
-                      # Xử lý format từ @DisplayName: "MethodName | Mô tả | Input | Expected"
-                      method_name_display = full_name
-                      desc = ""
-                      data_input = ""
-                      expected_result = ""
-
+                      # 2. Nếu Failed/Error thì lấy message lỗi
+                      if failure is not None:
+                          status = "❌ FAIL"
+                          total_failed += 1
+                          actual_result = f"Exception: {failure.get('message', '')}"
+                      elif error is not None:
+                          status = "⚠️ ERROR"
+                          total_failed += 1
+                          actual_result = f"Error: {error.get('message', '')}"
+                      else:
+                          status = "✅ PASS"
+                          total_passed += 1
+          
+                          # 3. Nếu Pass, kiểm tra xem code Java có in [ACTUAL] ra System.out không
+                          system_out = testcase.find('system-out')
+                          if system_out is not None and system_out.text:
+                              for line in system_out.text.split('\n'):
+                                  if "[ACTUAL]" in line:
+                                      # Lấy nội dung sau chữ [ACTUAL]
+                                      actual_result = line.replace("[ACTUAL]", "").strip()
+                                      break
+          
+                      # --- Xử lý Format @DisplayName (4 phần) ---
                       if ' | ' in full_name:
                           parts = full_name.split(' | ')
-                          # Trường hợp chuẩn 4 phần như file Java của bạn
                           if len(parts) == 4:
-                              method_name_display = parts[0].strip()
+                              name_display = parts[0].strip()
                               desc = parts[1].strip()
-                              data_input = parts[2].strip()
-                              expected_result = parts[3].strip()
-                          # Trường hợp thiếu tên hàm (3 phần)
+                              inp = parts[2].strip()
+                              expected = parts[3].strip()
                           elif len(parts) == 3:
-                              method_name_display = "Test Case"
+                              name_display = "TestCase"
                               desc = parts[0].strip()
-                              data_input = parts[1].strip()
-                              expected_result = parts[2].strip()
+                              inp = parts[1].strip()
+                              expected = parts[2].strip()
                           else:
+                              name_display = full_name
                               desc = full_name
-                              data_input = "Xem chi tiết"
-                              expected_result = "Xem chi tiết"
+                              inp = "-"
+                              expected = "-"
                       else:
-                          # Fallback: parse từ tên method cũ kiểu camelCase_snake_case
-                          parts = full_name.split('_')
-                          if len(parts) >= 3:
-                              method_name_display = full_name
-                              desc = '_'.join(parts[1:-1]).replace('_', ' ')
-                              data_input = parts[1].replace('_', ' ')
-                              expected_result = parts[-1].replace('should', '').replace('_', ' ')
-                          else:
-                              method_name_display = full_name
-                              desc = full_name.replace('_', ' ')
-                              data_input = "N/A"
-                              expected_result = "N/A"
+                          # Fallback logic cũ
+                          name_display = full_name
+                          desc = full_name
+                          inp = "-"
+                          expected = "-"
           
-                      # Escape pipes in output để không vỡ bảng Markdown
-                      name_safe = method_name_display.replace('|', '\\|')
-                      desc_safe = desc.replace('|', '\\|')
-                      data_safe = data_input.replace('|', '\\|')
-                      expected_safe = expected_result.replace('|', '\\|')
+                      # Escape ký tự đặc biệt cho Markdown table
+                      def clean(s): return str(s).replace('|', '\\|').replace('\n', ' ')[:100]
+
+                      print(f"| `{clean(name_display)}` | {clean(desc)} | {clean(inp)} | {clean(expected)} | {clean(actual_result)} | {status} |")
           
-                      print(f"| `{name_safe}` | {desc_safe} | {data_safe} | {expected_safe} | {result} | {status} |")
               except Exception as e:
-                  print(f"Error parsing {xml_file}: {e}")
+                  print(f"Error parsing xml: {e}")
           
-          print("\n###  Tổng kết\n")
-          print(f"- **Tổng số test:** {total_tests}")
-          print(f"- ** Passed:** {total_passed}")
-          print(f"- ** Failed:** {total_failed}")
-          print(f"- ** Errors:** {total_errors}")
-          success_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
-          print(f"- **Tỷ lệ thành công:** {success_rate:.1f}%")
+          # Footer Summary
+          print("\n### 📈 Tổng kết")
+          print(f"- **Total:** {total_tests} | **Passed:** {total_passed} | **Failed:** {total_failed}")
           EOF
 
       - name: Upload surefire reports
