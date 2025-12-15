@@ -1,0 +1,45 @@
+name: backend-unit-tests
+
+# Run unit tests only (no DB). Triggers on pushes to main/develop/junit-integration-tests and PRs to main/develop.
+on:
+  push:
+    branches: [ main, develop, junit-integration-tests,unit-integration-test,shoeUnitIntergrationTest ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  unit-tests:
+    name: Run backend unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: maven
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Run backend unit tests (skip integration tests)
+        working-directory: back-end
+        # Run only test classes that end with 'UnitTest' to avoid executing integration tests
+        run: |
+          mvn -B -DskipITs=true "-Dtest=*UnitTest" "-Dsurefire.failIfNoSpecifiedTests=false" test
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: back-end/target/surefire-reports

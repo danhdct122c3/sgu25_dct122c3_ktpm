@@ -1,0 +1,146 @@
+# CI workflow: run backend integration tests against MySQL service
+# - Starts a MySQL service container
+# - Waits for DB readiness
+# - Creates the `shoeshop_test` database
+# - Runs `mvn` in the back-end module with profile `test`
+name: Backend Integration Tests (MySQL)
+
+on:
+  push:
+    branches: [ main, develop, junit-integration-tests,unit-integration-test, shoeUnitIntergrationTest ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch: {}
+
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/shoeshop_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      TEST_DB_USERNAME: root
+      TEST_DB_PASSWORD: 123456
+      MAVEN_OPTS: -Xmx2g
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Wait for MySQL to be ready
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y default-mysql-client
+          for i in $(seq 1 30); do
+            mysql -h 127.0.0.1 -P 3306 -u root -p"${{ env.TEST_DB_PASSWORD }}" -e "SELECT 1" && break
+            echo "Waiting for MySQL... ($i)"
+            sleep 2
+          done
+
+      - name: Create test database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p"${{ env.TEST_DB_PASSWORD }}" -e "CREATE DATABASE IF NOT EXISTS shoeshop_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+      - name: Run backend tests (maven)
+        working-directory: back-end
+        run: mvn -Dspring.profiles.active=test -DskipTests=false test
+        # If you want to run a single test class to speed up CI, replace the command with:
+        # mvn -Dspring.profiles.active=test -DskipTests=false -Dtest=AuthControllerTest test
+
+      - name: Run auth JUnit test (maven)
+        working-directory: back-end
+        env:
+          TEST_DB_URL: ${{ env.TEST_DB_URL }}
+          TEST_DB_USERNAME: ${{ env.TEST_DB_USERNAME }}
+          TEST_DB_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+        run: |
+          # Run only the AuthControllerTest to speed up CI and make debugging faster
+          mvn -Dspring.profiles.active=test -DskipTests=false -Dtest=AuthControllerTest test
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Maven Tests
+          path: back-end/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+      - name: Print JUnit test summary (parse surefire XML)
+        if: always()
+        run: |
+          echo "=== JUnit surefire summary ==="
+          sudo apt-get update -y
+          sudo apt-get install -y xmlstarlet || true
+          REPORT_DIR=back-end/target/surefire-reports
+          if [ ! -d "$REPORT_DIR" ]; then
+            echo "No surefire reports found at $REPORT_DIR"
+            exit 0
+          fi
+
+          for f in $REPORT_DIR/TEST-*.xml; do
+            [ -e "$f" ] || continue
+            echo "---- Suite: $f ----"
+            xmlstarlet sel -t -m "/testsuite" \
+              -v "concat('tests=',@tests,' failures=',@failures,' errors=',@errors,' skipped=',@skipped,' time=',@time)" -n "$f"
+
+            echo "Testcases:"
+            xmlstarlet sel -t -m "/testsuite/testcase" \
+              -v "concat(@classname,'::',@name,'|time=',@time,'|failures=',count(failure),'|errors=',count(error))" -n "$f" | \
+              awk -F'|' '{
+                split($1,a,"::");
+                class=a[1]; name=a[2];
+                split($2,b,"=");
+                time=b[2];
+                split($3,c,"=");
+                failures=c[2]+0;
+                split($4,d,"=");
+                errors=d[2]+0;
+                status="PASSED";
+                if (failures>0) status="FAILED";
+                if (errors>0) status="ERROR";
+                printf "- %s.%s | status=%s | time=%ss\n", class, name, status, time;
+              }'
+            echo
+          done
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: back-end/target/surefire-reports/**
+
+      - name: Upload full target (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: back-end-target
+          path: back-end/target/**

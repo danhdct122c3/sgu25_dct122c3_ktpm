@@ -2,14 +2,13 @@ package fpl.sd.backend.dto.request;
 
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchConnectionDetails;
 
 @Data
 @AllArgsConstructor
+@Builder
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserCreateRequest {
