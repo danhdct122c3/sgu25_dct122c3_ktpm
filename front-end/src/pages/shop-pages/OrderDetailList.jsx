@@ -270,18 +270,6 @@ function OrderCard({ order, onOrderCancelled }) {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {/* Nút thanh toán lại cho đơn hàng CREATED */}
-                {order?.orderStatus === "CREATED" && (
-                  <Button
-                    variant="default"
-                    onClick={handleRetryPayment}
-                    disabled={isRetrying}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isRetrying ? "Đang xử lý..." : "Thanh toán lại"}
-                  </Button>
-                )}
-                
                 {cancellableStatuses.has(order?.orderStatus) && (
                 <Button
                   variant="destructive"
