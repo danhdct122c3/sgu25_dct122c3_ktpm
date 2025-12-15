@@ -1,15 +1,13 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
 spring:
   datasource:
-    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/shop_shoe_superteam?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&createDatabaseIfnNotExist=true}
-    username: ${DBMS_USERNAME:root}
-    password: ${DBMS_PASSWORD:root}
-#    url: jdbc:mysql://206.189.42.99/shop_shoe_superteam?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-#    username: root
+    url: jdbc:mysql://${DATABASE_HOST}:${DATABASE_PORT:3306}/${DATABASE_NAME}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
     driverClassName: "com.mysql.cj.jdbc.Driver"
   jpa:
     hibernate:
@@ -33,7 +31,7 @@ vnPay:
   hash-secret: ${VNP_HASH_SECRET:3JMZVAOGMYMN0OR2B0LHODUA0IN3OF0B}
   tmn-code: ${VNP_TMN_CODE:SOHPW8FT}
   payment-url: ${VNP_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
-  return-url: ${VNP_RETURN_URL:https://unpatrician-underogatively-bronson.ngrok-free.dev/checkout/payment-callback}
+  return-url: ${VNP_RETURN_URL:https://sgu25-dct122c3-ktpm.vercel.app/checkout/payment-callback}
   # Debug / compatibility flags (try variations if signature fails):
   # When true, values will be percent-encoded during HMAC calculation (some sandboxes expect this)
   hash-encode: ${VNP_HASH_ENCODE:true}
