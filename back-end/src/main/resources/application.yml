@@ -30,8 +30,8 @@ vnPay:
   command: ${VNP_COMMAND:pay}
   orderType: ${VNP_ORDER_TYPE:other}
   currCode: ${VNP_CURR_CODE:VND}
-  hash-secret: ${VNP_HASH_SECRET:ANAIDKYHLTU5HVKRMUM4NVRMLCN0SJU1}
-  tmn-code: ${VNP_TMN_CODE:8VWZT7KJ}
+  hash-secret: ${VNP_HASH_SECRET:3JMZVAOGMYMN0OR2B0LHODUA0IN3OF0B}
+  tmn-code: ${VNP_TMN_CODE:SOHPW8FT}
   payment-url: ${VNP_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   return-url: ${VNP_RETURN_URL:http://localhost:3000/checkout/payment-callback}
   # Debug / compatibility flags (try variations if signature fails):

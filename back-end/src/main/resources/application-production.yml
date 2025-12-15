@@ -1,4 +1,3 @@
-
 server:
   port: 8080
   servlet:
@@ -31,10 +30,19 @@ vnPay:
   command: ${VNP_COMMAND:pay}
   orderType: ${VNP_ORDER_TYPE:other}
   currCode: ${VNP_CURR_CODE:VND}
-  hash-secret: ${VNP_HASH_SECRET:ANAIDKYHLTU5HVKRMUM4NVRMLCN0SJU1}
-  tmn-code: ${VNP_TMN_CODE:8VWZT7KJ}
-  payment-url: ${VNP_PAYMENT_URL:https://pay.vnpay.vn/vpcpay.html}
-  return-url: ${VNP_RETURN_URL:http://localhost:8080/api/v1/payment/payment-callback}
+  hash-secret: ${VNP_HASH_SECRET:3JMZVAOGMYMN0OR2B0LHODUA0IN3OF0B}
+  tmn-code: ${VNP_TMN_CODE:SOHPW8FT}
+  payment-url: ${VNP_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  return-url: ${VNP_RETURN_URL:https://unpatrician-underogatively-bronson.ngrok-free.dev/checkout/payment-callback}
+  # Debug / compatibility flags (try variations if signature fails):
+  # When true, values will be percent-encoded during HMAC calculation (some sandboxes expect this)
+  hash-encode: ${VNP_HASH_ENCODE:true}
+  # When true, HMAC hex will be converted to uppercase before sending to VNPay
+  hash-upper: ${VNP_HASH_UPPER:true}
+  # When true, add &vnp_SecureHashType=SHA512 to the payment URL
+  send-hash-type: ${VNP_SEND_HASH_TYPE:true}
+  demo: ${VNPAY_DEMO:false}
+  timezone: ${VNPAY_TIMEZONE:GMT+7}
 
 mail:
   apiKey: ""
@@ -43,5 +51,3 @@ ai:
   openai:
     endpoint: ${AI_OPENAI_ENDPOINT:https://api.openai.com/v1/chat/completions}
     api-key: ${AI_OPENAI_APIKEY}
-
-
