@@ -3,11 +3,13 @@ package fpl.sd.backend.ai.chat;
 import fpl.sd.backend.ai.chat.dto.ChatRequest;
 import fpl.sd.backend.ai.chat.dto.ChatResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
+@ConditionalOnProperty(name = "ai.openai.api-key", matchIfMissing = false)
 public class OpenAIChatClient implements ChatClient {
 
     private final RestClient restClient;
