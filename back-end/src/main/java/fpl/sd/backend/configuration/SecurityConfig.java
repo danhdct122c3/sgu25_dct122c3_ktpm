@@ -136,9 +136,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+            // Local development
             "http://localhost:5173",
             "http://localhost:3000",
-            "http://localhost:8080"
+            "http://localhost:8080",
+            // Production - Vercel frontend
+            "https://sgu25-dct122c3-ktpm.vercel.app",
+            // Production - Render backend (for internal calls if needed)
+            "https://sgu25-dct122c3-ktpm.onrender.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
