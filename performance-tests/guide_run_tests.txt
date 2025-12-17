@@ -1,0 +1,35 @@
+HƯỚNG DẪN CHẠY PERFORMANCE TEST VỚI K6
+========================================
+
+Yêu cầu:
+- Đã cài đặt k6 (https://k6.io/docs/get-started/installation/)
+
+1. Cấu trúc thư mục
+-------------------
+- load_testing.js: Kịch bản kiểm thử tải (Load Test) - Kiểm tra độ ổn định hệ thống.
+- stress_testing.js: Kịch bản kiểm thử chịu tải (Stress Test) - Tìm điểm giới hạn của hệ thống.
+
+2. Chạy Load Test (Kiểm thử tải)
+--------------------------------
+Mục tiêu: Chứng minh hệ thống hoạt động ổn định dưới tải dự kiến.
+
+a) Chạy với cấu hình mặc định (150 VUs trong 3 phút):
+   k6 run load_testing.js
+
+b) Chạy với cấu hình tùy chỉnh:
+   - VUS: Số lượng người dùng ảo (Virtual Users)
+   - DURATION: Thời gian duy trì tải (ví dụ: 30s, 1m, 5m)
+
+   Ví dụ chạy 150 người dùng trong 5 phút:
+   k6 run -e VUS=150 -e DURATION=5m load_testing.js
+
+3. Chạy Stress Test (Kiểm thử chịu tải)
+---------------------------------------
+Mục tiêu: Tăng tải đột ngột hoặc vượt quá giới hạn để xem hệ thống phản ứng thế nào.
+
+a) Chạy với cấu hình mặc định (50 VUs trong 2 phút):
+   k6 run stress_testing.js
+
+b) Chạy với cấu hình tùy chỉnh:
+   Ví dụ chạy 100 người dùng trong 2 phút:
+   k6 run -e VUS=100 -e DURATION=2m stress_testing.js
