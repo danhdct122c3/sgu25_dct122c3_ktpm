@@ -52,7 +52,22 @@ jobs:
             -Dspring.datasource.password="" \
             -Dspring.datasource.driver-class-name="org.h2.Driver" \
             -Dspring.jpa.database-platform="org.hibernate.dialect.H2Dialect" \
-            -Dspring.jpa.hibernate.ddl-auto="create-drop"
+            -Dspring.jpa.properties.hibernate.dialect="org.hibernate.dialect.H2Dialect" \
+            -Dspring.jpa.hibernate.ddl-auto="create"
+
+      - name: Run AuthControllerTest
+        working-directory: ./back-end
+        run: |
+          if [ -f ./mvnw ]; then chmod +x ./mvnw; MVNCMD=./mvnw; else MVNCMD=mvn; fi
+          echo "Running AuthControllerTest with H2"
+          $MVNCMD -B clean test -Dtest="com.example.shoeshop.auth.AuthControllerTest" \
+            -Dspring.datasource.url="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL" \
+            -Dspring.datasource.username="sa" \
+            -Dspring.datasource.password="" \
+            -Dspring.datasource.driver-class-name="org.h2.Driver" \
+            -Dspring.jpa.database-platform="org.hibernate.dialect.H2Dialect" \
+            -Dspring.jpa.properties.hibernate.dialect="org.hibernate.dialect.H2Dialect" \
+            -Dspring.jpa.hibernate.ddl-auto="create"
 
       - name: Restore test file if excluded
         if: always()

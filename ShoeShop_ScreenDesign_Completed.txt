@@ -1,0 +1,920 @@
+--- Sheet: Đăng nhập ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	 SCR001	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập	Đăng nhập									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+1. Overview																																											
+	Màn hình đăng nhập cho phép Person và Librarian sử dụng các chức năng của hệ thống																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+	2.2. Screen items																																										
+			STT	Thành phần	Mô tả																																														3	Ô nhập "Tên người dùng"	TextBox cho người dùng nhập username (ví dụ: ThanhDo123).
+			1	Tiêu đề	"Đăng Nhập" – Tiêu đề chính, căn giữa.																																														4	Ô nhập "Mật khẩu"	PasswordBox – ẩn ký tự, hiển thị dấu chấm •.
+			2	Lời chào	"Chào bạn! Hãy đăng nhập nhé" – thông báo thân thiện ở đầu form.																																														5	Checkbox “Ghi nhớ tài khoản”	Cho phép hệ thống lưu lại thông tin đăng nhập cho lần sau.
+			3	Ô nhập "Tên người dùng"	TextBox cho người dùng nhập username (ví dụ: ThanhDo123).																																														6	Liên kết “Quên mật khẩu?”	Link điều hướng đến trang khôi phục mật khẩu.
+			4	Ô nhập "Mật khẩu"	PasswordBox – ẩn ký tự, hiển thị dấu chấm •.																																														7	Nút “Đăng nhập”	Button chính để gửi thông tin đăng nhập.
+			5	Checkbox “Ghi nhớ tài khoản”	Cho phép hệ thống lưu lại thông tin đăng nhập cho lần sau.																																														8	Liên kết “Tạo một tài khoản”	Link chuyển đến trang đăng ký người dùng mới.
+			6	Liên kết “Quên mật khẩu?”	Link điều hướng đến trang khôi phục mật khẩu.																																						
+			7	Nút “Đăng nhập”	Button chính để gửi thông tin đăng nhập.																																						
+			8	Liên kết “Tạo một tài khoản”	Link chuyển đến trang đăng ký người dùng mới.																																						
+				. Main screen interaction
+			1) Hệ thống sẽ validate dữ liệu như sau:
+				- Khi sai tên đăng nhập hoặc mật khẩu
+				- Nếu không tìm thấy tên hoặc account của PM, Senior Manager trong danh sách nhân viên, hệ thống hiển thị message "Sai tài khoản hoặc mật khẩu"
+				- Khi nhập dữ liệu vào trường Textbox, hệ thống sẽ chặn không cho user nhập vượt quá maxlenght quy định
+				Tên người dùng: bắt buộc nhập , không chứa kí tự đặc biệt
+				Mật khẩu bắt buộc nhập, 8 kí tự trở lên
+			Flow đăng nhập
+			1. Người dùng nhập Tên người dùng và Mật khẩu.
+			2. Nhấn Đăng nhập → Gửi request đến API /auth/login.
+			3. Hệ thống kiểm tra:
+			Nếu hợp lệ → Chuyển hướng trang (home/dashboard).
+			Nếu không hợp lệ → Hiển thị lỗi tương ứng.
+			4. Nếu chọn "Ghi nhớ tài khoản" → Lưu thông tin đăng nhập vào localStorage hoặc cookie.
+			5. Nếu nhấn "Quên mật khẩu?" → Điều hướng đến trang khôi phục mật khẩu.
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR001
+
+Screen Name: Đăng nhập
+
+Module / Feature: Authentication
+
+Actor sử dụng (User / Admin / Staff / …): User, Admin, Staff, Manager
+
+Mục tiêu màn hình: Cho phép người dùng xác thực và truy cập vào hệ thống
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Người dùng truy cập từ trang chủ hoặc các trang yêu cầu đăng nhập.
+
+Trang trước (Previous Page): Home (/)
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Chưa đăng nhập
+
+Hành động dẫn đến màn hình hiện tại: Click link "Đăng nhập" hoặc tự động redirect khi truy cập trang cần auth
+
+Trang sau (Next Page): Home (/) nếu thành công
+
+Khi nhấn nút nào → điều hướng tới đâu: Nút "Đăng nhập" → Home nếu success
+
+Điều kiện chuyển trang (success / error / validate fail): Success → Home, Error → ở lại
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /login
+
+Tham số URL (nếu có): Không có
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép
+
+Redirect về đâu nếu không hợp lệ: Không áp dụng
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Login	POST	/api/auth/login	Xác thực thông tin đăng nhập	Submit form
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Logo, Tên hệ thống
+
+Main Content: Form đăng nhập với các trường input
+
+Action Area: Nút "Đăng nhập"
+
+Notification / Message: Thông báo lỗi nếu có
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Tên người dùng	Textbox	Yes	Yes	Không rỗng, không ký tự đặc biệt	
+2	Mật khẩu	Password	Yes	Yes	>=8 ký tự	
+3	Ghi nhớ tài khoản	Checkbox	No	Yes	-	
+4	Quên mật khẩu	Link	No	-	-	
+5	Đăng nhập	Button	-	-	-	
+6	Tạo tài khoản	Link	No	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Khi gửi request đăng nhập
+
+Normal state: Form trống, sẵn sàng nhập
+
+Error state: Hiển thị thông báo lỗi khi sai thông tin
+
+Success state: Chuyển hướng sau đăng nhập thành công
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Username bắt buộc nhập, không chứa ký tự đặc biệt
+
+- Password bắt buộc nhập, tối thiểu 8 ký tự
+
+- Nếu tick "Ghi nhớ tài khoản", lưu thông tin vào cookie/localStorage
+
+- Nếu quên mật khẩu, chuyển đến trang reset
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Validate input fields
+
+- API integration cho login
+
+- Điều hướng sau login
+
+- Xử lý lỗi và security
+
+🔹 10. Liên kết Test Case
+
+TC_LOGIN_001, TC_LOGIN_002, TC_LOGIN_003
+
+--- Sheet: Đăng ký ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 SCR05	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký	 Đăng ký									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+1. Overview																																											
+	Màn hình đăng ký																																										
+	Cho phép người dùng mới tạo tài khoản để truy cập hệ thống.																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+	2.2. Screen items																																										
+					STT	Thành phần	Mô tả																																				
+					1	Tiêu đề	"Đăng Ký" – căn giữa, nổi bật.																																				
+					2	Lời chào	"Ồ bạn mới! Hãy đăng ký ngay" – thông báo thân thiện.																																				
+					3	Ô nhập "Tên người dùng"	Nhập username.																																				
+					4	Ô nhập "Email"	Nhập địa chỉ email hợp lệ.																																				
+					5	Ô nhập "Mật khẩu"	Nhập mật khẩu (ẩn ký tự).																																				
+					6	Ô nhập "Xác nhận mật khẩu"	Nhập lại mật khẩu để xác minh.																																				
+					7	Checkbox "Chấp nhận điều khoản…"	Bắt buộc tick để đồng ý với Điều khoản & Chính sách bảo mật.																																				
+					8	Nút "Đăng ký"	Gửi yêu cầu đăng ký tài khoản.																																				
+					9	Liên kết "Đăng nhập"	Chuyển đến trang đăng nhập nếu đã có tài khoản.																																				
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR05
+
+Screen Name: Đăng ký
+
+Module / Feature: Authentication
+
+Actor sử dụng (User / Admin / Staff / …): User
+
+Mục tiêu màn hình: Cho phép người dùng tạo tài khoản mới
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Từ trang đăng nhập, click link "Tạo tài khoản"
+
+Trang trước (Previous Page): Đăng nhập (/login)
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Chưa đăng nhập
+
+Hành động dẫn đến màn hình hiện tại: Click link từ trang đăng nhập
+
+Trang sau (Next Page): Đăng nhập (/login) nếu thành công, hoặc ở lại nếu lỗi
+
+Khi nhấn nút nào → điều hướng tới đâu: Nút "Đăng ký" → Đăng nhập nếu success
+
+Điều kiện chuyển trang (success / error / validate fail): Success → Đăng nhập, Error → ở lại
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /register
+
+Tham số URL (nếu có): Không có
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép
+
+Redirect về đâu nếu không hợp lệ: Không áp dụng
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Register	POST	/api/auth/register	Tạo tài khoản mới	Submit form
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Logo, Tên hệ thống
+
+Main Content: Form đăng ký
+
+Action Area: Nút "Đăng ký"
+
+Notification / Message: Thông báo lỗi hoặc thành công
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Tên người dùng	Textbox	Yes	Yes	Không rỗng, không ký tự đặc biệt	
+2	Email	Textbox	Yes	Yes	Định dạng email hợp lệ	
+3	Mật khẩu	Password	Yes	Yes	>=8 ký tự	
+4	Xác nhận mật khẩu	Password	Yes	Yes	Phải khớp với mật khẩu	
+5	Chấp nhận điều khoản	Checkbox	Yes	Yes	Phải tick	
+6	Đăng ký	Button	-	-	-	
+7	Đăng nhập	Link	No	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Khi gửi request đăng ký
+
+Normal state: Form trống
+
+Error state: Hiển thị lỗi validation
+
+Success state: Thông báo thành công và chuyển hướng
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Tất cả trường bắt buộc
+
+- Email phải hợp lệ
+
+- Password >=8 ký tự, xác nhận phải khớp
+
+- Phải chấp nhận điều khoản
+
+- Username unique
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Validate tất cả fields
+
+- API register
+
+- Điều hướng
+
+- Xử lý duplicate username/email
+
+🔹 10. Liên kết Test Case
+
+TC_REGISTER_001, TC_REGISTER_002, TC_REGISTER_003
+
+--- Sheet: Home ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	 SCR004	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home	Home									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+https://sgu25-dct122c3-ktpm.vercel.app/ (https://sgu25-dct122c3-ktpm.vercel.app/)																																											
+1. Overview																																											
+	Trang chủ hiển thị sản phẩm nổi bật, banner, danh mục.																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+																																																	A
+	2.2. Screen items																																										
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR004
+
+Screen Name: Home
+
+Module / Feature: Home Page
+
+Actor sử dụng (User / Admin / Staff / …): All users
+
+Mục tiêu màn hình: Hiển thị trang chủ với sản phẩm và thông tin chính
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Trang mặc định khi truy cập website
+
+Trang trước (Previous Page): N/A
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Không yêu cầu
+
+Hành động dẫn đến màn hình hiện tại: Truy cập root URL
+
+Trang sau (Next Page): Các trang sản phẩm, chi tiết, etc.
+
+Khi nhấn nút nào → điều hướng tới đâu: Click sản phẩm → Chi tiết sản phẩm, Menu → Các trang khác
+
+Điều kiện chuyển trang (success / error / validate fail): Always success
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /
+
+Tham số URL (nếu có): Không có
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép
+
+Redirect về đâu nếu không hợp lệ: Không áp dụng
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Get featured products	GET	/api/products/featured	Load sản phẩm nổi bật	Page load
+2	Get categories	GET	/api/categories	Load danh mục	Page load
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Navigation, Logo, Search, Cart, User menu
+
+Main Content: Banner carousel, Featured products, Categories
+
+Footer: Links, Contact info
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Banner Carousel	Image Slider	No	No	-	
+2	Featured Products	List	No	No	-	
+3	Categories	Menu	No	No	-	
+4	Search Bar	Textbox	No	Yes	-	
+5	Cart Icon	Link	No	-	-	
+6	User Menu	Dropdown	No	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Khi load dữ liệu
+
+Normal state: Hiển thị đầy đủ
+
+Empty state: Nếu không có dữ liệu
+
+Error state: Lỗi load API
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Hiển thị banner carousel
+
+- Sản phẩm nổi bật theo thứ tự
+
+- Responsive design
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Load performance
+
+- Responsive UI
+
+- API integration
+
+- Navigation links
+
+🔹 10. Liên kết Test Case
+
+TC_HOME_001, TC_HOME_002, TC_HOME_003
+
+--- Sheet: Sản phẩm ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	 SCR006	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm	Sản phẩm									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+https://sgu25-dct122c3-ktpm.vercel.app/shoes (https://sgu25-dct122c3-ktpm.vercel.app/shoes)																																											
+1. Overview																																											
+	Danh sách sản phẩm																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+	2.2. Screen items																																										
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR006
+
+Screen Name: Sản phẩm
+
+Module / Feature: Product Listing
+
+Actor sử dụng (User / Admin / Staff / …): All users
+
+Mục tiêu màn hình: Hiển thị danh sách sản phẩm với bộ lọc
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Từ home, menu, hoặc search
+
+Trang trước (Previous Page): Home (/)
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Không yêu cầu
+
+Hành động dẫn đến màn hình hiện tại: Click menu "Sản phẩm" hoặc search
+
+Trang sau (Next Page): Chi tiết sản phẩm
+
+Khi nhấn nút nào → điều hướng tới đâu: Click sản phẩm → Chi tiết
+
+Điều kiện chuyển trang (success / error / validate fail): Always
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /shoes
+
+Tham số URL (nếu có): ?brand=...&size=...&price=...
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép
+
+Redirect về đâu nếu không hợp lệ: Không áp dụng
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Get products	GET	/api/products	Load danh sách sản phẩm	Page load, filter change
+2	Get brands	GET	/api/brands	Load danh sách brand	Initial load
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Navigation
+
+Sidebar: Filters (brand, size, price)
+
+Main Content: Product grid
+
+Footer: Pagination
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Product Grid	List	No	No	-	
+2	Brand Filter	Checkbox	No	Yes	-	
+3	Size Filter	Checkbox	No	Yes	-	
+4	Price Filter	Range	No	Yes	-	
+5	Sort By	Select	No	Yes	-	
+6	Pagination	Buttons	No	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Khi load products
+
+Normal state: Hiển thị grid
+
+Empty state: Không có sản phẩm
+
+Error state: Lỗi API
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Bộ lọc theo brand, size, price
+
+- Sort theo popularity, price
+
+- Pagination
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Filtering functionality
+
+- Sorting
+
+- Pagination
+
+- API calls
+
+🔹 10. Liên kết Test Case
+
+TC_PRODUCTS_001, TC_PRODUCTS_002, TC_PRODUCTS_003
+
+--- Sheet: Chi tiết sản phẩm ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	 SCR007	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm	Chi tiết sản phẩm									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+https://sgu25-dct122c3-ktpm.vercel.app/shoes/1 (https://sgu25-dct122c3-ktpm.vercel.app/shoes/1)																																											
+1. Overview																																											
+	Màn hình chi tiết sản phẩm																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+	2.2. Screen items																																										
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR007
+
+Screen Name: Chi tiết sản phẩm
+
+Module / Feature: Product Detail
+
+Actor sử dụng (User / Admin / Staff / …): All users
+
+Mục tiêu màn hình: Hiển thị chi tiết sản phẩm và cho phép thêm vào giỏ
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Từ danh sách sản phẩm
+
+Trang trước (Previous Page): Sản phẩm (/shoes)
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Không yêu cầu
+
+Hành động dẫn đến màn hình hiện tại: Click sản phẩm
+
+Trang sau (Next Page): Giỏ hàng (/cart)
+
+Khi nhấn nút nào → điều hướng tới đâu: "Thêm vào giỏ" → Giỏ hàng
+
+Điều kiện chuyển trang (success / error / validate fail): Success → Giỏ hàng
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /shoes/:id
+
+Tham số URL (nếu có): id (product id)
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép
+
+Redirect về đâu nếu không hợp lệ: 404 hoặc Home
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Get product detail	GET	/api/products/:id	Load chi tiết sản phẩm	Page load
+2	Add to cart	POST	/api/cart/add	Thêm vào giỏ	Click button
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Navigation
+
+Main Content: Product images, info, variants
+
+Action Area: Size select, Add to cart
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Product Images	Gallery	No	No	-	
+2	Product Name	Text	No	No	-	
+3	Price	Text	No	No	-	
+4	Size Select	Select	Yes	Yes	-	
+5	Quantity	Input	Yes	Yes	>0	
+6	Add to Cart	Button	-	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Load product
+
+Normal state: Hiển thị đầy đủ
+
+Error state: Sản phẩm không tồn tại
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Chọn size bắt buộc
+
+- Quantity >0
+
+- Stock check
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Load product detail
+
+- Add to cart
+
+- Size/quantity validation
+
+🔹 10. Liên kết Test Case
+
+TC_PRODUCT_DETAIL_001, TC_PRODUCT_DETAIL_002, TC_PRODUCT_DETAIL_003
+
+--- Sheet: Giỏ hàng ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	 SCR008	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng	Giỏ hàng									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+https://sgu25-dct122c3-ktpm.vercel.app/cart (https://sgu25-dct122c3-ktpm.vercel.app/cart)																																											
+1. Overview																																											
+	Chi tiết giỏ hàng																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+	2.2. Screen items																																										
+	2.3. Main screen interaction																																										
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR008
+
+Screen Name: Giỏ hàng
+
+Module / Feature: Shopping Cart
+
+Actor sử dụng (User / Admin / Staff / …): User (logged in)
+
+Mục tiêu màn hình: Hiển thị và quản lý giỏ hàng
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Từ header cart icon hoặc sau add to cart
+
+Trang trước (Previous Page): Chi tiết sản phẩm
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Đã login
+
+Hành động dẫn đến màn hình hiện tại: Click cart icon
+
+Trang sau (Next Page): Checkout (/checkout)
+
+Khi nhấn nút nào → điều hướng tới đâu: "Thanh toán" → Checkout
+
+Điều kiện chuyển trang (success / error / validate fail): Success → Checkout
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /cart
+
+Tham số URL (nếu có): Không có
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép nếu login
+
+Redirect về đâu nếu không hợp lệ: Login
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Get cart	GET	/api/cart	Load giỏ hàng	Page load
+2	Update quantity	PUT	/api/cart/update	Cập nhật số lượng	Change quantity
+3	Remove item	DELETE	/api/cart/remove	Xóa item	Click remove
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Navigation
+
+Main Content: Cart items list, totals
+
+Action Area: Update cart, Proceed to checkout
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Cart Items	List	No	No	-	
+2	Quantity	Input	Yes	Yes	>0	
+3	Remove Button	Button	-	-	-	
+4	Subtotal	Text	No	No	-	
+5	Total	Text	No	No	-	
+6	Update Cart	Button	-	-	-	
+7	Checkout	Button	-	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Load cart
+
+Normal state: Hiển thị items
+
+Empty state: Giỏ trống
+
+Error state: Lỗi update
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Update quantity real-time
+
+- Recalculate totals
+
+- Stock validation
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Add/remove items
+
+- Update quantity
+
+- Total calculation
+
+- Checkout flow
+
+🔹 10. Liên kết Test Case
+
+TC_CART_001, TC_CART_002, TC_CART_003
+
+--- Sheet: Lịch sử đơn hàng ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	 SCR009	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng	Lịch sử đơn hàng									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+https://sgu25-dct122c3-ktpm.vercel.app/order-history (https://sgu25-dct122c3-ktpm.vercel.app/order-history)																																											
+1. Overview																																											
+	Lịch sử đơn hàng của user																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+	2.2. Screen items																																										
+	2.3. Main screen interaction																																										
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR009
+
+Screen Name: Lịch sử đơn hàng
+
+Module / Feature: Order History
+
+Actor sử dụng (User / Admin / Staff / …): User (logged in)
+
+Mục tiêu màn hình: Hiển thị lịch sử đơn hàng
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): Medium
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Từ user menu
+
+Trang trước (Previous Page): Profile
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Đã login
+
+Hành động dẫn đến màn hình hiện tại: Click "Lịch sử đơn hàng"
+
+Trang sau (Next Page): Chi tiết đơn hàng
+
+Khi nhấn nút nào → điều hướng tới đâu: Click đơn hàng → Chi tiết
+
+Điều kiện chuyển trang (success / error / validate fail): Always
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /order-history
+
+Tham số URL (nếu có): Không có
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép nếu login
+
+Redirect về đâu nếu không hợp lệ: Login
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Get order history	GET	/api/orders/history	Load lịch sử đơn hàng	Page load
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Navigation
+
+Main Content: Order list
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Order List	Table	No	No	-	
+2	Order ID	Text	No	No	-	
+3	Date	Text	No	No	-	
+4	Status	Text	No	No	-	
+5	Total	Text	No	No	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Load orders
+
+Normal state: Hiển thị list
+
+Empty state: Không có đơn hàng
+
+Error state: Lỗi load
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Hiển thị theo thứ tự thời gian
+
+- Status: Pending, Shipped, Delivered
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Load order history
+
+- Display details
+
+- Status updates
+
+🔹 10. Liên kết Test Case
+
+TC_ORDER_HISTORY_001, TC_ORDER_HISTORY_002
+
+--- Sheet: Checkout ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	 SCR0010	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán	Thanh toán									MMDDYYY	MMDDYYY	MMDDYYY	MMDDYYY
+https://sgu25-dct122c3-ktpm.vercel.app/checkout (https://sgu25-dct122c3-ktpm.vercel.app/checkout)																																											
+1. Overview																																											
+	Thanh toán																																										
+2.  Screen Design																																											
+	2.1. Screen image																																										
+		Màn hình hiển thị lỗi cho các trường hợp không hợp lệ:																																									
+	2.2. Screen items																																										
+	2.3. Main screen interaction																																										
+		1) Hệ thống sẽ validate dữ liệu như sau:																																									
+			 a) Thông báo lỗi ngay khi nhập dữ liệu, khi trỏ chuột loss focus																																								
+			b) Hoặc khi user click vào [Thêm] button  [Xóa] button [Sửa] button																																								
+			c) Lỗi sẽ được hiển thị như sau:																																								
+				- Khi nhập giá trị không phải là số vào các trường có data type là Number hệ thống hiển thị message "Chỉ được nhập số"																																							
+				- Khi save dữ liệu mà các trường Required là Null thì hệ thống sẽ hiển thị thông báo lỗi "[Lỗi] Không được để trống thông tin"																																							
+				- Khi nhập dữ liệu vào trường Textbox, hệ thống sẽ chặn không cho user nhập vượt quá maxlenght quy định																																							
+				- Khi hệ thống không nhận dạng được format trường Date thì hệ thống sẽ thông báo lối "[Date field name] is formated DD-MMM-YY"  																																							
+			d) Bấm vào [Cancel] button																																								
+			e) Trỏ chuột sẽ focus vào field bị lỗi.																																								
+	2.4. Screen displaying																																										
+		1) Thông báo lỗi cho các trường hợp không hợp lệ sẽ thực hiên như sau: 																																									
+			- Các dữ liệu không hợp lệ sẽ được hiển thị bằng màu đỏ																																								
+			- Hệ thống hiển thị thông báo lỗi cho từng trường hợp không hợp lệ theo quy luật từ trên xuống dưới, từ trái qua phải.																																								
+		2) Đối với trường combo box:																																									
+			Độ rộng của trường combo được fix cứng, nếu dữ liệu dài quá độ rộng thì toàn bộ nội dung dữ liệu sẽ được hiển thị như tooltip.																																								
+			Dữ liệu sẽ được sort theo Alphabet để người dùng chọn																																								
+		3) Khi màn hình Create new project được open, trỏ chuột sẽ focus váo trường nhập đầu tiên của màn hình, sau đó sẽ di chuyển theo quy luật từ trên xuống dưới, từ trái qua																																									
+			phải khi user bấm phím Tab trên bàn phím.																																								
+		4) Khi create project mà không phải sub-project thì vùng parent project sẽ được hide đi																																									
+
+🔹 1. Thông tin chung màn hình
+
+Screen ID: SCR0010
+
+Screen Name: Thanh toán
+
+Module / Feature: Checkout
+
+Actor sử dụng (User / Admin / Staff / …): User (logged in)
+
+Mục tiêu màn hình: Hoàn tất thanh toán đơn hàng
+
+Mức độ ưu tiên kiểm thử (High / Medium / Low): High
+
+🔹 2. Trạng thái điều hướng (Navigation Flow)
+
+Mô tả luồng truy cập màn hình: Từ giỏ hàng
+
+Trang trước (Previous Page): Giỏ hàng (/cart)
+
+Điều kiện truy cập (đã login / có quyền / có dữ liệu…): Đã login, có items trong cart
+
+Hành động dẫn đến màn hình hiện tại: Click "Thanh toán"
+
+Trang sau (Next Page): Payment success hoặc fail
+
+Khi nhấn nút nào → điều hướng tới đâu: "Thanh toán" → Payment gateway
+
+Điều kiện chuyển trang (success / error / validate fail): Success → Success page
+
+🔹 3. URL & Routing
+
+URL màn hình (Frontend): /checkout
+
+Tham số URL (nếu có): Không có
+
+Điều kiện truy cập URL trực tiếp (Direct URL Access): Cho phép nếu login và có cart
+
+Redirect về đâu nếu không hợp lệ: Cart hoặc Login
+
+🔹 4. API liên quan đến màn hình
+
+STT	API Name	Method	Endpoint	Mục đích	Khi nào gọi
+1	Create order	POST	/api/orders/create	Tạo đơn hàng	Submit form
+2	Payment	POST	/api/payment/process	Xử lý thanh toán	Submit payment
+
+🔹 5. Cấu trúc Layer của màn hình (Screen Layers)
+
+Header: Navigation
+
+Main Content: Billing info, Payment method, Order summary
+
+Action Area: Place order
+
+🔹 6. Danh sách UI Item (Screen Items)
+
+STT	Item Name	Type	Required	Editable	Validation	Ghi chú
+1	Name	Textbox	Yes	Yes	Không rỗng	
+2	Address	Textarea	Yes	Yes	Không rỗng	
+3	Phone	Textbox	Yes	Yes	Định dạng phone	
+4	Email	Textbox	Yes	Yes	Email hợp lệ	
+5	Payment Method	Radio	Yes	Yes	-	
+6	Place Order	Button	-	-	-	
+
+🔹 7. Trạng thái màn hình (Screen States)
+
+Loading state: Process payment
+
+Normal state: Form checkout
+
+Error state: Validation errors
+
+Success state: Order confirmed
+
+🔹 8. Quy tắc nghiệp vụ liên quan
+
+- Tất cả fields bắt buộc
+
+- Validate address, phone, email
+
+- Payment method selection
+
+- Order total calculation
+
+🔹 9. Điểm cần kiểm thử (Testing Focus)
+
+- Form validation
+
+- Payment integration
+
+- Order creation
+
+- Error handling
+
+🔹 10. Liên kết Test Case
+
+TC_CHECKOUT_001, TC_CHECKOUT_002, TC_CHECKOUT_003
+
+--- Sheet: Quản lý giày ---
+						Process	Process	Process	Process	Process	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen ID	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Screen Name	Created PIC	Created PIC	Created PIC	Created PIC	Created Date	Created Date	Created Date	Created Date	Approved Date	Approved Date	Approved Date	Approved Date
+						Screen Design	Screen Design	Screen Design	Screen Design	Screen Design	 SCR011	 SCR011	 SCR011	 SCR011	 SCR011	 SCR011	 SCR011	 SCR011	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản lý giày ( manager)	Màn hình quản
