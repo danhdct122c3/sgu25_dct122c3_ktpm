@@ -15,6 +15,7 @@ on:
     paths:
       - 'back-end/src/**'
       - 'back-end/pom.xml'
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -36,8 +37,6 @@ jobs:
           MYSQL_DATABASE: shop_shoe_superteam
           MYSQL_USER: testuser
           MYSQL_PASSWORD: testpass
-        ports:
-          - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -h localhost"
           --health-interval=10s
@@ -67,7 +66,7 @@ jobs:
           sleep 2
         done
         
-        # Verify database exists
+        # Verify database exists (exit non-zero if not present)
         mysql -h127.0.0.1 -P3306 -uroot -pkhang141204 -e "SHOW DATABASES;" | grep shop_shoe_superteam || exit 1
         echo "✅ Database shop_shoe_superteam confirmed!"
 
@@ -76,15 +75,20 @@ jobs:
       env:
         SPRING_DATASOURCE_PASSWORD: khang141204
       run: |
+        set -o pipefail
         cd back-end
         echo "🏃 Running CartManagementIntegrationTest..."
-        echo "📝 Using application.yml from src/main/resources with overridden password for CI"
+        echo "📝 Running Maven with quoted -Dtest to avoid shell issues"
+
         mvn -B clean test \
-          -Dtest=CartManagementIntegrationTest \
+          -Dtest="com.example.shoeshop.auth.CartManagementIntegrationTest" \
+          -DtrimStackTrace=false \
           -Dspring.datasource.password=khang141204 \
           2>&1 | tee test-output.log
+
         TEST_EXIT_CODE=${PIPESTATUS[0]}
         echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+
         if [ $TEST_EXIT_CODE -ne 0 ]; then
           echo "❌ Tests failed with exit code: $TEST_EXIT_CODE"
           exit $TEST_EXIT_CODE
@@ -95,26 +99,46 @@ jobs:
       if: always()
       run: |
         cd back-end
-        echo "##  Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ -d target/surefire-reports ]; then
-          TOTAL=$(find target/surefire-reports -name "TEST-*.xml" | wc -l)
-          echo "- **Total Test Files:** $TOTAL" >> $GITHUB_STEP_SUMMARY
-          
-          # Parse test results if files exist
-          if [ $TOTAL -gt 0 ]; then
-            echo "- **Test Class:** CartManagementIntegrationTest" >> $GITHUB_STEP_SUMMARY
-            echo "- **Expected Tests:** 4" >> $GITHUB_STEP_SUMMARY
+          total_files=$(ls target/surefire-reports/TEST-*.xml 2>/dev/null | wc -l || true)
+          echo "- **Total Test Report Files**: $total_files" >> $GITHUB_STEP_SUMMARY
+
+          if [ $total_files -gt 0 ]; then
+            TOTAL_TESTS=0
+            TOTAL_FAILURES=0
+            TOTAL_ERRORS=0
+            TOTAL_SKIPPED=0
+
+            for f in target/surefire-reports/TEST-*.xml; do
+              if [ ! -f "$f" ]; then
+                continue
+              fi
+              tests=$(grep -oP 'tests="\K[^"]+' "$f" | head -1 || echo 0)
+              failures=$(grep -oP 'failures="\K[^"]+' "$f" | head -1 || echo 0)
+              errors=$(grep -oP 'errors="\K[^"]+' "$f" | head -1 || echo 0)
+              skipped=$(grep -oP 'skipped="\K[^"]+' "$f" | head -1 || echo 0)
+
+              TOTAL_TESTS=$((TOTAL_TESTS + tests))
+              TOTAL_FAILURES=$((TOTAL_FAILURES + failures))
+              TOTAL_ERRORS=$((TOTAL_ERRORS + errors))
+              TOTAL_SKIPPED=$((TOTAL_SKIPPED + skipped))
+
+              classname=$(basename "$f" .xml | sed 's/^TEST-//')
+              echo "- **$classname** — tests=$tests failures=$failures errors=$errors skipped=$skipped" >> $GITHUB_STEP_SUMMARY
+            done
+
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Test Methods:" >> $GITHUB_STEP_SUMMARY
-            echo "1. ✅ testSuccessfulCartManagementAndCheckout" >> $GITHUB_STEP_SUMMARY
-            echo "2. ✅ testAddOutOfStockProduct" >> $GITHUB_STEP_SUMMARY
-            echo "3. ✅ testUpdateQuantityExceedingStock" >> $GITHUB_STEP_SUMMARY
-            echo "4. ✅ testApplyInvalidDiscountCode" >> $GITHUB_STEP_SUMMARY
+            echo "### Totals" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tests run:** $TOTAL_TESTS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failures:** $TOTAL_FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors:** $TOTAL_ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Skipped:** $TOTAL_SKIPPED" >> $GITHUB_STEP_SUMMARY
           fi
         else
-          echo " No test reports found in target/surefire-reports" >> $GITHUB_STEP_SUMMARY
+          echo "No test reports found in target/surefire-reports" >> $GITHUB_STEP_SUMMARY
         fi
 
     - name:  Upload Test Reports (XML + TXT)
@@ -130,7 +154,7 @@ jobs:
         if-no-files-found: warn
 
     - name:  Publish Test Dashboard
-      if: success()
+      if: always()
       uses: dorny/test-reporter@v1
       with:
         name:  Cart Integration Test Results
@@ -142,196 +166,48 @@ jobs:
     - name:  Create Detailed Issue on Test Failure
       if: failure() && steps.run-tests.outcome == 'failure'
       uses: actions/github-script@v7
+      id: create-issue
       with:
         script: |
           const fs = require('fs');
-          const path = require('path');
-          
-          // Read test output log if available
+          const core = require('@actions/core');
+
           let testOutput = 'Test output not available';
           const logPath = 'back-end/test-output.log';
           if (fs.existsSync(logPath)) {
             const fullLog = fs.readFileSync(logPath, 'utf8');
-            // Extract last 100 lines of errors
             const lines = fullLog.split('\n');
-            testOutput = lines.slice(-100).join('\n');
+            testOutput = lines.slice(-200).join('\n');
           }
 
-          const issueTitle = ` CI FAILED: CartManagementIntegrationTest - Run #${context.runNumber} (${context.ref.replace('refs/heads/', '')})`;
+          const issueTitle = `CI FAILED: CartManagementIntegrationTest - Run #${context.runNumber} (${context.ref.replace('refs/heads/', '')})`;
 
-          const issueBody = `
-          ##  Cart Management Integration Test Failure
+          const issueBody = `Automated CI failure report for CartManagementIntegrationTest. See run: ${context.payload.repository.html_url}/actions/runs/${context.runId}\n\nRecent test output:\n\n\`\`\`\n${testOutput}\n\`\`\``;
 
-          ###  CI Execution Details
-          | Property | Value |
-          |----------|-------|
-          | **Workflow** | ${context.workflow} |
-          | **Run Number** | #${context.runNumber} |
-          | **Branch** | ${context.ref.replace('refs/heads/', '')} |
-          | **Commit** | \`${context.sha.substring(0, 7)}\` |
-          | **Triggered By** | @${context.actor} |
-          | **Run URL** | [View Logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) |
-
-          ###  Test Information
-          - **Test Class:** \`CartManagementIntegrationTest\`
-          - **Location:** \`back-end/src/test/java/com/example/shoeshop/auth/CartManagementIntegrationTest.java\`
-          - **Status:**  **FAILED**
-          - **Use Case:** UC2 - Quản lý và Cập nhật Giỏ hàng
-
-          ###  Expected Test Methods (4 total)
-          - [ ] \`testSuccessfulCartManagementAndCheckout\` - Full cart workflow
-          - [ ] \`testAddOutOfStockProduct\` - Stock validation
-          - [ ] \`testUpdateQuantityExceedingStock\` - Quantity limits
-          - [ ] \`testApplyInvalidDiscountCode\` - Discount validation
-
-          ###  Test Reports & Artifacts
-          - **Artifact Name:** \`cart-test-reports-${context.runNumber}\`
-          - **Download:** [Click here](${context.payload.repository.html_url}/actions/runs/${context.runId})
-          - **Contains:** JUnit XML reports, text reports, and full test output log
-
-          ###  Recent Test Output
-          <details>
-          <summary>Click to view last 100 lines of test execution</summary>
-
-          \`\`\`
-          ${testOutput}
-          \`\`\`
-          </details>
-
-          ### ️ Troubleshooting Steps
-          1. **Check the logs:**
-             \`\`\`bash
-             # View the Actions run logs at:
-             ${context.payload.repository.html_url}/actions/runs/${context.runId}
-             \`\`\`
-
-          2. **Download test reports:**
-             - Go to Actions run → Artifacts section
-             - Download \`cart-test-reports-${context.runNumber}\`
-             - Review XML/TXT files for detailed errors
-
-          3. **Run tests locally:**
-             \`\`\`bash
-             cd back-end
-             mvn clean test -Dtest=CartManagementIntegrationTest
-             \`\`\`
-
-          4. **Check database connection:**
-             - Verify MySQL is running locally
-             - Check \`application-test.yml\` configuration
-             - Ensure test database schema is up-to-date
-
-          5. **Review test dependencies:**
-             - Check all @Autowired repositories are available
-             - Verify test data setup in \`@BeforeEach setUp()\`
-             - Check foreign key constraints are handled
-
-          ###  Files to Review
-          - \`back-end/src/test/java/com/example/shoeshop/auth/CartManagementIntegrationTest.java\`
-          - \`back-end/src/test/resources/application-test.yml\`
-          - \`back-end/pom.xml\` (check test dependencies)
-          - Controller endpoints: \`CartController.java\`, \`OrderController.java\`
-
-          ###  Common Issues & Solutions
-          | Issue | Solution |
-          |-------|----------|
-          | Foreign key constraint violations | Check cleanup order in \`setUp()\` method |
-          | 404 endpoint errors | Verify @RequestMapping paths match test URLs |
-          | Database connection timeout | Ensure MySQL service is healthy in CI |
-          | Test data conflicts | Use unique test data (timestamps in SKU) |
-
-          ### 👥 Assignees
-          Please assign this to the QA team or developer who last modified the test file.
-
-          ---
-           **Auto-generated by GitHub Actions CI**
-           **Created:** ${new Date().toISOString()}
-          🏷 **Labels:** ci, integration-test, bug, cart-management, automated
-          `;
-
-          // Check for existing open issues to avoid duplicates
-          const existingIssues = await github.rest.issues.listForRepo({
+          // Create issue
+          const newIssue = await github.rest.issues.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            labels: 'ci,integration-test',
-            state: 'open'
+            title: issueTitle,
+            body: issueBody,
+            labels: ['ci', 'integration-test', 'automated']
           });
 
-          const duplicateIssue = existingIssues.data.find(issue =>
-            issue.title.includes(`Run #${context.runNumber}`) &&
-            issue.title.includes('CartManagementIntegrationTest')
-          );
+          core.setOutput('issue-url', newIssue.data.html_url);
 
-          if (!duplicateIssue) {
-            const newIssue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: issueTitle,
-              body: issueBody,
-              labels: ['ci', 'integration-test', 'bug', 'cart-management', 'automated', 'test-failure']
-            });
-            
-            console.log(` Created issue #${newIssue.data.number}: ${issueTitle}`);
-          } else {
-            console.log(`⚠ Duplicate issue already exists: #${duplicateIssue.number}`);
-            
-            // Add a comment to existing issue instead
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: duplicateIssue.number,
-              body: ` **Another failure occurred in Run #${context.runNumber}**\n\n[View latest run](${context.payload.repository.html_url}/actions/runs/${context.runId})`
-            });
-          }
+    - name:  Print created issue link
+      if: failure()
+      run: |
+        echo "Created issue: ${{ steps.create-issue.outputs.issue-url }}"
+        echo "### Created Issue" >> $GITHUB_STEP_SUMMARY
+        echo "- ${{ steps.create-issue.outputs.issue-url }}" >> $GITHUB_STEP_SUMMARY
 
     - name:  Comment on PR (Success)
       if: success() && github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
-          const comment = `
-          ##  Cart Integration Tests Passed!
-
-          ###  Test Execution Summary
-          | Metric | Value |
-          |--------|-------|
-          | **Status** |  **ALL TESTS PASSED** |
-          | **Test Class** | CartManagementIntegrationTest |
-          | **Total Tests** | 4 |
-          | **Success Rate** | 100% |
-          | **Coverage** | UC2 Cart Management (Complete) |
-          | **Database** | MySQL 8.0  |
-          | **Run** | [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId}) |
-
-          ###  Test Details
-          | # | Test Method | Status | Purpose |
-          |---|-------------|--------|---------|
-          | 1 | testSuccessfulCartManagementAndCheckout |  PASS | Complete cart workflow with discount |
-          | 2 | testAddOutOfStockProduct |  PASS | Stock availability validation |
-          | 3 | testUpdateQuantityExceedingStock |  PASS | Quantity limit enforcement |
-          | 4 | testApplyInvalidDiscountCode |  PASS | Discount code validation |
-
-          ###  Test Reports Available
-          **Download Artifacts:** [cart-test-reports-${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
-          - JUnit XML reports
-          - Detailed text reports
-          - Full test execution log
-
-          ###  What This Means
-          -  All cart management features working correctly
-          -  Database integration successful
-          -  Foreign key constraints properly handled
-          -  API endpoints responding as expected
-          -  Error handling validated
-
-          ###  Ready for Merge
-          All integration tests passed! The cart management functionality is stable and ready for deployment.
-
-          ---
-           *CI Bot - Cart Integration Tests*
-           *${new Date().toISOString()}*
-          `;
-
+          const comment = `\n##  Cart Integration Tests Passed!\n\nAll tests passed.`;
           await github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
@@ -344,33 +220,7 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const comment = `
-          ##  Cart Integration Tests Failed
-
-          ###  Test Execution Summary
-          | Metric | Value |
-          |--------|-------|
-          | **Status** |  **TESTS FAILED** |
-          | **Test Class** | CartManagementIntegrationTest |
-          | **Run** | [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId}) |
-
-          ###  Action Required
-          -  An issue has been automatically created with detailed failure information
-          -  Download test reports from [Artifacts](${context.payload.repository.html_url}/actions/runs/${context.runId})
-          -  Review the [Actions logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details
-
-          ###  Quick Debug
-          \`\`\`bash
-          cd back-end
-          mvn clean test -Dtest=CartManagementIntegrationTest
-          \`\`\`
-
-           **Please fix the failing tests before merging this PR.**
-
-          ---
-           *CI Bot - Cart Integration Tests*
-          `;
-
+          const comment = `\n##  Cart Integration Tests Failed\n\nAn issue was created with details.`;
           await github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
@@ -379,116 +229,4 @@ jobs:
           });
 
 # ========================================================================================
-# 📚 WORKFLOW DOCUMENTATION & CUSTOMIZATION GUIDE
-# ========================================================================================
-#
-# 🎯 WORKFLOW OVERVIEW:
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# This CI workflow automatically tests the Cart Management Integration Test suite
-# for the shoe shop application's cart functionality (UC2 - Cart Management).
-#
-# 📋 EXECUTION FLOW:
-# 1. ✅ Trigger: Push/PR to main, develop, or junit-integration-tests branches
-# 2. 🐳 Setup: Ubuntu + JDK 21 + MySQL 8.0 Docker service
-# 3. 🧪 Test: Run CartManagementIntegrationTest (4 test methods)
-# 4. 📊 Report: Always upload JUnit XML/TXT reports as artifacts
-# 5. ✅ Success: Publish interactive test dashboard + comment on PR
-# 6. ❌ Failure: Auto-create GitHub issue with detailed error info + comment on PR
-#
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# 🔧 CUSTOMIZATION OPTIONS:
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# 1️⃣ CHANGE TRIGGER BRANCHES:
-#    Line 4-6: branches: [ main, develop, your-branch ]
-#
-# 2️⃣ CHANGE TRIGGER PATHS (run only when specific files change):
-#    Line 7-10: Add/remove paths to monitor
-#
-# 3️⃣ CHANGE TEST COMMAND:
-#    Line 97: Current: mvn -B clean test -Dtest=CartManagementIntegrationTest
-#    Options:
-#      - Run all tests: mvn -B test
-#      - Run specific package: mvn -B test -Dtest=com.example.shoeshop.auth.*
-#      - Run with coverage: mvn -B verify jacoco:report
-#
-# 4️⃣ CHANGE MYSQL DATABASE NAME:
-#    Line 24: MYSQL_DATABASE: your_database_name
-#    Line 62: Update application-test.yml URL accordingly
-#
-# 5️⃣ CHANGE MYSQL PASSWORD:
-#    Line 23: MYSQL_ROOT_PASSWORD: your_password
-#    Line 62: Update application-test.yml password
-#
-# 6️⃣ CHANGE JDK VERSION:
-#    Line 45: java-version: '17' or '11'
-#
-# 7️⃣ CHANGE ARTIFACT RETENTION:
-#    Line 132: retention-days: 7 (shorter) or 90 (longer)
-#
-# 8️⃣ CHANGE ISSUE LABELS:
-#    Line 278: labels: ['your-label1', 'your-label2']
-#
-# 9️⃣ ADD MORE TEST CLASSES:
-#    Line 97: -Dtest=CartManagementIntegrationTest,OrderIntegrationTest
-#
-# 🔟 CHANGE TIMEOUT:
-#    Line 19: timeout-minutes: 30 (for slower tests)
-#
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# 📊 TEST REPORT LOCATIONS:
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# - XML Reports: back-end/target/surefire-reports/*.xml
-# - Text Reports: back-end/target/surefire-reports/*.txt
-# - Full Log: back-end/test-output.log
-# - Download from: Actions → Run → Artifacts section
-#
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# 🚨 TROUBLESHOOTING COMMON ISSUES:
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# ❌ MySQL connection failed:
-#    → Check MYSQL_ROOT_PASSWORD matches in both service and test config
-#    → Verify port 3306 is not already in use
-#    → Increase health check retries (Line 31)
-#
-# ❌ Tests timeout:
-#    → Increase job timeout (Line 19)
-#    → Check MySQL health check is passing
-#
-# ❌ Artifacts not found:
-#    → Verify paths in upload-artifact step (Line 129-131)
-#    → Check if tests actually ran and generated reports
-#
-# ❌ Issue creation fails:
-#    → Verify GITHUB_TOKEN has issues:write permission
-#    → Check repository settings → Actions → General → Workflow permissions
-#
-# ❌ dorny/test-reporter fails:
-#    → Ensure at least one TEST-*.xml file exists
-#    → Check XML file is valid JUnit format
-#
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# 🎓 ADDITIONAL ENHANCEMENTS (Optional):
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# 💬 Add Slack Notifications:
-#    - uses: slackapi/slack-github-action@v1
-#    - Notify team on test failures
-#
-# 📊 Add Code Coverage:
-#    - Use JaCoCo plugin: mvn verify jacoco:report
-#    - Upload coverage: uses: codecov/codecov-action@v3
-#
-# 🔐 Add Secret Scanning:
-#    - uses: trufflesecurity/trufflehog@main
-#
-# 📈 Add Performance Testing:
-#    - Measure test execution time
-#    - Track over time to detect slowdowns
-#
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# End of workflow
