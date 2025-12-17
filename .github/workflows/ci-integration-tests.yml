@@ -49,7 +49,10 @@ jobs:
           $MVNCMD -B clean test -Dtest="com.example.shoeshop.auth.CartManagementIntegrationTest" \
             -Dspring.datasource.url="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL" \
             -Dspring.datasource.username="sa" \
-            -Dspring.datasource.password=""
+            -Dspring.datasource.password="" \
+            -Dspring.datasource.driver-class-name="org.h2.Driver" \
+            -Dspring.jpa.database-platform="org.hibernate.dialect.H2Dialect" \
+            -Dspring.jpa.hibernate.ddl-auto="create-drop"
 
       - name: Restore test file if excluded
         if: always()
