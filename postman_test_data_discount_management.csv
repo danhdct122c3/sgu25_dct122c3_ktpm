@@ -1,0 +1,26 @@
+testCase,description,role,username,password,endpoint,method,requestBody,expectedStatusCode,expectedResult
+DM_001,Manager create discount code,manager,manager1,password123,/api/discounts,POST,"{""code"":""SUMMER2024"",""description"":""Summer Sale"",""discountType"":""PERCENTAGE"",""discountValue"":20,""minOrderValue"":100000,""maxDiscountAmount"":50000,""startDate"":""2024-06-01"",""endDate"":""2024-08-31"",""usageLimit"":100}",201,created
+DM_002,Manager create discount with fixed amount,manager,manager1,password123,/api/discounts,POST,"{""code"":""FIXED50K"",""description"":""Fixed 50k discount"",""discountType"":""FIXED_AMOUNT"",""discountValue"":50000,""minOrderValue"":200000,""startDate"":""2024-01-01"",""endDate"":""2024-12-31"",""usageLimit"":50}",201,created
+DM_003,Manager create discount with duplicate code,manager,manager1,password123,/api/discounts,POST,"{""code"":""SUMMER2024"",""description"":""Duplicate"",""discountType"":""PERCENTAGE"",""discountValue"":10}",400,duplicate_code
+DM_004,Manager create discount with invalid date range,manager,manager1,password123,/api/discounts,POST,"{""code"":""INVALID"",""description"":""Invalid dates"",""discountType"":""PERCENTAGE"",""discountValue"":10,""startDate"":""2024-12-31"",""endDate"":""2024-01-01""}",400,invalid_date_range
+DM_005,Manager create discount with negative value,manager,manager1,password123,/api/discounts,POST,"{""code"":""NEGATIVE"",""description"":""Negative value"",""discountType"":""PERCENTAGE"",""discountValue"":-10}",400,invalid_value
+DM_006,Manager create discount with empty code,manager,manager1,password123,/api/discounts,POST,"{""code"":"""",""description"":""Empty code"",""discountType"":""PERCENTAGE"",""discountValue"":10}",400,validation_error
+DM_007,Manager get all discounts,manager,manager1,password123,/api/discounts,GET,,200,success
+DM_008,Manager get discount by ID,manager,manager1,password123,/api/discounts/{{discountId}},GET,,200,success
+DM_009,Manager get non-existent discount,manager,manager1,password123,/api/discounts/99999,GET,,404,not_found
+DM_010,Manager update discount code,manager,manager1,password123,/api/discounts/{{discountId}},PUT,"{""code"":""UPDATED2024"",""description"":""Updated discount"",""discountType"":""PERCENTAGE"",""discountValue"":25,""minOrderValue"":150000,""startDate"":""2024-06-01"",""endDate"":""2024-09-30""}",200,success
+DM_011,Manager update discount with invalid ID,manager,manager1,password123,/api/discounts/99999,PUT,"{""code"":""UPDATED"",""description"":""Test"",""discountType"":""PERCENTAGE"",""discountValue"":10}",404,not_found
+DM_012,Manager partially update discount,manager,manager1,password123,/api/discounts/{{discountId}},PATCH,"{""discountValue"":30,""usageLimit"":200}",200,success
+DM_013,Manager deactivate discount,manager,manager1,password123,/api/discounts/{{discountId}}/deactivate,PATCH,,200,success
+DM_014,Manager activate discount,manager,manager1,password123,/api/discounts/{{discountId}}/activate,PATCH,,200,success
+DM_015,Manager delete discount,manager,manager1,password123,/api/discounts/{{discountId}},DELETE,,200,success
+DM_016,Manager delete non-existent discount,manager,manager1,password123,/api/discounts/99999,DELETE,,404,not_found
+DM_017,Staff try to create discount (unauthorized),staff,staff1,password123,/api/discounts,POST,"{""code"":""STAFF"",""description"":""Test"",""discountType"":""PERCENTAGE"",""discountValue"":10}",403,unauthorized
+DM_018,Staff try to update discount (unauthorized),staff,staff1,password123,/api/discounts/{{discountId}},PUT,"{""code"":""STAFF"",""description"":""Test"",""discountType"":""PERCENTAGE"",""discountValue"":10}",403,unauthorized
+DM_019,Staff try to delete discount (unauthorized),staff,staff1,password123,/api/discounts/{{discountId}},DELETE,,403,unauthorized
+DM_020,Customer try to create discount (unauthorized),customer,customer1,password123,/api/discounts,POST,"{""code"":""CUSTOMER"",""description"":""Test"",""discountType"":""PERCENTAGE"",""discountValue"":10}",403,unauthorized
+DM_021,Customer try to update discount (unauthorized),customer,customer1,password123,/api/discounts/{{discountId}},PUT,"{""code"":""CUSTOMER"",""description"":""Test"",""discountType"":""PERCENTAGE"",""discountValue"":10}",403,unauthorized
+DM_022,Customer try to delete discount (unauthorized),customer,customer1,password123,/api/discounts/{{discountId}},DELETE,,403,unauthorized
+DM_023,Customer can view discounts (public access),customer,customer1,password123,/api/discounts/public,GET,,200,success
+DM_024,Create discount without authentication,,,/api/discounts,POST,"{""code"":""TEST"",""description"":""Test"",""discountType"":""PERCENTAGE"",""discountValue"":10}",401,unauthorized
+DM_025,Manager create discount with percentage > 100,manager,manager1,password123,/api/discounts,POST,"{""code"":""OVER100"",""description"":""Over 100%"",""discountType"":""PERCENTAGE"",""discountValue"":150}",400,invalid_percentage

@@ -1,0 +1,26 @@
+Bug ID,Date Reported,Reported By,Module,Feature,Bug Summary,Bug Description,Steps to Reproduce,Expected Result,Actual Result,Severity,Priority,Status,Assigned To,Date Resolved,Resolution Notes,Related Test Case
+BUG_001,,,,,,,,,,,,,,,,,
+BUG_002,,,,,,,,,,,,,,,,,
+BUG_003,,,,,,,,,,,,,,,,,
+
+Severity Levels:
+- Critical: System crash, data loss, security breach
+- High: Major feature not working, blocking functionality
+- Medium: Feature partially working, workaround exists
+- Low: Minor issue, cosmetic problem
+
+Priority Levels:
+- P1: Fix immediately
+- P2: Fix before release
+- P3: Fix if time permits
+- P4: Nice to have
+
+Status Values:
+- New: Just reported
+- Open: Acknowledged
+- In Progress: Being fixed
+- Fixed: Fix completed
+- Verified: Fix verified by tester
+- Closed: Accepted as resolved
+- Rejected: Not a bug
+- Deferred: Will fix later

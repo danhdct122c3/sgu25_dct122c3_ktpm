@@ -196,14 +196,14 @@ export default function Cart() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => removeFromCart(item.variantId)}
-                        className="p-1 rounded-md hover:bg-gray-100"
+                        className="decrease-qty p-1 rounded-md hover:bg-gray-100"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <span className="w-8 text-center">{item.quantity}</span>
+                      <span className="item-quantity w-8 text-center">{item.quantity}</span>
                       <button
                         onClick={() => addToCart(item)}
-                        className="p-1 rounded-md hover:bg-gray-100"
+                        className="increase-qty p-1 rounded-md hover:bg-gray-100"
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -291,7 +291,7 @@ export default function Cart() {
 
               <Button
                 onClick={handleCheckout}
-                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white"
+                className="checkout-btn w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Tiến hành thanh toán
               </Button>

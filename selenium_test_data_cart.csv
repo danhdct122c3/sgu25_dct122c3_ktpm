@@ -1,0 +1,16 @@
+testId,description,action,productName,size,quantity,expectedResult,expectedMessage
+SeleniumCart001,Thêm 1 sản phẩm vào giỏ,add,Nike Air Max,42,1,success,Product added to cart
+SeleniumCart002,Thêm sản phẩm với size khác,add,Adidas Ultraboost,40,1,success,Product added to cart
+SeleniumCart003,Thêm nhiều sản phẩm cùng lúc,add_multiple,Nike Air Max,42,1,success,2 items in cart
+SeleniumCart004,Tăng số lượng sản phẩm,increase_quantity,Nike Air Max,42,3,success,Quantity updated to 3
+SeleniumCart005,Giảm số lượng sản phẩm,decrease_quantity,Nike Air Max,42,1,success,Quantity updated to 1
+SeleniumCart006,Xóa sản phẩm khỏi giỏ,remove,Nike Air Max,42,0,success,Product removed from cart
+SeleniumCart007,Xóa tất cả sản phẩm,remove_all,,,0,success,Cart is empty
+SeleniumCart008,Thêm sản phẩm vượt quá stock,add,Nike Air Max,42,100,fail,Insufficient stock
+SeleniumCart009,Cập nhật số lượng = 0,update_quantity,Nike Air Max,42,0,fail,Quantity must be at least 1
+SeleniumCart010,Thêm sản phẩm hết hàng,add,Out of Stock Product,42,1,fail,Product is out of stock
+SeleniumCart011,Kiểm tra tổng tiền giỏ hàng,view_cart,,,,,Cart total calculated correctly
+SeleniumCart012,Apply mã giảm giá hợp lệ,apply_discount,,,,,Discount applied successfully
+SeleniumCart013,Apply mã giảm giá không hợp lệ,apply_discount,,,,,Invalid discount code
+SeleniumCart014,Apply mã giảm giá đã hết hạn,apply_discount,,,,,Discount code expired
+SeleniumCart015,Tiếp tục mua hàng từ giỏ,continue_shopping,,,,,Redirected to products page

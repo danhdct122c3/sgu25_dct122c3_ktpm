@@ -269,14 +269,14 @@ export default function DetailShoePage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleQuantityChange("decrement")}
-                    className="p-2 border rounded-md"
+                    className="decrease-qty p-2 border rounded-md"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="ư-12 text-center w-10">{quantity}</span>
+                  <span className="quantity-display w-12 text-center w-10">{quantity}</span>
                   <button
                     onClick={() => handleQuantityChange("increment")}
-                    className="p-2 border rounded-md"
+                    className="increase-qty p-2 border rounded-md"
                   >
                     <Plus className="w-4 h-4" />
                   </button>

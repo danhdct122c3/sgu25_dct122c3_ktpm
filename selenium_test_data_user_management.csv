@@ -1,0 +1,21 @@
+testCase,description,role,username,password,fullName,email,phone,targetUsername,newStatus,expectedResult
+UM_001,Customer update own profile,customer,customer1,password123,Customer Updated,customer.new@example.com,0123456789,,,success
+UM_002,Customer update profile with invalid email,customer,customer1,password123,Customer Name,invalid-email,0123456789,,,validation_error
+UM_003,Customer update profile with empty name,customer,customer1,password123,,customer@example.com,0123456789,,,validation_error
+UM_004,Staff update own profile,staff,staff1,password123,Staff Updated,staff.new@example.com,0987654321,,,success
+UM_005,Staff update profile with long phone,staff,staff1,password123,Staff Name,staff@example.com,01234567890123456,,,validation_error
+UM_006,Manager update own profile,manager,manager1,password123,Manager Updated,manager.new@example.com,0123456789,,,success
+UM_007,Manager update staff status to active,manager,manager1,password123,,,,staff1,ACTIVE,success
+UM_008,Manager update staff status to inactive,manager,manager1,password123,,,,staff1,INACTIVE,success
+UM_009,Manager try to update manager status,manager,manager1,password123,,,,manager2,INACTIVE,unauthorized
+UM_010,Manager try to update admin status,manager,manager1,password123,,,,admin1,INACTIVE,unauthorized
+UM_011,Admin update own profile,admin,admin1,password123,Admin Updated,admin.new@example.com,0123456789,,,success
+UM_012,Admin update staff status to active,admin,admin1,password123,,,,staff1,ACTIVE,success
+UM_013,Admin update staff status to inactive,admin,admin1,password123,,,,staff1,INACTIVE,success
+UM_014,Admin update manager status to active,admin,admin1,password123,,,,manager1,ACTIVE,success
+UM_015,Admin update manager status to inactive,admin,admin1,password123,,,,manager1,INACTIVE,success
+UM_016,Staff try to update user status,staff,staff1,password123,,,,staff2,INACTIVE,unauthorized
+UM_017,Customer try to update user status,customer,customer1,password123,,,,staff1,INACTIVE,unauthorized
+UM_018,Admin update profile with special characters,admin,admin1,password123,Admin Nguyễn Văn A,admin@example.com,0123-456-789,,,success
+UM_019,Update profile with valid phone formats,customer,customer1,password123,Customer,customer@example.com,0912345678,,,success
+UM_020,Update profile with international phone,manager,manager1,password123,Manager,manager@example.com,+84123456789,,,success

@@ -1,0 +1,21 @@
+testCase,description,role,username,password,endpoint,method,requestBody,expectedStatusCode,expectedResult
+UM_001,Customer update own profile,customer,customer1,password123,/api/users/profile,PUT,"{""fullName"":""Customer Updated"",""email"":""customer.new@example.com"",""phone"":""0123456789""}",200,success
+UM_002,Customer update profile with invalid email,customer,customer1,password123,/api/users/profile,PUT,"{""fullName"":""Customer"",""email"":""invalid-email"",""phone"":""0123456789""}",400,validation_error
+UM_003,Customer update profile with empty name,customer,customer1,password123,/api/users/profile,PUT,"{""fullName"":"""",""email"":""customer@example.com"",""phone"":""0123456789""}",400,validation_error
+UM_004,Staff update own profile,staff,staff1,password123,/api/users/profile,PUT,"{""fullName"":""Staff Updated"",""email"":""staff.new@example.com"",""phone"":""0987654321""}",200,success
+UM_005,Staff update profile with long phone,staff,staff1,password123,/api/users/profile,PUT,"{""fullName"":""Staff"",""email"":""staff@example.com"",""phone"":""01234567890123456""}",400,validation_error
+UM_006,Manager update own profile,manager,manager1,password123,/api/users/profile,PUT,"{""fullName"":""Manager Updated"",""email"":""manager.new@example.com"",""phone"":""0123456789""}",200,success
+UM_007,Manager update staff status to active,manager,manager1,password123,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""ACTIVE""}",200,success
+UM_008,Manager update staff status to inactive,manager,manager1,password123,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""INACTIVE""}",200,success
+UM_009,Manager try to update manager status (unauthorized),manager,manager1,password123,/api/users/staff/{{managerId}}/status,PATCH,"{""status"":""INACTIVE""}",403,unauthorized
+UM_010,Manager try to update admin status (unauthorized),manager,manager1,password123,/api/users/staff/{{adminId}}/status,PATCH,"{""status"":""INACTIVE""}",403,unauthorized
+UM_011,Admin update own profile,admin,admin1,password123,/api/users/profile,PUT,"{""fullName"":""Admin Updated"",""email"":""admin.new@example.com"",""phone"":""0123456789""}",200,success
+UM_012,Admin update staff status to active,admin,admin1,password123,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""ACTIVE""}",200,success
+UM_013,Admin update staff status to inactive,admin,admin1,password123,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""INACTIVE""}",200,success
+UM_014,Admin update manager status to active,admin,admin1,password123,/api/users/staff/{{managerId}}/status,PATCH,"{""status"":""ACTIVE""}",200,success
+UM_015,Admin update manager status to inactive,admin,admin1,password123,/api/users/staff/{{managerId}}/status,PATCH,"{""status"":""INACTIVE""}",200,success
+UM_016,Staff try to update another user status (unauthorized),staff,staff1,password123,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""INACTIVE""}",403,unauthorized
+UM_017,Customer try to update user status (unauthorized),customer,customer1,password123,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""INACTIVE""}",403,unauthorized
+UM_018,Update profile without authentication,,,/api/users/profile,PUT,"{""fullName"":""Test"",""email"":""test@example.com""}",401,unauthorized
+UM_019,Update user status without authentication,,,/api/users/staff/{{staffId}}/status,PATCH,"{""status"":""INACTIVE""}",401,unauthorized
+UM_020,Admin update profile with special characters,admin,admin1,password123,/api/users/profile,PUT,"{""fullName"":""Admin Nguyễn Văn A"",""email"":""admin@example.com"",""phone"":""0123-456-789""}",200,success

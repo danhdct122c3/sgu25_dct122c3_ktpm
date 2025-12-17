@@ -11,6 +11,17 @@ import java.util.Objects;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(value = AppException.class)
+    ResponseEntity<APIResponse<Object>> handleAppException(AppException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        APIResponse<Object> apiResponse = APIResponse.builder()
+                .message(errorCode.getMessage())
+                .flag(false)
+                .code(errorCode.getCode())
+                .build();
+        return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
+    }
+
     @ExceptionHandler(value = RuntimeException.class)
     ResponseEntity<APIResponse<Object>> handleRuntimeException(RuntimeException e) {
         APIResponse<Object> apiResponse = APIResponse.builder()

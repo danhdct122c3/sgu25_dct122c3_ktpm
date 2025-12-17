@@ -1,0 +1,41 @@
+testCase,description,role,username,password,orderId,action,orderStatus,paymentMethod,shippingAddress,expectedResult
+OM_001,Customer view order history,customer,customer1,password123,,view_history,,,Customer Address,success
+OM_002,Customer view order details,customer,customer1,password123,{{orderId}},view_details,,,Customer Address,success
+OM_003,Customer cancel pending order,customer,customer1,password123,{{orderId}},cancel,PENDING,,Customer Address,success
+OM_004,Customer try to cancel processing order,customer,customer1,password123,{{orderId}},cancel,PROCESSING,,Customer Address,error
+OM_005,Customer try to cancel completed order,customer,customer1,password123,{{orderId}},cancel,COMPLETED,,Customer Address,error
+OM_006,Customer reorder from history,customer,customer1,password123,{{orderId}},reorder,COMPLETED,,Customer Address,success
+OM_007,Customer filter orders by status,customer,customer1,password123,,filter,PENDING,,Customer Address,success
+OM_008,Customer search orders by ID,customer,customer1,password123,{{orderId}},search,,,Customer Address,success
+OM_009,Customer place order with COD,customer,customer1,password123,,place_order,,COD,Customer Address,success
+OM_010,Customer place order with VNPay,customer,customer1,password123,,place_order,,VNPAY,Customer Address,success
+OM_011,Customer view empty order history,customer,customer2,password123,,view_history,,,New Customer Address,empty
+OM_012,Customer try to view other user order,customer,customer1,password123,{{otherUserId}},view_details,,,Customer Address,unauthorized
+OM_013,Staff view all orders,staff,staff1,password123,,view_all,,,Staff Address,success
+OM_014,Staff update order to processing,staff,staff1,password123,{{orderId}},update_status,PROCESSING,,Staff Address,success
+OM_015,Staff update order to shipping,staff,staff1,password123,{{orderId}},update_status,SHIPPING,,Staff Address,success
+OM_016,Staff update order to completed,staff,staff1,password123,{{orderId}},update_status,COMPLETED,,Staff Address,success
+OM_017,Staff cancel order,staff,staff1,password123,{{orderId}},cancel,PENDING,,Staff Address,success
+OM_018,Staff view order details,staff,staff1,password123,{{orderId}},view_details,,,Staff Address,success
+OM_019,Staff filter orders by status,staff,staff1,password123,,filter,PROCESSING,,Staff Address,success
+OM_020,Staff search orders by customer,staff,staff1,password123,,search_customer,,,Staff Address,success
+OM_021,Manager view all orders,manager,manager1,password123,,view_all,,,Manager Address,success
+OM_022,Manager update order status,manager,manager1,password123,{{orderId}},update_status,PROCESSING,,Manager Address,success
+OM_023,Manager cancel any order,manager,manager1,password123,{{orderId}},cancel,PENDING,,Manager Address,success
+OM_024,Manager view order statistics,manager,manager1,password123,,view_statistics,,,Manager Address,success
+OM_025,Manager export orders report,manager,manager1,password123,,export_report,,,Manager Address,success
+OM_026,Manager filter by date range,manager,manager1,password123,,filter_date,,,Manager Address,success
+OM_027,Admin view all orders,admin,admin1,password123,,view_all,,,Admin Address,success
+OM_028,Admin update any order status,admin,admin1,password123,{{orderId}},update_status,COMPLETED,,Admin Address,success
+OM_029,Admin delete order,admin,admin1,password123,{{orderId}},delete,,,Admin Address,success
+OM_030,Admin view order analytics,admin,admin1,password123,,view_analytics,,,Admin Address,success
+OM_031,Customer try to update order status,customer,customer1,password123,{{orderId}},update_status,PROCESSING,,Customer Address,unauthorized
+OM_032,Staff try to delete order,staff,staff1,password123,{{orderId}},delete,,,Staff Address,unauthorized
+OM_033,Place order with invalid address,customer,customer1,password123,,place_order,,COD,,validation_error
+OM_034,Place order with empty cart,customer,customer1,password123,,place_order,,COD,Customer Address,error
+OM_035,Update order to invalid status,staff,staff1,password123,{{orderId}},update_status,INVALID,,Staff Address,validation_error
+OM_036,View order with invalid ID,customer,customer1,password123,99999,view_details,,,Customer Address,not_found
+OM_037,Cancel order with invalid ID,customer,customer1,password123,99999,cancel,,,Customer Address,not_found
+OM_038,Customer track order shipment,customer,customer1,password123,{{orderId}},track_shipment,SHIPPING,,Customer Address,success
+OM_039,Customer view order invoice,customer,customer1,password123,{{orderId}},view_invoice,COMPLETED,,Customer Address,success
+OM_040,Staff batch update order status,staff,staff1,password123,,batch_update,PROCESSING,,Staff Address,success

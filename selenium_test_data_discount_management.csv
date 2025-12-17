@@ -1,0 +1,26 @@
+testCase,description,role,username,password,code,discountDescription,discountType,discountValue,minOrderValue,maxDiscountAmount,startDate,endDate,usageLimit,expectedResult
+DM_001,Manager create percentage discount,manager,manager1,password123,SUMMER2024,Summer Sale,PERCENTAGE,20,100000,50000,2024-06-01,2024-08-31,100,success
+DM_002,Manager create fixed amount discount,manager,manager1,password123,FIXED50K,Fixed 50k discount,FIXED_AMOUNT,50000,200000,,,2024-01-01,2024-12-31,50,success
+DM_003,Manager create discount with duplicate code,manager,manager1,password123,SUMMER2024,Duplicate code,PERCENTAGE,10,50000,,,2024-01-01,2024-12-31,,duplicate_code
+DM_004,Manager create discount with invalid date range,manager,manager1,password123,INVALID,Invalid dates,PERCENTAGE,10,50000,,,2024-12-31,2024-01-01,,invalid_date_range
+DM_005,Manager create discount with negative value,manager,manager1,password123,NEGATIVE,Negative value,PERCENTAGE,-10,50000,,,2024-01-01,2024-12-31,,validation_error
+DM_006,Manager create discount with empty code,manager,manager1,password123,,Empty code,PERCENTAGE,10,50000,,,2024-01-01,2024-12-31,,validation_error
+DM_007,Manager view all discounts,manager,manager1,password123,,,,,,,,,,success
+DM_008,Manager search discount by code,manager,manager1,password123,SUMMER2024,,,,,,,,,success
+DM_009,Manager filter discounts by status,manager,manager1,password123,,,,,,,,,,success
+DM_010,Manager update discount code,manager,manager1,password123,UPDATED2024,Updated discount,PERCENTAGE,25,150000,75000,2024-06-01,2024-09-30,200,success
+DM_011,Manager update non-existent discount,manager,manager1,password123,NOTEXIST,Test,PERCENTAGE,10,50000,,,2024-01-01,2024-12-31,,not_found
+DM_012,Manager update discount value only,manager,manager1,password123,,Updated value only,PERCENTAGE,30,,,,,200,success
+DM_013,Manager deactivate discount,manager,manager1,password123,SUMMER2024,,,,,,,,INACTIVE,success
+DM_014,Manager activate discount,manager,manager1,password123,SUMMER2024,,,,,,,,ACTIVE,success
+DM_015,Manager delete discount,manager,manager1,password123,SUMMER2024,,,,,,,,,success
+DM_016,Manager delete non-existent discount,manager,manager1,password123,NOTEXIST,,,,,,,,,not_found
+DM_017,Staff try to create discount,staff,staff1,password123,STAFFTEST,Staff discount,PERCENTAGE,10,50000,,,2024-01-01,2024-12-31,,unauthorized
+DM_018,Staff try to update discount,staff,staff1,password123,SUMMER2024,Staff update,PERCENTAGE,15,50000,,,2024-01-01,2024-12-31,,unauthorized
+DM_019,Staff try to delete discount,staff,staff1,password123,SUMMER2024,,,,,,,,,unauthorized
+DM_020,Customer try to create discount,customer,customer1,password123,CUSTOMERTEST,Customer discount,PERCENTAGE,10,50000,,,2024-01-01,2024-12-31,,unauthorized
+DM_021,Customer try to update discount,customer,customer1,password123,SUMMER2024,Customer update,PERCENTAGE,15,50000,,,2024-01-01,2024-12-31,,unauthorized
+DM_022,Customer try to delete discount,customer,customer1,password123,SUMMER2024,,,,,,,,,unauthorized
+DM_023,Customer view public discounts,customer,customer1,password123,,,,,,,,,,success
+DM_024,Manager create discount with percentage > 100,manager,manager1,password123,OVER100,Over 100%,PERCENTAGE,150,50000,,,2024-01-01,2024-12-31,,validation_error
+DM_025,Manager create discount with special characters,manager,manager1,password123,SALE-50%,Special chars,PERCENTAGE,50,100000,100000,2024-01-01,2024-12-31,100,success

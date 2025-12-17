@@ -1,0 +1,2054 @@
+{
+	"info": {
+		"_postman_id": "shoe-shop-api-collection",
+		"name": "Shoe Shop API Collection",
+		"description": "Complete API collection for Shoe Store Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "shoe_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "brand_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "discount_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "variant_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login (Get Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Login successful - Token received\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData.result).to.have.property('token');",
+									"        pm.expect(jsonData.result.token).to.be.a('string');",
+									"    });",
+									"    ",
+									"    pm.test(\"Response contains user role\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        // Check if role exists in response",
+									"        if (jsonData.result && jsonData.result.role) {",
+									"            pm.expect(jsonData.result.role).to.be.a('string');",
+									"            console.log(\"User role:\", jsonData.result.role);",
+									"        } else {",
+									"            // If role not in response, decode JWT token to check role",
+									"            var token = jsonData.result.token;",
+									"            var tokenParts = token.split('.');",
+									"            if (tokenParts.length === 3) {",
+									"                var payload = JSON.parse(atob(tokenParts[1]));",
+									"                console.log(\"Token payload:\", payload);",
+									"                // Check common role field names in JWT",
+									"                if (payload.role || payload.roles || payload.authorities) {",
+									"                    var userRole = payload.role || payload.roles || payload.authorities;",
+									"                    console.log(\"User role from token:\", userRole);",
+									"                    pm.environment.set(\"user_role\", userRole);",
+									"                }",
+									"            }",
+									"        }",
+									"    });",
+									"    ",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.result.token);",
+									"    console.log(\"Token saved:\", jsonData.result.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/token",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "token"]
+						},
+						"description": "Login to get JWT token. Save token to collection variable."
+					}
+				},
+				{
+					"name": "Login as Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"access_token\", jsonData.result.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"customer01\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/token",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "token"]
+						}
+					}
+				},
+				{
+					"name": "Introspect Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{access_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/introspect",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "introspect"]
+						}
+					}
+				},
+				{
+					"name": "Get Current User Info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"oldPassword\": \"admin123\",\n    \"newPassword\": \"newpassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/change-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "change-password"]
+						}
+					}
+				},
+				{
+					"name": "Send OTP to Email",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/email/send",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "email", "send"]
+						}
+					}
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"otpCode\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-otp"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"newPassword\": \"newpassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{access_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. User Management",
+			"item": [
+				{
+					"name": "Register New User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newuser\",\n    \"password\": \"password123\",\n    \"email\": \"newuser@example.com\",\n    \"fullName\": \"New User\",\n    \"phone\": \"0123456789\",\n    \"address\": \"123 Main Street\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/register",
+							"host": ["{{base_url}}"],
+							"path": ["users", "register"]
+						}
+					}
+				},
+				{
+					"name": "Get All Users (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{user_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/profile",
+							"host": ["{{base_url}}"],
+							"path": ["users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update User by ID (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"Updated Name\",\n    \"email\": \"updated@example.com\",\n    \"phone\": \"0987654321\",\n    \"address\": \"456 New Address\",\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{user_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Own Profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"My Updated Name\",\n    \"email\": \"myemail@example.com\",\n    \"phone\": \"0123456789\",\n    \"address\": \"My New Address\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/update/{{username}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "update", "{{username}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Users by Role",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/role?role=CUSTOMER",
+							"host": ["{{base_url}}"],
+							"path": ["users", "role"],
+							"query": [
+								{
+									"key": "role",
+									"value": "CUSTOMER"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Users by Active Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/isActive?isActive=true",
+							"host": ["{{base_url}}"],
+							"path": ["users", "isActive"],
+							"query": [
+								{
+									"key": "isActive",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Users with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/list-user?page=0&size=10&sortBy=createdAt&sortDir=DESC&role=CUSTOMER&isActive=true&search=",
+							"host": ["{{base_url}}"],
+							"path": ["users", "list-user"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC"
+								},
+								{
+									"key": "role",
+									"value": "CUSTOMER"
+								},
+								{
+									"key": "isActive",
+									"value": "true"
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Check Admin Exists",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/check-admin",
+							"host": ["{{base_url}}"],
+							"path": ["users", "check-admin"]
+						}
+					}
+				},
+				{
+					"name": "Create Admin Account (JSON)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\",\n    \"email\": \"admin@shoeshop.com\",\n    \"fullName\": \"System Administrator\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/create-admin-json",
+							"host": ["{{base_url}}"],
+							"path": ["users", "create-admin-json"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Brand Management",
+			"item": [
+				{
+					"name": "Create Brand",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"brand_id\", jsonData.result.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brandName\": \"Nike\",\n    \"description\": \"Just Do It\",\n    \"logoUrl\": \"https://example.com/nike-logo.png\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/brands",
+							"host": ["{{base_url}}"],
+							"path": ["brands"]
+						}
+					}
+				},
+				{
+					"name": "Get All Brands",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands",
+							"host": ["{{base_url}}"],
+							"path": ["brands"]
+						}
+					}
+				},
+				{
+					"name": "Get Brand by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["brands", "{{brand_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Brand",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brandName\": \"Nike Updated\",\n    \"description\": \"Just Do It - Updated\",\n    \"logoUrl\": \"https://example.com/nike-logo-new.png\",\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["brands", "{{brand_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Upload Brand Logo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/logo.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}/logo",
+							"host": ["{{base_url}}"],
+							"path": ["brands", "{{brand_id}}", "logo"]
+						}
+					}
+				},
+				{
+					"name": "Update Brand with Logo",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "brandName",
+									"value": "Nike",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Just Do It",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/logo.png"
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}/with-logo",
+							"host": ["{{base_url}}"],
+							"path": ["brands", "{{brand_id}}", "with-logo"]
+						}
+					}
+				},
+				{
+					"name": "Delete Brand",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands/{{brand_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["brands", "{{brand_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Brand Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands/summary",
+							"host": ["{{base_url}}"],
+							"path": ["brands", "summary"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Shoe Management",
+			"item": [
+				{
+					"name": "Create Shoe",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"shoe_id\", jsonData.result.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Air Max 90\",\n    \"price\": 120.00,\n    \"fakePrice\": 150.00,\n    \"description\": \"Classic running shoe\",\n    \"gender\": \"UNISEX\",\n    \"category\": \"RUNNING\",\n    \"brandId\": 1,\n    \"status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoes",
+							"host": ["{{base_url}}"],
+							"path": ["shoes"]
+						}
+					}
+				},
+				{
+					"name": "Get All Shoes",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["shoes"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Shoes (Admin View)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/admin/all",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "admin", "all"]
+						}
+					}
+				},
+				{
+					"name": "Get Shoe by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "{{shoe_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Shoe",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nike Air Max 90 Premium - Updated\",\n    \"price\": 2499000,\n    \"status\": true,\n    \"fakePrice\": 3299000,\n    \"gender\": \"UNISEX\",\n    \"category\": \"RUNNING\",\n    \"description\": \"Giày chạy bộ Nike Air Max 90 phiên bản cao cấp với công nghệ đệm khí Max Air mang lại sự thoải mái tối đa. Thiết kế cổ điển kết hợp chất liệu da cao cấp và lưới thoáng khí. Đế ngoài cao su bền bỉ, chống mài mòn. Phù hợp cho cả nam và nữ.\",\n    \"variants\": [\n        {\n            \"id\": 1,\n            \"sizeId\": 5,\n            \"stockQuantity\": 45\n        },\n        {\n            \"id\": 2,\n            \"sizeId\": 6,\n            \"stockQuantity\": 50\n        }\n    ],\n    \"images\": [\n        {\n            \"id\": 1,\n            \"imageUrl\": \"https://example.com/nike-air-max-90-front-updated.jpg\"\n        },\n        {\n            \"imageUrl\": \"https://example.com/nike-air-max-90-side-new.jpg\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoes/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "{{shoe_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Shoe",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "{{shoe_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Shoes by Gender",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/by-gender?gender=MAN",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "by-gender"],
+							"query": [
+								{
+									"key": "gender",
+									"value": "MAN"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Shoes by Brand",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/by-brand?brandId=1",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "by-brand"],
+							"query": [
+								{
+									"key": "brandId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Shoes by Category",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/by-category?category=RUNNING",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "by-category"],
+							"query": [
+								{
+									"key": "category",
+									"value": "RUNNING"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Shop - Multi Filter",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/shop?gender=UNISEX&category=RUNNING&brandIds=1,2&minPrice=50&maxPrice=200",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "shop"],
+							"query": [
+								{
+									"key": "gender",
+									"value": "UNISEX"
+								},
+								{
+									"key": "category",
+									"value": "RUNNING"
+								},
+								{
+									"key": "brandIds",
+									"value": "1,2"
+								},
+								{
+									"key": "minPrice",
+									"value": "50"
+								},
+								{
+									"key": "maxPrice",
+									"value": "200"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "List Shoes with Pagination",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/list-shoes?page=0&size=10&sortBy=price&sortDir=ASC&gender=&category=&brandIds=&minPrice=&maxPrice=&search=",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "list-shoes"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "price"
+								},
+								{
+									"key": "sortDir",
+									"value": "ASC"
+								},
+								{
+									"key": "gender",
+									"value": ""
+								},
+								{
+									"key": "category",
+									"value": ""
+								},
+								{
+									"key": "brandIds",
+									"value": ""
+								},
+								{
+									"key": "minPrice",
+									"value": ""
+								},
+								{
+									"key": "maxPrice",
+									"value": ""
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Categories",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/categories",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get All Genders",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/genders",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "genders"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Shoe Variants",
+			"item": [
+				{
+					"name": "Get All Sizes",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/sizes",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "sizes"]
+						}
+					}
+				},
+				{
+					"name": "Initialize Size Chart",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/sizes/init",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "sizes", "init"]
+						}
+					}
+				},
+				{
+					"name": "Get Variants by Shoe ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/{{shoe_id}}/variants",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "{{shoe_id}}", "variants"]
+						}
+					}
+				},
+				{
+					"name": "Get Variant by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/variants/{{variant_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "variants", "{{variant_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Create Variant",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"variant_id\", jsonData.result.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sizeId\": 1,\n    \"stockQuantity\": 50\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoes/{{shoe_id}}/variants",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "{{shoe_id}}", "variants"]
+						}
+					}
+				},
+				{
+					"name": "Update Variant",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"stockQuantity\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoes/variants/{{variant_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "variants", "{{variant_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Variant",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/variants/{{variant_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "variants", "{{variant_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Shoe Images",
+			"item": [
+				{
+					"name": "Get Images by Shoe ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoe-images/shoe/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoe-images", "shoe", "{{shoe_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Image by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoe-images/1",
+							"host": ["{{base_url}}"],
+							"path": ["shoe-images", "1"]
+						}
+					}
+				},
+				{
+					"name": "Upload Image for Shoe",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"imageUrl\": \"https://example.com/shoe-image.jpg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoe-images/shoe/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoe-images", "shoe", "{{shoe_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Image",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"imageUrl\": \"https://example.com/new-image.jpg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoe-images/1",
+							"host": ["{{base_url}}"],
+							"path": ["shoe-images", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Image",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoe-images/1",
+							"host": ["{{base_url}}"],
+							"path": ["shoe-images", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete All Images of Shoe",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoe-images/shoe/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoe-images", "shoe", "{{shoe_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Image Upload",
+			"item": [
+				{
+					"name": "Upload Multiple Images",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/images/upload",
+							"host": ["{{base_url}}"],
+							"path": ["images", "upload"]
+						}
+					}
+				},
+				{
+					"name": "Upload Single Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/image.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/images/upload-single",
+							"host": ["{{base_url}}"],
+							"path": ["images", "upload-single"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Shopping Cart",
+			"item": [
+				{
+					"name": "Get My Cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cart",
+							"host": ["{{base_url}}"],
+							"path": ["cart"]
+						}
+					}
+				},
+				{
+					"name": "Add to Cart",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variantId\": \"{{variant_id}}\",\n    \"quantity\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/add",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "add"]
+						}
+					}
+				},
+				{
+					"name": "Update Cart Item",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variantId\": \"{{variant_id}}\",\n    \"quantity\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/update",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "update"]
+						}
+					}
+				},
+				{
+					"name": "Remove from Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cart/remove/{{variant_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "remove", "{{variant_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Clear Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cart/clear",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "clear"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"order_id\", jsonData.result.orderId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"discountCode\": \"SUMMER2024\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/create",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "create"]
+						}
+					}
+				},
+				{
+					"name": "Apply Discount to Cart",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"{{user_id}}\",\n    \"coupon\": \"SUMMER2024\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/apply-discount",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "apply-discount"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/{{order_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{order_id}}", "cancel"]
+						}
+					}
+				},
+				{
+					"name": "Get All Orders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order-details",
+							"host": ["{{base_url}}"],
+							"path": ["order-details"]
+						}
+					}
+				},
+				{
+					"name": "Get Orders by Username",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order-details/user/customer01",
+							"host": ["{{base_url}}"],
+							"path": ["order-details", "user", "customer01"]
+						}
+					}
+				},
+				{
+					"name": "Get Order Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order-details/order/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["order-details", "order", "{{order_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newStatus\": \"CONFIRMED\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/order-details/order/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["order-details", "order", "{{order_id}}"]
+						},
+						"description": "Status: CREATED, CONFIRMED, PREPARING, READY_FOR_DELIVERY, OUT_FOR_DELIVERY, DELIVERED, CANCELLED, REJECTED, PAID, PAYMENT_FAILED"
+					}
+				},
+				{
+					"name": "Get Orders by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order-details/orderStatus?orderStatus=CONFIRMED",
+							"host": ["{{base_url}}"],
+							"path": ["order-details", "orderStatus"],
+							"query": [
+								{
+									"key": "orderStatus",
+									"value": "CONFIRMED"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Orders with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order-details/list-order?page=0&size=10&sortBy=orderDate&sortDir=DESC&orderStatus=&search=",
+							"host": ["{{base_url}}"],
+							"path": ["order-details", "list-order"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "orderDate"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC"
+								},
+								{
+									"key": "orderStatus",
+									"value": ""
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Payment (VNPay)",
+			"item": [
+				{
+					"name": "Create Payment URL (Test)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 100000,\n    \"orderInfo\": \"Test payment\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/payment/create-payment",
+							"host": ["{{base_url}}"],
+							"path": ["payment", "create-payment"]
+						}
+					}
+				},
+				{
+					"name": "Create Payment for Order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": \"{{order_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/payment/create-payment-order",
+							"host": ["{{base_url}}"],
+							"path": ["payment", "create-payment-order"]
+						}
+					}
+				},
+				{
+					"name": "Payment Callback (VNPay)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/payment/payment-callback?vnp_Amount=10000000&vnp_BankCode=NCB&vnp_ResponseCode=00&vnp_TransactionNo=123456&vnp_TxnRef={{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["payment", "payment-callback"],
+							"query": [
+								{
+									"key": "vnp_Amount",
+									"value": "10000000"
+								},
+								{
+									"key": "vnp_BankCode",
+									"value": "NCB"
+								},
+								{
+									"key": "vnp_ResponseCode",
+									"value": "00"
+								},
+								{
+									"key": "vnp_TransactionNo",
+									"value": "123456"
+								},
+								{
+									"key": "vnp_TxnRef",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "This is called by VNPay after payment"
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Discounts",
+			"item": [
+				{
+					"name": "Create Discount",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"discount_id\", jsonData.result.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"SUMMER2024\",\n    \"description\": \"Summer sale 2024\",\n    \"discountType\": \"PERCENTAGE\",\n    \"percentage\": 20.0,\n    \"minimumOrderAmount\": 100.0,\n    \"startDate\": \"2024-06-01T00:00:00Z\",\n    \"endDate\": \"2024-08-31T23:59:59Z\",\n    \"isActive\": true,\n    \"applyAll\": false,\n    \"shoeIds\": [1, 2, 3],\n    \"categories\": [\"RUNNING\", \"CASUAL\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/discounts",
+							"host": ["{{base_url}}"],
+							"path": ["discounts"]
+						}
+					}
+				},
+				{
+					"name": "Get All Discounts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discounts",
+							"host": ["{{base_url}}"],
+							"path": ["discounts"]
+						}
+					}
+				},
+				{
+					"name": "Get Discount by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discounts/{{discount_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["discounts", "{{discount_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Discount",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"SUMMER2024\",\n    \"description\": \"Updated summer sale\",\n    \"discountType\": \"PERCENTAGE\",\n    \"percentage\": 25.0,\n    \"minimumOrderAmount\": 100.0,\n    \"startDate\": \"2024-06-01T00:00:00Z\",\n    \"endDate\": \"2024-08-31T23:59:59Z\",\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/discounts/{{discount_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["discounts", "{{discount_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Discount",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discounts/{{discount_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["discounts", "{{discount_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Active Discounts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discounts/isActive?isActive=true",
+							"host": ["{{base_url}}"],
+							"path": ["discounts", "isActive"],
+							"query": [
+								{
+									"key": "isActive",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Discounts by Type",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discounts/discountType?discountType=PERCENTAGE",
+							"host": ["{{base_url}}"],
+							"path": ["discounts", "discountType"],
+							"query": [
+								{
+									"key": "discountType",
+									"value": "PERCENTAGE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Discounts with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discounts/list-discount?page=0&size=10&sortBy=startDate&sortDir=DESC&isActive=&discountType=&search=",
+							"host": ["{{base_url}}"],
+							"path": ["discounts", "list-discount"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "startDate"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC"
+								},
+								{
+									"key": "isActive",
+									"value": ""
+								},
+								{
+									"key": "discountType",
+									"value": ""
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Reports",
+			"item": [
+				{
+					"name": "Daily Revenue Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/report/daily-report?startDate=2024-01-01&endDate=2024-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["report", "daily-report"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Daily Revenue Totals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/report/daily-totals?startDate=2024-01-01&endDate=2024-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["report", "daily-totals"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Monthly Revenue Totals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/report/monthly-totals?year=2024",
+							"host": ["{{base_url}}"],
+							"path": ["report", "monthly-totals"],
+							"query": [
+								{
+									"key": "year",
+									"value": "2024"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Top Selling Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/report/top-seller?startDate=2024-01-01&endDate=2024-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["report", "top-seller"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Top Customers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/report/top-customer?limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["report", "top-customer"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Inventory Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/report/inventory-status",
+							"host": ["{{base_url}}"],
+							"path": ["report", "inventory-status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "13. AI Chat",
+			"item": [
+				{
+					"name": "Chat - Query Shoe Data",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question\": \"Tìm giày Nike giá dưới 2 triệu\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/shoe-data",
+							"host": ["{{base_url}}"],
+							"path": ["chat", "shoe-data"]
+						}
+					}
+				},
+				{
+					"name": "Chat - Query Discount Data",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question\": \"Có mã giảm giá nào đang hoạt động không?\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/chat/discount-data",
+							"host": ["{{base_url}}"],
+							"path": ["chat", "discount-data"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "14. Debug",
+			"item": [
+				{
+					"name": "Debug - Get Shoe Images",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/debug/shoe/{{shoe_id}}/images",
+							"host": ["{{base_url}}"],
+							"path": ["debug", "shoe", "{{shoe_id}}", "images"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+

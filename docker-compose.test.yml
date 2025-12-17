@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mysql-test:
+    image: mysql:8.0
+    container_name: mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: testdb
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-test:
+    build: ./back-end
+    container_name: backend-test
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-test:3306/testdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root123
+      SPRING_PROFILES_ACTIVE: test
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  newman-test:
+    image: postman/newman:latest
+    container_name: newman-test
+    depends_on:
+      backend-test:
+        condition: service_healthy
+    volumes:
+      - ./postman_collection.json:/etc/newman/postman_collection.json
+      - ./postman_environment_local.json:/etc/newman/environment.json
+      - ./test-reports:/etc/newman/reports
+    command: >
+      run /etc/newman/postman_collection.json
+      -e /etc/newman/environment.json
+      -r cli,json,html
+      --reporter-json-export /etc/newman/reports/results.json
+      --reporter-html-export /etc/newman/reports/results.html

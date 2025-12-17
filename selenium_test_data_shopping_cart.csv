@@ -1,0 +1,31 @@
+testCase,description,username,password,productName,size,quantity,action,discountCode,expectedResult
+SC_001,Add single product to cart,customer1,password123,Nike Air Max,8,1,add,none,success
+SC_002,Add multiple products to cart,customer1,password123,Adidas Ultraboost,9,2,add,none,success
+SC_003,Add product with max quantity,customer1,password123,Puma Suede,10,10,add,none,success
+SC_004,Add product without selecting size,customer1,password123,New Balance 574,none,1,add,none,validation_error
+SC_005,Add out of stock product,customer1,password123,Out Of Stock Shoe,8,1,add,none,error
+SC_006,View empty cart,customer1,password123,,,,,none,empty_cart
+SC_007,View cart with items,customer1,password123,Nike Air Max,8,1,view,none,success
+SC_008,Update cart quantity increase,customer1,password123,Nike Air Max,8,3,update_increase,none,success
+SC_009,Update cart quantity decrease,customer1,password123,Nike Air Max,8,1,update_decrease,none,success
+SC_010,Update cart quantity to zero,customer1,password123,Nike Air Max,8,0,update_zero,none,remove_item
+SC_011,Update cart quantity exceed stock,customer1,password123,Nike Air Max,8,999,update_exceed,none,validation_error
+SC_012,Remove single item from cart,customer1,password123,Nike Air Max,8,1,remove,none,success
+SC_013,Remove all items from cart,customer1,password123,Nike Air Max,8,1,remove_all,none,empty_cart
+SC_014,Apply valid discount code,customer1,password123,Nike Air Max,8,2,apply_discount,SUMMER2024,success
+SC_015,Apply invalid discount code,customer1,password123,Nike Air Max,8,1,apply_discount,INVALID123,error
+SC_016,Apply expired discount code,customer1,password123,Nike Air Max,8,1,apply_discount,EXPIRED2023,error
+SC_017,Apply discount with min order not met,customer1,password123,Nike Air Max,8,1,apply_discount,BIGORDER500K,error
+SC_018,Apply discount multiple times,customer1,password123,Nike Air Max,8,1,apply_discount,SUMMER2024,error
+SC_019,Remove discount code,customer1,password123,Nike Air Max,8,1,remove_discount,SUMMER2024,success
+SC_020,Calculate cart total correctly,customer1,password123,Nike Air Max,8,2,calculate_total,none,success
+SC_021,Calculate cart total with discount,customer1,password123,Nike Air Max,8,2,calculate_total,SUMMER2024,success
+SC_022,Verify cart items persist after logout,customer1,password123,Nike Air Max,8,1,logout_login,none,success
+SC_023,Proceed to checkout with items,customer1,password123,Nike Air Max,8,1,checkout,none,success
+SC_024,Try to checkout with empty cart,customer1,password123,,,,checkout,none,error
+SC_025,Add same product different sizes,customer1,password123,Nike Air Max,8,1,add_multiple_sizes,none,success
+SC_026,Add product then change size,customer1,password123,Nike Air Max,8,1,change_size,none,success
+SC_027,View cart item details,customer1,password123,Nike Air Max,8,1,view_details,none,success
+SC_028,Update cart from product page,customer1,password123,Nike Air Max,8,2,update_from_product,none,success
+SC_029,Continue shopping from cart,customer1,password123,Nike Air Max,8,1,continue_shopping,none,success
+SC_030,Cart quantity validation,customer1,password123,Nike Air Max,8,-5,update_negative,none,validation_error

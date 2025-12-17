@@ -1,0 +1,16 @@
+testId,description,username,password,fullName,email,phoneNumber,expectedStatus,expectedMessage
+DataAU1,Đăng ký thành công - Customer,newcustomer01,Customer@123,Nguyen Van A,customer01@example.com,0901234567,200,Registration successful
+DataAU2,Đăng ký username đã tồn tại,customer01,Customer@123,Nguyen Van B,customer02@example.com,0901234568,400,Username already exists
+DataAU3,Đăng ký email đã tồn tại,newcustomer02,Customer@123,Nguyen Van C,customer01@example.com,0901234569,400,Email already exists
+DataAU4,Đăng ký thiếu username,,Customer@123,Nguyen Van D,customer03@example.com,0901234570,400,Username is required
+DataAU5,Đăng ký mật khẩu yếu,newcustomer03,123,Nguyen Van E,customer04@example.com,0901234571,400,Password too weak
+DataAU6,Đăng ký email không hợp lệ,newcustomer04,Customer@123,Nguyen Van F,invalidemail,0901234572,400,Invalid email format
+DataAU7,Đăng ký số điện thoại không hợp lệ,newcustomer05,Customer@123,Nguyen Van G,customer05@example.com,123,400,Invalid phone number
+DataAU8,Đăng nhập thành công - Admin,admin01,admin123,,,,,200,Login successful
+DataAU9,Đăng nhập thành công - Customer,customer01,customer123,,,,,200,Login successful
+DataAU10,Đăng nhập thành công - Staff,shipper01,shipper123,,,,,200,Login successful
+DataAU11,Đăng nhập sai mật khẩu,admin01,wrongpassword,,,,,401,Invalid credentials
+DataAU12,Đăng nhập user không tồn tại,nonexistuser,password123,,,,,401,User not found
+DataAU13,Đăng nhập thiếu username,,password123,,,,,400,Username is required
+DataAU14,Đăng nhập thiếu password,admin01,,,,,,400,Password is required
+DataAU15,Đăng nhập thiếu cả username và password,,,,,,400,Username and password required

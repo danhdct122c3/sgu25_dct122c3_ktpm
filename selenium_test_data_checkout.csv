@@ -1,0 +1,16 @@
+testId,description,fullName,phone,address,city,paymentMethod,expectedResult,expectedMessage
+SeleniumCheckout001,Checkout thành công với COD,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,success,Order placed successfully
+SeleniumCheckout002,Checkout thành công với VNPay,Tran Thi B,0907654321,456 Nguyen Hue,Ha Noi,VNPay,success,Redirected to VNPay
+SeleniumCheckout003,Checkout với tên trống,,0901234567,123 Le Loi,Ho Chi Minh,COD,fail,Full name is required
+SeleniumCheckout004,Checkout với số điện thoại trống,Nguyen Van A,,123 Le Loi,Ho Chi Minh,COD,fail,Phone number is required
+SeleniumCheckout005,Checkout với địa chỉ trống,Nguyen Van A,0901234567,,Ho Chi Minh,COD,fail,Address is required
+SeleniumCheckout006,Checkout với thành phố trống,Nguyen Van A,0901234567,123 Le Loi,,COD,fail,City is required
+SeleniumCheckout007,Checkout với số điện thoại không hợp lệ,Nguyen Van A,123456,123 Le Loi,Ho Chi Minh,COD,fail,Invalid phone number
+SeleniumCheckout008,Checkout với giỏ hàng trống,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,fail,Cart is empty
+SeleniumCheckout009,Xem lại đơn hàng trước khi đặt,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,review,Order details displayed
+SeleniumCheckout010,Quay lại giỏ hàng từ checkout,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,back_to_cart,Redirected to cart
+SeleniumCheckout011,Apply discount code trong checkout,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,discount_applied,Discount applied
+SeleniumCheckout012,Thay đổi địa chỉ giao hàng,Nguyen Van C,0909999999,789 Tran Hung Dao,Da Nang,COD,success,Order placed with new address
+SeleniumCheckout013,Thay đổi phương thức thanh toán,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,Bank Transfer,success,Order placed with bank transfer
+SeleniumCheckout014,Checkout với ghi chú đơn hàng,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,success,Note: Giao giờ hành chính
+SeleniumCheckout015,Xác nhận email sau khi đặt hàng,Nguyen Van A,0901234567,123 Le Loi,Ho Chi Minh,COD,success,Confirmation email sent

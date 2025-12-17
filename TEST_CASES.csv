@@ -1,0 +1,521 @@
+Test Case ID,Module,Feature,Test Scenario,Test Case Description,Preconditions,Test Steps,Test Data,Expected Result,Actual Result,Status,Priority,Tested By,Test Date,Notes
+TC_AUTH_001,Authentication,Login,Valid Login,Verify user can login with valid credentials,"  User account exists
+  Backend is running","1. Open Postman
+2. Select 'Login (Get Token)' request
+3. Enter username: 'admin'
+4. Enter password: '123123123'
+5. Click Send","Username: admin
+Password: 123123123","  Status: 200 OK
+  Response contains 'token' field
+  Token is saved to {{access_token}}","  Status: 200 OK
+  Response contains 'token' field
+  Token is saved to {{access_token}}",Pass,High,,,
+TC_AUTH_002,Authentication,Login,Invalid Password,Verify login fails with wrong password,"  User account exists
+  Backend is running","1. Open Postman
+2. Select 'Login (Get Token)' request
+3. Enter username: 'admin'
+4. Enter password: 'wrongpassword'
+5. Click Send","Username: admin
+Password: wrongpassword","  Status: 401 
+ Error message: Unauthorized","  Status: 401 
+ Error message: Unauthorized",Pass,High,,,
+TC_AUTH_003,Authentication,Login,Non existent User,Verify login fails with non existent username,Backend is running,"1. Open Postman
+2. Select 'Login (Get Token)' request
+3. Enter username: 'nonexistuser'
+4. Enter password: 'anypassword'
+5. Click Send","Username: nonexistuser
+Password: anypassword","  Status: 404 
+  Error message: User not found","  Status: 404 
+  Error message: User not found",Pass,High,,,
+TC_AUTH_004,Authentication,Login,Empty Credentials,Verify login fails with empty fields,    Backend is running,"1. Open Postman
+2. Select 'Login (Get Token)' request
+3. Leave username empty
+4. Leave password empty
+5. Click Send","Username: (empty)
+Password: (empty)","  Status: 400 Bad Request
+  Validation error message",,Not Tested,Medium,,,
+TC_AUTH_005,Authentication,Token Validation,Valid Token Introspect,Verify token validation works with valid token,"  User is logged in
+  Valid token exists","1. Login first to get token
+2. Select 'Introspect Token' request
+3. Token is auto filled from {{access_token}}
+4. Click Send",Token: {{access_token}},"  Status: 200 OK
+  Response: { valid: true }",,Not Tested,High,,,
+TC_AUTH_006,Authentication,Logout,Successful Logout,Verify user can logout successfully,    User is logged in,"1. Login first
+2. Select 'Logout' request
+3. Click Send",Token: {{access_token}},"  Status: 200 OK
+  Token is invalidated",,Not Tested,Medium,,,
+TC_AUTH_009,Authentication,Change Password,Valid Password Change,Verify user can change password,  User is logged in,"1. Login first
+2. Select 'Change Password' request
+3. Enter old and new password
+4. Click Send","Old Password: admin123
+New Password: newpassword123","  Status: 200 OK
+  Password changed successfully",,Not Tested,High,,,
+TC_USER_001,User Management,Registration,Valid Registration,Verify new user can register,"  Backend is running
+  Email not registered yet","1. Select 'Register New User' request
+2. Fill all required fields
+3. Click Send","Username: newuser
+Email: new@example.com
+Password: password123
+Full Name: Test User","  Status: 200 OK
+  User created successfully
+  User ID returned",,Not Tested,High,,,
+TC_USER_002,User Management,Registration,Duplicate Username,Verify registration fails with existing username,  Username already exists,"1. Select 'Register New User' request
+2. Use existing username
+3. Click Send","Username: admin (existing)
+Email: new@example.com","  Status: 400 Bad Request
+  Error: Username already exists",,Not Tested,High,,,
+TC_USER_003,User Management,Registration,Invalid Email Format,Verify registration fails with invalid email,  Backend is running,"1. Select 'Register New User' request
+2. Enter invalid email format
+3. Click Send",Email: invalidemail,"  Status: 400 Bad Request
+  Validation error for email",,Not Tested,Medium,,,
+TC_USER_004,User Management,Get Users,Get All Users (Admin),Verify admin can get all users,  logged in as ADMIN,"1. Login as admin
+2. Select 'Get All Users' request
+3. Click Send",Admin credentials,"  Status: 200 OK
+  Array of users returned",,Not Tested,High,,,
+TC_USER_005,User Management,Get Users,Unauthorized Access,Verify non admin cannot get all users,  logged in as CUSTOMER,"1. Login as customer
+2. Select 'Get All Users' request
+3. Click Send",Customer credentials,"  Status: 403 Forbidden
+  Access denied message",,Not Tested,High,,,
+TC_USER_006,User Management,Update User,Update Own Profile,Verify user can update their profile,  User is logged in,"1. Login as user
+2. Select 'Update Own Profile' request
+3. Update fields
+4. Click Send","Full Name: Updated Name
+Phone: 0987654321","  Status: 200 OK
+  Profile updated",,Not Tested,Medium,,,
+TC_USER_007,User Management,Pagination,Get Users with Pagination,Verify pagination works correctly,"  Multiple users exist
+  Logged in as ADMIN","1. Login as admin
+2. Select 'Get Users with Pagination'
+3. Set page0, size10
+4. Click Send","Page: 0
+Size: 10","  Status: 200 OK
+  Returns max 10 users
+  Pagination metadata present",,Not Tested,Medium,,,
+TC_BRAND_001,Brand Management,Create Brand,Valid Brand Creation,Verify manager can create brand,  logged in as MANAGER,"1. Login as manager
+2. Select 'Create Brand' request
+3. Fill brand details
+4. Click Send","Brand Name: Nike
+Description: Just Do It","  Status: 200 OK
+  Brand created with ID
+  ID saved to {{brand_id}}",,Not Tested,High,,,
+TC_BRAND_002,Brand Management,Create Brand,Duplicate Brand Name,Verify duplicate brand name is rejected,  Brand name exists,"1. Login as manager
+2. Try to create brand with existing name
+3. Click Send",Brand Name: Nike (existing),"  Status: 400 Bad Request
+  Error: Brand name exists",,Not Tested,Medium,,,
+TC_BRAND_003,Brand Management,Upload Logo,Upload Brand Logo,Verify logo upload works,"  Brand exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Upload Brand Logo' request
+3. Attach image file
+4. Click Send",File: logo.png (valid image),"  Status: 200 OK
+  Logo URL returned",,Not Tested,Medium,,,
+TC_BRAND_004,Brand Management,Get Brands,Get All Brands (Public),Verify anyone can view brands,"  Brands exist
+  No authentication needed","1. Select 'Get All Brands' request
+2. Click Send (without token)",None,"  Status: 200 OK
+  Array of brands returned",,Not Tested,High,,,
+TC_BRAND_005,Brand Management,Update Brand,Update Brand Info,Verify brand update works,"  Brand exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Update Brand' request
+3. Modify brand details
+4. Click Send","Brand Name: Nike Updated
+Active: true","  Status: 200 OK
+  Brand updated successfully",,Not Tested,Medium,,,
+TC_BRAND_006,Brand Management,Delete Brand,Delete Existing Brand,Verify brand deletion,"  Brand exists without shoes
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Delete Brand' request
+3. Click Send",Brand ID: {{brand_id}},"  Status: 200 OK
+  Brand deleted",,Not Tested,Low,,,
+TC_SHOE_001,Shoe Management,Create Shoe,Valid Shoe Creation,Verify manager can create shoe,"  Brand exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Create Shoe' request
+3. Fill shoe details
+4. Click Send","Name: Air Max 90
+Price: 120.00
+Brand ID: 1
+Gender: UNISEX
+Category: RUNNING","  Status: 200 OK
+  Shoe created with ID
+  ID saved to {{shoe_id}}",,Not Tested,High,,,
+TC_SHOE_002,Shoe Management,Create Shoe,Missing Required Fields,Verify validation for required fields,  logged in as MANAGER,"1. Login as manager
+2. Create shoe without name
+3. Click Send","Name: (empty)
+Price: 120.00","  Status: 400 Bad Request
+  Validation error",,Not Tested,High,,,
+TC_SHOE_003,Shoe Management,Create Shoe,Invalid Price,Verify negative price is rejected,  logged in as MANAGER,"1. Login as manager
+2. Create shoe with negative price
+3. Click Send",Price:  50.00,"  Status: 400 Bad Request
+  Error: Invalid price",,Not Tested,Medium,,,
+TC_SHOE_004,Shoe Management,Get Shoes,Get All Shoes (Public),Verify anyone can view shoes,  shoes exist,"1. Select 'Get All Shoes' request
+2. Click Send",None,"  Status: 200 OK
+  Array of shoes with pagination",,Not Tested,High,,,
+TC_SHOE_005,Shoe Management,Get Shoes,Get Shoe by ID,Verify shoe detail retrieval,  Shoe exists,"1. Select 'Get Shoe by ID' request
+2. Use {{shoe_id}}
+3. Click Send",Shoe ID: {{shoe_id}},"  Status: 200 OK
+  Complete shoe details
+  Includes variants and images",,Not Tested,High,,,
+TC_SHOE_006,Shoe Management,Update Shoe,Update Shoe Info,Verify shoe update works,"  Shoe exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Update Shoe' request
+3. Modify shoe details
+4. Click Send","Price: 130.00
+Description: Updated","  Status: 200 OK
+  Shoe updated",,Not Tested,Medium,,,
+TC_SHOE_007,Shoe Management,Delete Shoe,Delete Existing Shoe,Verify shoe deletion,"  Shoe exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Delete Shoe' request
+3. Click Send",Shoe ID: {{shoe_id}},"  Status: 200 OK
+  Shoe deleted (soft delete)",,Not Tested,Medium,,,
+TC_SHOE_008,Shoe Management,Filter Shoes,Filter by Gender,Verify gender filter works,  shoes exist with different genders,"1. Select 'Get Shoes by Gender'
+2. Set genderMAN
+3. Click Send",Gender: MAN,"  Status: 200 OK
+  Only MAN shoes returned",,Not Tested,Medium,,,
+TC_SHOE_009,Shoe Management,Filter Shoes,Filter by Brand,Verify brand filter works,  shoes exist with different Brands,"1. Select 'Get Shoes by Brand'
+2. Set brandId1
+3. Click Send",Brand ID: 1,"  Status: 200 OK
+  Only shoes from brand 1",,Not Tested,Medium,,,
+TC_SHOE_010,Shoe Management,Filter Shoes,Filter by Category,Verify category filter works,  shoes exist with different categories,"1. Select 'Get Shoes by Category'
+2. Set categoryRUNNING
+3. Click Send",Category: RUNNING,"  Status: 200 OK
+  Only RUNNING shoes",,Not Tested,Medium,,,
+TC_SHOE_011,Shoe Management,Filter Shoes,Multi Filter Shop,Verify multiple filters work together,  shoes exist,"1. Select 'Shop   Multi Filter'
+2. Set gender, category, price range
+3. Click Send","Gender: UNISEX
+Category: RUNNING
+MinPrice: 50
+MaxPrice: 200","  Status: 200 OK
+  Shoes matching ALL criteria",,Not Tested,High,,,
+TC_SHOE_012,Shoe Management,Pagination,Pagination and Sorting,Verify pagination with sorting,  Multiple shoes exist,"1. Select 'List Shoes with Pagination'
+2. Set page0, size10, sortByprice
+3. Click Send","Page: 0
+Size: 10
+Sort By: price
+Sort Dir: ASC","  Status: 200 OK
+  Max 10 shoes
+  Sorted by price ascending",,Not Tested,Medium,,,
+TC_VARIANT_001,Shoe Variants,Create Variant,Add Variant to Shoe,Verify variant creation,"  Shoe exists
+  Size exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Create Variant'
+3. Set shoe ID and size
+4. Click Send","Shoe ID: {{shoe_id}}
+Size ID: 1
+Stock: 50","  Status: 200 OK
+  Variant created with SKU
+  ID saved to {{variant_id}}",,Not Tested,High,,,
+TC_VARIANT_002,Shoe Variants,Get Variants,Get Variants by Shoe,Verify getting all variants of a shoe,  Shoe has variants,"1. Select 'Get Variants by Shoe ID'
+2. Use {{shoe_id}}
+3. Click Send",Shoe ID: {{shoe_id}},"  Status: 200 OK
+  Array of variants with sizes and stock",,Not Tested,High,,,
+TC_VARIANT_003,Shoe Variants,Update Variant,Update Stock Quantity,Verify stock update,"  Variant exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Update Variant'
+3. Change stock quantity
+4. Click Send","Variant ID: {{variant_id}}
+Stock: 100","  Status: 200 OK
+  Stock updated",,Not Tested,High,,,
+TC_VARIANT_004,Shoe Variants,Update Variant,Negative Stock,Verify negative stock is rejected,"  Variant exists
+  Logged in as MANAGER","1. Login as manager
+2. Try to set negative stock
+3. Click Send",Stock:  10,"  Status: 400 Bad Request
+  Error: Invalid stock quantity",,Not Tested,Medium,,,
+TC_VARIANT_005,Shoe Variants,Delete Variant,Delete Existing Variant,Verify variant deletion,"  Variant exists without orders
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Delete Variant'
+3. Click Send",Variant ID: {{variant_id}},"  Status: 200 OK
+  Variant deleted",,Not Tested,Low,,,
+TC_VARIANT_006,Shoe Variants,Size Chart,Initialize Size Chart,Verify size chart initialization,"  Logged in as MANAGER
+  Size chart not initialized","1. Login as manager
+2. Select 'Initialize Size Chart'
+3. Click Send",None,"  Status: 200 OK
+  All standard sizes created",,Not Tested,Low,,,
+TC_IMAGE_001,Shoe Images,Upload Image,Add Image to Shoe,Verify image upload for shoe,"  Shoe exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Upload Image for Shoe'
+3. Enter image URL
+4. Click Send","Shoe ID: {{shoe_id}}
+Image URL: https://example.com/shoe.jpg","  Status: 200 OK
+  Image added to shoe",,Not Tested,Medium,,,
+TC_IMAGE_002,Shoe Images,Get Images,Get All Images of Shoe,Verify getting shoe images,  Shoe has images,"1. Select 'Get Images by Shoe ID'
+2. Use {{shoe_id}}
+3. Click Send",Shoe ID: {{shoe_id}},"  Status: 200 OK
+  Array of image URLs",,Not Tested,Medium,,,
+TC_IMAGE_003,Shoe Images,Delete Image,Delete Single Image,Verify image deletion,"  Image exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Delete Image'
+3. Use image ID
+4. Click Send",Image ID: 1,"  Status: 200 OK
+  Image deleted",,Not Tested,Low,,,
+TC_IMAGE_004,Shoe Images,Upload File,Upload Image File,Verify file upload works,  logged in as MANAGER,"1. Login as manager
+2. Select 'Upload Single Image'
+3. Attach image file
+4. Click Send",File: shoe image.jpg,"  Status: 200 OK
+  File uploaded
+  URL returned",,Not Tested,Medium,,,
+TC_CART_001,Shopping Cart,Add to Cart,Add Valid Item,Verify adding item to cart,"  User logged in
+  Variant exists with stock","1. Login as customer
+2. Select 'Add to Cart'
+3. Enter variant ID and quantity
+4. Click Send","Variant ID: {{variant_id}}
+Quantity: 2","  Status: 200 OK
+  Item added to cart",,Not Tested,High,,,
+TC_CART_002,Shopping Cart,Add to Cart,Add Out of Stock Item,Verify cannot add out of stock item,"  User logged in
+  Variant has stock0","1. Login as customer
+2. Try to add out of stock item
+3. Click Send","Variant ID: (out of stock)
+Quantity: 1","  Status: 400 Bad Request
+  Error: Out of stock",,Not Tested,High,,,
+TC_CART_003,Shopping Cart,Add to Cart,Add Excessive Quantity,Verify quantity validation,"  User logged in
+  Variant has stock10","1. Login as customer
+2. Try to add quantity > stock
+3. Click Send","Variant ID: {{variant_id}}
+Quantity: 100","  Status: 400 Bad Request
+  Error: Insufficient stock",,Not Tested,High,,,
+TC_CART_004,Shopping Cart,View Cart,Get My Cart,Verify user can view cart,"  User logged in
+  Cart has items","1. Login as customer
+2. Select 'Get My Cart'
+3. Click Send",None,"  Status: 200 OK
+  Cart items with details
+  Total price calculated",,Not Tested,High,,,
+TC_CART_005,Shopping Cart,Update Cart,Update Item Quantity,Verify quantity update,"  User logged in
+  Item in cart","1. Login as customer
+2. Select 'Update Cart Item'
+3. Change quantity
+4. Click Send","Variant ID: {{variant_id}}
+New Quantity: 5","  Status: 200 OK
+  Quantity updated
+  Total recalculated",,Not Tested,High,,,
+TC_CART_006,Shopping Cart,Remove from Cart,Remove Single Item,Verify item removal,"  User logged in
+  Item in cart","1. Login as customer
+2. Select 'Remove from Cart'
+3. Enter variant ID
+4. Click Send",Variant ID: {{variant_id}},"  Status: 200 OK
+  Item removed from cart",,Not Tested,Medium,,,
+TC_CART_007,Shopping Cart,Clear Cart,Clear All Items,Verify clearing entire cart,"  User logged in
+  Cart has items","1. Login as customer
+2. Select 'Clear Cart'
+3. Click Send",None,"  Status: 200 OK
+  All items removed
+  Cart is empty",,Not Tested,Medium,,,
+TC_ORDER_001,Orders,Create Order,Create Order from Cart,Verify order creation,"  User logged in
+  Cart has items","1. Login as customer
+2. Select 'Create Order'
+3. Click Send",Optional discount code,"  Status: 200 OK
+  Order created
+  Order ID saved to {{order_id}}
+  Cart is cleared",,Not Tested,Critical,,,
+TC_ORDER_002,Orders,Create Order,Create Order with Empty Cart,Verify cannot create order with empty cart,"  User logged in
+  Cart is empty","1. Login as customer
+2. Select 'Create Order'
+3. Click Send",None,"  Status: 400 Bad Request
+  Error: Cart is empty",,Not Tested,High,,,
+TC_ORDER_003,Orders,Apply Discount,Apply Valid Coupon,Verify discount application,"  Valid coupon exists
+  Cart meets minimum amount","1. Select 'Apply Discount to Cart'
+2. Enter user ID and coupon
+3. Click Send","User ID: {{user_id}}
+Coupon: SUMMER2024","  Status: 200 OK
+  Discount calculated
+  Final total shown",,Not Tested,High,,,
+TC_ORDER_004,Orders,Apply Discount,Apply Invalid Coupon,Verify invalid coupon is rejected,  Coupon doesn't exist,"1. Select 'Apply Discount to Cart'
+2. Enter invalid coupon
+3. Click Send",Coupon: INVALID123,"  Status: 400 Bad Request
+  Error: Invalid coupon",,Not Tested,High,,,
+TC_ORDER_005,Orders,Apply Discount,Apply Expired Coupon,Verify expired coupon is rejected,  coupon exists but expired,"1. Select 'Apply Discount to Cart'
+2. Enter expired coupon
+3. Click Send",Coupon: EXPIRED2023,"  Status: 400 Bad Request
+  Error: Coupon expired",,Not Tested,High,,,
+TC_ORDER_006,Orders,Cancel Order,Customer Cancel Order,Verify customer can cancel their order,"  User logged in
+  Order in CREATED or CONFIRMED status","1. Login as customer
+2. Select 'Cancel Order'
+3. Use order ID
+4. Click Send",Order ID: {{order_id}},"  Status: 200 OK
+  Order status  CANCELLED
+  Stock restored",,Not Tested,High,,,
+TC_ORDER_007,Orders,Cancel Order,Cancel Delivered Order,Verify cannot cancel delivered order,  Order Status  DELIVERED,"1. Login as customer
+2. Try to cancel delivered order
+3. Click Send",Order ID: (delivered order),"  Status: 400 Bad Request
+  Error: Cannot cancel delivered order",,Not Tested,Medium,,,
+TC_ORDER_008,Orders,Get Orders,Get My Orders,Verify customer can view their orders,"  User logged in
+  User has orders","1. Login as customer
+2. Select 'Get Orders by Username'
+3. Click Send",None,"  Status: 200 OK
+  Array of user's orders",,Not Tested,High,,,
+TC_ORDER_009,Orders,Get Orders,Get Order Details,Verify order detail retrieval,  Order exists,"1. Login as customer/staff
+2. Select 'Get Order Details'
+3. Use order ID
+4. Click Send",Order ID: {{order_id}},"  Status: 200 OK
+  Complete order information
+  Order items with details",,Not Tested,High,,,
+TC_ORDER_010,Orders,Update Status,Staff Update to CONFIRMED,Verify staff can confirm order,"  Logged in as STAFF
+  Order status  CREATED or PAID","1. Login as staff
+2. Select 'Update Order Status'
+3. Set status to CONFIRMED
+4. Click Send","Order ID: {{order_id}}
+New Status: CONFIRMED","  Status: 200 OK
+  Order status updated",,Not Tested,High,,,
+TC_ORDER_011,Orders,Update Status,Staff Update to PREPARING,Verify status progression,"  Logged in as STAFF
+  Order status  CONFIRMED","1. Login as staff
+2. Update status to PREPARING
+3. Click Send",New Status: PREPARING,"  Status: 200 OK
+  Status updated",,Not Tested,High,,,
+TC_ORDER_012,Orders,Update Status,Invalid Status Transition,Verify invalid transitions are rejected,"  Logged in as STAFF
+  Order status  CREATED","1. Login as staff
+2. Try to set status to DELIVERED directly
+3. Click Send",New Status: DELIVERED,"  Status: 400 Bad Request
+  Error: Invalid status transition",,Not Tested,High,,,
+TC_ORDER_013,Orders,Update Status,Staff Cannot Cancel,Verify staff cannot cancel orders,  logged in as STAFF,"1. Login as staff
+2. Try to set status to CANCELLED
+3. Click Send",New Status: CANCELLED,"  Status: 403 Forbidden
+  Error: Only customer can cancel",,Not Tested,Medium,,,
+TC_ORDER_014,Orders,Filter Orders,Get Orders by Status,Verify status filter,"  Multiple orders exist
+  Logged in as STAFF","1. Login as staff
+2. Select 'Get Orders by Status'
+3. Set orderStatusCONFIRMED
+4. Click Send",Order Status: CONFIRMED,"  Status: 200 OK
+  Only CONFIRMED orders",,Not Tested,Medium,,,
+TC_ORDER_015,Orders,Pagination,Orders with Pagination,Verify order pagination,"  Multiple orders exist
+  Logged in as STAFF","1. Login as staff
+2. Select 'Get Orders with Pagination'
+3. Set page and size
+4. Click Send","Page: 0
+Size: 10","  Status: 200 OK
+  Max 10 orders
+  Pagination metadata",,Not Tested,Medium,,,
+TC_PAYMENT_001,Payment,VNPay,Create Payment URL,Verify payment URL generation,"  Order exists
+  User logged in","1. Login as customer
+2. Select 'Create Payment for Order'
+3. Enter order ID
+4. Click Send",Order ID: {{order_id}},"  Status: 200 OK
+  Payment URL returned
+  URL contains order reference",,Not Tested,Critical,,,
+TC_PAYMENT_002,Payment,VNPay,Payment Callback Success,Verify successful payment callback,  Payment initiated,"1. Simulate VNPay callback
+2. Set vnp_ResponseCode00
+3. Click Send","Response Code: 00
+Transaction No: 123456
+Order ID: {{order_id}}","  Status: 200 OK
+  Order status  PAID
+  Payment details saved",,Not Tested,Critical,,,
+TC_PAYMENT_003,Payment,VNPay,Payment Callback Failed,Verify failed payment callback,  Payment initiated,"1. Simulate VNPay callback
+2. Set vnp_ResponseCode24 (cancelled)
+3. Click Send",Response Code: 24,"  Status: 200 OK
+  Order status  PAYMENT_FAILED",,Not Tested,High,,,
+TC_DISCOUNT_001,Discounts,Create Discount,Create Percentage Discount,Verify percentage discount creation,  logged in as MANAGER,"1. Login as manager
+2. Select 'Create Discount'
+3. Set type to PERCENTAGE
+4. Click Send","Code: SUMMER2024
+Type: PERCENTAGE
+Percentage: 20%
+Min Amount: 100","  Status: 200 OK
+  Discount created
+  ID saved to {{discount_id}}",,Not Tested,High,,,
+TC_DISCOUNT_002,Discounts,Create Discount,Create Fixed Amount Discount,Verify fixed discount creation,  logged in as MANAGER,"1. Login as manager
+2. Create discount with fixed amount
+3. Click Send","Code: SAVE50K
+Type: FIXED_AMOUNT
+Fixed Amount: 50000","  Status: 200 OK
+  Discount created",,Not Tested,High,,,
+TC_DISCOUNT_003,Discounts,Create Discount,Duplicate Coupon Code,Verify duplicate code is rejected,  coupon code exists,"1. Login as manager
+2. Try to create with existing code
+3. Click Send",Code: SUMMER2024 (existing),"  Status: 400 Bad Request
+  Error: Coupon code exists",,Not Tested,High,,,
+TC_DISCOUNT_004,Discounts,Create Discount,Invalid Date Range,Verify date validation,  logged in as MANAGER,"1. Login as manager
+2. Set end date before start date
+3. Click Send","Start: 2024 08 31
+End: 2024 06 01","  Status: 400 Bad Request
+  Error: Invalid date range",,Not Tested,Medium,,,
+TC_DISCOUNT_005,Discounts,Update Discount,Update Discount Info,Verify discount update,"  Discount exists
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Update Discount'
+3. Modify fields
+4. Click Send","Percentage: 25%
+End Date: extended","  Status: 200 OK
+  Discount updated",,Not Tested,Medium,,,
+TC_DISCOUNT_006,Discounts,Get Discounts,Get Active Discounts,Verify active filter,  Multiple discounts exist,"1. Login as manager
+2. Select 'Get Active Discounts'
+3. Set isActivetrue
+4. Click Send",Active: true,"  Status: 200 OK
+  Only active discounts",,Not Tested,Medium,,,
+TC_DISCOUNT_007,Discounts,Delete Discount,Delete Unused Discount,Verify discount deletion,"  Discount exists without orders
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Delete Discount'
+3. Click Send",Discount ID: {{discount_id}},"  Status: 200 OK
+  Discount deleted",,Not Tested,Low,,,
+TC_REPORT_001,Reports,Revenue,Daily Revenue Report,Verify daily revenue report,"  Orders exist
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Daily Revenue Report'
+3. Set date range
+4. Click Send","Start: 2024 01 01
+End: 2024 12 31","  Status: 200 OK
+  Revenue data by day",,Not Tested,High,,,
+TC_REPORT_002,Reports,Revenue,Monthly Revenue Report,Verify monthly aggregation,"  Orders exist
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Monthly Revenue Totals'
+3. Set year
+4. Click Send",Year: 2024,"  Status: 200 OK
+  Revenue by month",,Not Tested,High,,,
+TC_REPORT_003,Reports,Products,Top Selling Products,Verify top sellers report,"  Orders exist
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Top Selling Products'
+3. Set date range
+4. Click Send","Start: 2024 01 01
+End: 2024 12 31","  Status: 200 OK
+  Products sorted by sales",,Not Tested,Medium,,,
+TC_REPORT_004,Reports,Customers,Top Customers,Verify top customers report,"  Orders exist
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Top Customers'
+3. Set limit
+4. Click Send",Limit: 10,"  Status: 200 OK
+  Top 10 customers by revenue",,Not Tested,Medium,,,
+TC_REPORT_005,Reports,Inventory,Inventory Status,Verify inventory report,"  Products exist
+  Logged in as MANAGER","1. Login as manager
+2. Select 'Inventory Status'
+3. Click Send",None,"  Status: 200 OK
+  Stock levels by product",,Not Tested,Medium,,,
+TC_CHAT_001,AI Chat,Query,Query Shoe Data,Verify AI shoe query,  shoes exist,"1. Select 'Chat   Query Shoe Data'
+2. Enter question in Vietnamese
+3. Click Send",Question: Tìm giày Nike giá dưới 2 triệu,"  Status: 200 OK
+  AI response with shoe recommendations",,Not Tested,Low,,,
+TC_CHAT_002,AI Chat,Query,Query Discount Data,Verify AI discount query,  discounts exist,"1. Select 'Chat   Query Discount Data'
+2. Enter question
+3. Click Send",Question: Có mã giảm giá nào không?,"  Status: 200 OK
+  AI response with discount info",,Not Tested,Low,,,
+TC_SEC_001,Security,Authorization,Access Admin Endpoint as Customer,Verify role based access control,  logged in as CUSTOMER,"1. Login as customer
+2. Try to access admin endpoint
+3. Click Send",Customer token,"  Status: 403 Forbidden
+  Access denied",,Not Tested,Critical,,,
+TC_SEC_002,Security,Authorization,Access Manager Endpoint as Staff,Verify staff limitations,  logged in as STAFF,"1. Login as staff
+2. Try to create shoe
+3. Click Send",Staff token,"  Status: 403 Forbidden
+  Insufficient permissions",,Not Tested,High,,,
+TC_SEC_003,Security,Token,Expired Token,Verify expired token is rejected,  Token expired,"1. Use expired token
+2. Try to access protected endpoint
+3. Click Send",Expired token,"  Status: 401 Unauthorized
+  Token expired message",,Not Tested,High,,,
+TC_SEC_004,Security,Token,Access Without Token,Verify authentication required,  No Token provided,"1. Remove auth header
+2. Try to access protected endpoint
+3. Click Send",No token,"  Status: 401 Unauthorized
+  Authentication required",,Not Tested,High,,,
+TC_PERF_001,Performance,Load,Concurrent Users,Verify system handles concurrent requests,  system running,"1. Use Postman Runner
+2. Run 50 concurrent requests
+3. Check response times",50 concurrent users,"  All requests succeed
+  Response time < 2s
+  No errors",,Not Tested,Medium,,,
+TC_PERF_002,Performance,Load,Large Dataset Pagination,Verify pagination performance with large data,  10000+ shoes exist,"1. Request page 100 with size 50
+2. Measure response time
+3. Click Send","Page: 100
+Size: 50","  Status: 200 OK
+  Response time < 1s",,Not Tested,Low,,,
+TC_INT_001,Integration,E2E,Complete Purchase Flow,Verify end to end purchase,  All services running,"1. Register user
+2. Browse shoes
+3. Add to cart
+4. Apply discount
+5. Create order
+6. Make payment
+7. Verify order status",Full flow,"  All steps succeed
+  Order status  PAID
+  Stock decremented
+  Payment recorded",,Not Tested,Critical,,,
+TC_INT_002,Integration,E2E,Order Fulfillment Flow,Verify staff workflow,  Order exists with PAID Status,"1. Staff login
+2. Confirm order
+3. Update to PREPARING
+4. Update to READY_FOR_DELIVERY
+5. Update to OUT_FOR_DELIVERY
+6. Update to DELIVERED",Order ID: {{order_id}},"  All transitions succeed
+  Final status  DELIVERED",,Not Tested,High,,,

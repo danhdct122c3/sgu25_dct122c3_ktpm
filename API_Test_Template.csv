@@ -1,0 +1,101 @@
+apiTestId,dataTestId,module,description,api,method,requestData,expectedStatus,expectedMessage,actualStatus,actualMessage,result,notes
+API-AU-001,DataAU1,Authentication,Đăng ký thành công - Customer,/auth/register,POST,"username=newcustomer01, password=Customer@123, fullName=Nguyen Van A, email=customer01@example.com, phoneNumber=0901234567",200,Registration successful,,,
+API-AU-002,DataAU2,Authentication,Đăng ký username đã tồn tại,/auth/register,POST,"username=customer01, password=Customer@123, fullName=Nguyen Van B, email=customer02@example.com, phoneNumber=0901234568",400,Username already exists,,,
+API-AU-003,DataAU3,Authentication,Đăng ký email đã tồn tại,/auth/register,POST,"username=newcustomer02, password=Customer@123, fullName=Nguyen Van C, email=customer01@example.com, phoneNumber=0901234569",400,Email already exists,,,
+API-AU-004,DataAU4,Authentication,Đăng ký thiếu username,/auth/register,POST,"password=Customer@123, fullName=Nguyen Van D, email=customer03@example.com, phoneNumber=0901234570",400,Username is required,,,
+API-AU-005,DataAU5,Authentication,Đăng ký mật khẩu yếu,/auth/register,POST,"username=newcustomer03, password=123, fullName=Nguyen Van E, email=customer04@example.com, phoneNumber=0901234571",400,Password too weak,,,
+API-AU-006,DataAU6,Authentication,Đăng ký email không hợp lệ,/auth/register,POST,"username=newcustomer04, password=Customer@123, fullName=Nguyen Van F, email=invalidemail, phoneNumber=0901234572",400,Invalid email format,,,
+API-AU-007,DataAU7,Authentication,Đăng ký số điện thoại không hợp lệ,/auth/register,POST,"username=newcustomer05, password=Customer@123, fullName=Nguyen Van G, email=customer05@example.com, phoneNumber=123",400,Invalid phone number,,,
+API-AU-008,DataAU8,Authentication,Đăng nhập thành công - Admin,/auth/login,POST,"username=admin01, password=admin123",200,Login successful,,,
+API-AU-009,DataAU9,Authentication,Đăng nhập thành công - Customer,/auth/login,POST,"username=customer01, password=customer123",200,Login successful,,,
+API-AU-010,DataAU10,Authentication,Đăng nhập thành công - Staff,/auth/login,POST,"username=shipper01, password=shipper123",200,Login successful,,,
+API-AU-011,DataAU11,Authentication,Đăng nhập sai mật khẩu,/auth/login,POST,"username=admin01, password=wrongpassword",401,Invalid credentials,,,
+API-AU-012,DataAU12,Authentication,Đăng nhập user không tồn tại,/auth/login,POST,"username=nonexistuser, password=password123",401,User not found,,,
+API-AU-013,DataAU13,Authentication,Đăng nhập thiếu username,/auth/login,POST,password=password123,400,Username is required,,,
+API-AU-014,DataAU14,Authentication,Đăng nhập thiếu password,/auth/login,POST,username=admin01,400,Password is required,,,
+API-AU-015,DataAU15,Authentication,Đăng nhập thiếu cả username và password,/auth/login,POST,,400,Username and password required,,,
+API-Prod-001,DataProd1,Products,Xem tất cả sản phẩm,/shoes,GET,"page=0, size=10",200,Success,,,
+API-Prod-002,DataProd2,Products,Tìm kiếm theo keyword Nike,/shoes,GET,"keyword=Nike, page=0, size=10",200,Success,,,
+API-Prod-003,DataProd3,Products,Tìm kiếm không có kết quả,/shoes,GET,"keyword=XYZ123NotExist, page=0, size=10",200,Empty list,,,
+API-Prod-004,DataProd4,Products,Lọc theo khoảng giá 1M-3M,/shoes,GET,"minPrice=1000000, maxPrice=3000000, page=0, size=10",200,Success,,,
+API-Prod-005,DataProd5,Products,Lọc giá tối thiểu 2M,/shoes,GET,"minPrice=2000000, page=0, size=10",200,Success,,,
+API-Prod-006,DataProd6,Products,Lọc giá tối đa 3M,/shoes,GET,"maxPrice=3000000, page=0, size=10",200,Success,,,
+API-Prod-007,DataProd7,Products,Lọc theo giới tính MAN,/shoes,GET,"gender=MAN, page=0, size=10",200,Success,,,
+API-Prod-008,DataProd8,Products,Lọc theo giới tính WOMAN,/shoes,GET,"gender=WOMAN, page=0, size=10",200,Success,,,
+API-Prod-009,DataProd9,Products,Lọc theo giới tính UNISEX,/shoes,GET,"gender=UNISEX, page=0, size=10",200,Success,,,
+API-Prod-010,DataProd10,Products,Lọc theo category RUNNING,/shoes,GET,"category=RUNNING, page=0, size=10",200,Success,,,
+API-Prod-011,DataProd11,Products,Lọc theo category CASUAL,/shoes,GET,"category=CASUAL, page=0, size=10",200,Success,,,
+API-Prod-012,DataProd12,Products,Lọc theo brand Nike,/shoes,GET,"brandId=1, page=0, size=10",200,Success,,,
+API-Prod-013,DataProd13,Products,Lọc theo brand không tồn tại,/shoes,GET,"brandId=99999, page=0, size=10",200,Empty list,,,
+API-Prod-014,DataProd14,Products,Phân trang với page âm,/shoes,GET,"page=-1, size=10",400,Invalid page,,,
+API-Prod-015,DataProd15,Products,Phân trang với size = 0,/shoes,GET,"page=0, size=0",400,Invalid size,,,
+API-Prod-016,DataProd16,Products,Tạo sản phẩm thành công,/shoes,POST,"name=Nike Air Max 90, price=2299000, fakePrice=2999000, gender=UNISEX, category=RUNNING, brandId=1, status=true",201,Product created,,,Requires Admin/Manager role
+API-Prod-017,DataProd17,Products,Tạo sản phẩm thiếu tên,/shoes,POST,"price=2299000, fakePrice=2999000, gender=UNISEX, category=RUNNING, brandId=1, status=true",400,Name is required,,,Requires Admin/Manager role
+API-Prod-018,DataProd18,Products,Tạo sản phẩm giá âm,/shoes,POST,"name=Test Shoe, price=-1000, fakePrice=2000, gender=UNISEX, category=RUNNING, brandId=1, status=true",400,Price must be positive,,,Requires Admin/Manager role
+API-Prod-019,DataProd19,Products,Tạo sản phẩm giá = 0,/shoes,POST,"name=Test Shoe, price=0, fakePrice=2000, gender=UNISEX, category=RUNNING, brandId=1, status=true",400,Price must be positive,,,Requires Admin/Manager role
+API-Prod-020,DataProd20,Products,Tạo sản phẩm brand không tồn tại,/shoes,POST,"name=Test Shoe, price=2000000, fakePrice=2500000, gender=UNISEX, category=RUNNING, brandId=99999, status=true",404,Brand not found,,,Requires Admin/Manager role
+API-Prod-021,DataProd21,Products,Tạo sản phẩm gender không hợp lệ,/shoes,POST,"name=Test Shoe, price=2000000, fakePrice=2500000, gender=INVALID, category=RUNNING, brandId=1, status=true",400,Invalid gender,,,Requires Admin/Manager role
+API-Prod-022,DataProd22,Products,Tạo sản phẩm category không hợp lệ,/shoes,POST,"name=Test Shoe, price=2000000, fakePrice=2500000, gender=UNISEX, category=INVALID, brandId=1, status=true",400,Invalid category,,,Requires Admin/Manager role
+API-Prod-023,DataProd23,Products,Cập nhật sản phẩm thành công,/shoes/{id},PUT,"name=Nike Air Max 90 Updated, price=2499000, fakePrice=3299000, gender=UNISEX, category=RUNNING, status=true",200,Product updated,,,Requires Admin/Manager role. Replace {id} with actual shoe ID
+API-Prod-024,DataProd24,Products,Cập nhật sản phẩm giá âm,/shoes/{id},PUT,"name=Updated Name, price=-1000, fakePrice=3000, gender=UNISEX, category=RUNNING, status=true",400,Price must be positive,,,Requires Admin/Manager role. Replace {id} with actual shoe ID
+API-Prod-025,DataProd25,Products,Tạo sản phẩm Adidas,/shoes,POST,"name=Adidas Ultraboost 22, price=3499000, fakePrice=4299000, gender=MAN, category=RUNNING, brandId=2, status=true",201,Product created,,,Requires Admin/Manager role
+API-Prod-026,DataProd26,Products,Tạo sản phẩm Puma,/shoes,POST,"name=Puma RS-X, price=1899000, fakePrice=2499000, gender=WOMAN, category=CASUAL, brandId=3, status=true",201,Product created,,,Requires Admin/Manager role
+API-Prod-027,DataProd27,Products,Tạo sản phẩm Nike React,/shoes,POST,"name=Nike React Infinity, price=2799000, fakePrice=3499000, gender=UNISEX, category=RUNNING, brandId=1, status=true",201,Product created,,,Requires Admin/Manager role
+API-Prod-028,DataProd28,Products,Tạo sản phẩm Converse,/shoes,POST,"name=Converse Chuck Taylor, price=1299000, fakePrice=1599000, gender=UNISEX, category=CASUAL, brandId=4, status=true",201,Product created,,,Requires Admin/Manager role
+API-Cart-001,DataCart1,Cart,Thêm sản phẩm vào giỏ,/cart/items,POST,"variantId=UUID-VARIANT-1, quantity=2",200,Item added to cart,,,Requires authentication. Replace UUID-VARIANT-1 with actual variant ID
+API-Cart-002,DataCart2,Cart,Tăng số lượng trong giỏ,/cart/items,POST,"variantId=UUID-VARIANT-1, quantity=1",200,Quantity increased,,,Requires authentication
+API-Cart-003,DataCart3,Cart,Thêm sản phẩm khác vào giỏ,/cart/items,POST,"variantId=UUID-VARIANT-2, quantity=1",200,Item added to cart,,,Requires authentication
+API-Cart-004,DataCart4,Cart,Thêm với số lượng 0,/cart/items,POST,"variantId=UUID-VARIANT-1, quantity=0",400,Quantity must be positive,,,Requires authentication
+API-Cart-005,DataCart5,Cart,Thêm với số lượng âm,/cart/items,POST,"variantId=UUID-VARIANT-1, quantity=-1",400,Quantity must be positive,,,Requires authentication
+API-Cart-006,DataCart6,Cart,Thêm vượt quá tồn kho,/cart/items,POST,"variantId=UUID-VARIANT-1, quantity=9999",400,Exceeds stock,,,Requires authentication
+API-Cart-007,DataCart7,Cart,Thêm variant không tồn tại,/cart/items,POST,"variantId=invalid-uuid-123, quantity=1",404,Variant not found,,,Requires authentication
+API-Cart-008,DataCart8,Cart,Cập nhật số lượng thành công,/cart/items/{variantId},PUT,quantity=5,200,Quantity updated,,,Requires authentication. Replace {variantId} with actual ID
+API-Cart-009,DataCart9,Cart,Giảm số lượng trong giỏ,/cart/items/{variantId},PUT,quantity=1,200,Quantity updated,,,Requires authentication
+API-Cart-010,DataCart10,Cart,Cập nhật số lượng = 0,/cart/items/{variantId},PUT,quantity=0,400,Quantity must be positive,,,Requires authentication
+API-Cart-011,DataCart11,Cart,Cập nhật số lượng âm,/cart/items/{variantId},PUT,quantity=-5,400,Quantity must be positive,,,Requires authentication
+API-Cart-012,DataCart12,Cart,Cập nhật vượt tồn kho,/cart/items/{variantId},PUT,quantity=9999,400,Exceeds stock,,,Requires authentication
+API-Cart-013,DataCart13,Cart,Cập nhật item không có trong giỏ,/cart/items/{variantId},PUT,quantity=2,404,Item not in cart,,,Requires authentication
+API-Cart-014,DataCart14,Cart,Xóa sản phẩm khỏi giỏ,/cart/items/{variantId},DELETE,,200,Item removed,,,Requires authentication
+API-Cart-015,DataCart15,Cart,Xóa item không tồn tại,/cart/items/{variantId},DELETE,,404,Item not in cart,,,Requires authentication
+API-Cart-016,DataCart16,Cart,Xóa toàn bộ giỏ hàng,/cart/clear,DELETE,,200,Cart cleared,,,Requires authentication
+API-Cart-017,DataCart17,Cart,Xem giỏ hàng,/cart,GET,,200,Cart cleared,,,Requires authentication
+API-Cart-018,DataCart18,Cart,Áp dụng mã giảm giá hợp lệ,/cart/discount,POST,discountCode=SUMMER2024,200,Discount applied,,,Requires authentication
+API-Cart-019,DataCart19,Cart,Áp dụng mã không tồn tại,/cart/discount,POST,discountCode=INVALIDCODE,400,Discount not found,,,Requires authentication
+API-Cart-020,DataCart20,Cart,Áp dụng mã đã hết hạn,/cart/discount,POST,discountCode=EXPIREDCODE,400,Discount expired,,,Requires authentication
+API-Cart-021,DataCart21,Cart,Áp dụng mã chưa đến ngày,/cart/discount,POST,discountCode=FUTUREDATE,400,Not yet active,,,Requires authentication
+API-Cart-022,DataCart22,Cart,Áp dụng mã chưa đủ đơn tối thiểu,/cart/discount,POST,discountCode=MINORDER500K,400,Minimum not met,,,Requires authentication
+API-Cart-023,DataCart23,Cart,Tạo đơn hàng từ giỏ,/orders,POST,,200,Order created,,,Requires authentication
+API-Cart-024,DataCart24,Cart,Tạo đơn khi giỏ rỗng,/orders,POST,,400,Cart is empty,,,Requires authentication
+API-Cart-025,DataCart25,Cart,Tạo đơn với mã giảm giá,/orders,POST,discountCode=SUMMER2024,200,Order with discount created,,,Requires authentication
+API-Cart-026,DataCart26,Cart,Thêm nhiều sản phẩm vào giỏ - Item 1,/cart/items,POST,"variantId=UUID-VARIANT-3, quantity=3",200,Item added,,,Requires authentication
+API-Cart-027,DataCart27,Cart,Thêm nhiều sản phẩm vào giỏ - Item 2,/cart/items,POST,"variantId=UUID-VARIANT-4, quantity=1",200,Item added,,,Requires authentication
+API-Cart-028,DataCart28,Cart,Thêm nhiều sản phẩm vào giỏ - Item 3,/cart/items,POST,"variantId=UUID-VARIANT-5, quantity=2",200,Item added,,,Requires authentication
+API-Order-001,DataOrder1,Orders,Tạo đơn hàng thành công,/orders,POST,,200,Order created,,,Requires authentication
+API-Order-002,DataOrder2,Orders,Tạo đơn hàng với mã giảm giá,/orders,POST,discountCode=SUMMER2024,200,Order with discount created,,,Requires authentication
+API-Order-003,DataOrder3,Orders,Tạo đơn khi giỏ rỗng,/orders,POST,,400,Cart is empty,,,Requires authentication
+API-Order-004,DataOrder4,Orders,Xem chi tiết đơn hàng,/orders/{id},GET,,200,Order details returned,,,Replace {id} with actual order ID
+API-Order-005,DataOrder5,Orders,Xem đơn hàng không tồn tại,/orders/{id},GET,,404,Order not found,,,Use invalid order ID
+API-Order-006,DataOrder6,Orders,Cập nhật trạng thái CONFIRMED,/orders/{id}/status,PUT,newStatus=CONFIRMED,200,Status updated to CONFIRMED,,,Requires Admin/Manager/Staff role
+API-Order-007,DataOrder7,Orders,Cập nhật trạng thái PREPARING,/orders/{id}/status,PUT,newStatus=PREPARING,200,Status updated to PREPARING,,,Requires Admin/Manager/Staff role
+API-Order-008,DataOrder8,Orders,Cập nhật trạng thái READY_FOR_DELIVERY,/orders/{id}/status,PUT,newStatus=READY_FOR_DELIVERY,200,Status updated to READY_FOR_DELIVERY,,,Requires Admin/Manager/Staff role
+API-Order-009,DataOrder9,Orders,Cập nhật trạng thái OUT_FOR_DELIVERY,/orders/{id}/status,PUT,newStatus=OUT_FOR_DELIVERY,200,Status updated to OUT_FOR_DELIVERY,,,Requires Admin/Manager/Staff role
+API-Order-010,DataOrder10,Orders,Cập nhật trạng thái DELIVERED,/orders/{id}/status,PUT,newStatus=DELIVERED,200,Status updated to DELIVERED,,,Requires Admin/Manager/Staff role
+API-Order-011,DataOrder11,Orders,Hủy đơn hàng - Status CREATED,/orders/{id}/cancel,PUT,,200,Order cancelled,,,Order must be in CREATED status
+API-Order-012,DataOrder12,Orders,Hủy đơn hàng - Status CONFIRMED,/orders/{id}/cancel,PUT,,400,Cannot cancel,,,Order in CONFIRMED status cannot be cancelled
+API-Order-013,DataOrder13,Orders,Hủy đơn hàng - Status DELIVERED,/orders/{id}/cancel,PUT,,400,Cannot cancel,,,Order in DELIVERED status cannot be cancelled
+API-Order-014,DataOrder14,Orders,Cập nhật với status không hợp lệ,/orders/{id}/status,PUT,newStatus=INVALID_STATUS,400,Invalid status,,,
+API-Order-015,DataOrder15,Orders,Cập nhật transition không hợp lệ,/orders/{id}/status,PUT,newStatus=DELIVERED,400,Invalid transition,,,Invalid status transition
+API-Order-016,DataOrder16,Orders,Lọc đơn hàng theo status CREATED,/orders,GET,"orderStatus=CREATED, page=0, size=10",200,Orders with status CREATED,,,Requires Admin/Manager/Staff role
+API-Order-017,DataOrder17,Orders,Lọc đơn hàng theo status CONFIRMED,/orders,GET,"orderStatus=CONFIRMED, page=0, size=10",200,Orders with status CONFIRMED,,,Requires Admin/Manager/Staff role
+API-Order-018,DataOrder18,Orders,Lọc đơn hàng theo status PREPARING,/orders,GET,"orderStatus=PREPARING, page=0, size=10",200,Orders with status PREPARING,,,Requires Admin/Manager/Staff role
+API-Order-019,DataOrder19,Orders,Lọc đơn hàng theo status READY_FOR_DELIVERY,/orders,GET,"orderStatus=READY_FOR_DELIVERY, page=0, size=10",200,Orders with status READY_FOR_DELIVERY,,,Requires Admin/Manager/Staff role
+API-Order-020,DataOrder20,Orders,Lọc đơn hàng theo status OUT_FOR_DELIVERY,/orders,GET,"orderStatus=OUT_FOR_DELIVERY, page=0, size=10",200,Orders with status OUT_FOR_DELIVERY,,,Requires Admin/Manager/Staff role
+API-Order-021,DataOrder21,Orders,Lọc đơn hàng theo status DELIVERED,/orders,GET,"orderStatus=DELIVERED, page=0, size=10",200,Orders with status DELIVERED,,,Requires Admin/Manager/Staff role
+API-Order-022,DataOrder22,Orders,Lọc đơn hàng theo status CANCELLED,/orders,GET,"orderStatus=CANCELLED, page=0, size=10",200,Orders with status CANCELLED,,,Requires Admin/Manager/Staff role
+API-Order-023,DataOrder23,Orders,Tìm kiếm đơn hàng theo customer,/orders,GET,"searchKeyword=customer01, page=0, size=10",200,Orders for customer01,,,Requires Admin/Manager/Staff role
+API-Order-024,DataOrder24,Orders,Tìm kiếm đơn hàng theo order ID,/orders,GET,"searchKeyword=ORD-123, page=0, size=10",200,Orders matching ORD-123,,,Requires Admin/Manager/Staff role
+API-Order-025,DataOrder25,Orders,Xem trang đầu tiên của đơn hàng,/orders,GET,"page=0, size=10",200,Page 1 of orders,,,Requires Admin/Manager/Staff role
+API-Order-026,DataOrder26,Orders,Xem trang thứ hai của đơn hàng,/orders,GET,"page=1, size=10",200,Page 2 of orders,,,Requires Admin/Manager/Staff role
+API-Order-027,DataOrder27,Orders,Tạo payment URL cho đơn hàng,/orders/{id}/payment,POST,,200,Payment URL created,,,Requires authentication
+API-Order-028,DataOrder28,Orders,Tạo payment cho đơn không tồn tại,/orders/{id}/payment,POST,,404,Order not found,,,Use invalid order ID
+API-Order-029,DataOrder29,Orders,Tạo payment cho đơn đã thanh toán,/orders/{id}/payment,POST,,400,Already paid,,,Order already paid

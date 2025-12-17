@@ -1,0 +1,16 @@
+testId,description,action,searchKeyword,filterBrand,filterMinPrice,filterMaxPrice,sortBy,expectedResult
+SeleniumProd001,Tìm kiếm sản phẩm theo tên,search,Nike Air,,,,name_asc,Products found
+SeleniumProd002,Tìm kiếm sản phẩm không tồn tại,search,XYZ123NotExist,,,,name_asc,No products found
+SeleniumProd003,Tìm kiếm rỗng - hiển thị tất cả,search,,,,,name_asc,All products displayed
+SeleniumProd004,Filter theo brand Nike,filter,,Nike,,,name_asc,Only Nike products shown
+SeleniumProd005,Filter theo brand Adidas,filter,,Adidas,,,name_asc,Only Adidas products shown
+SeleniumProd006,Filter theo khoảng giá 500k-1M,filter,,,500000,1000000,price_asc,Products in price range
+SeleniumProd007,Filter theo khoảng giá > 2M,filter,,,2000000,,price_desc,Products above 2M
+SeleniumProd008,Sắp xếp theo giá tăng dần,sort,,,,,,price_asc,Products sorted by price ascending
+SeleniumProd009,Sắp xếp theo giá giảm dần,sort,,,,,,price_desc,Products sorted by price descending
+SeleniumProd010,Sắp xếp theo tên A-Z,sort,,,,,,name_asc,Products sorted alphabetically
+SeleniumProd011,Filter brand + price range,filter,,Nike,1000000,2000000,price_asc,Nike products in price range
+SeleniumProd012,Search + sort,search,Jordan,,,,,price_desc,Jordan products sorted by price
+SeleniumProd013,Pagination - trang 2,pagination,,,,,,page_2,Page 2 products displayed
+SeleniumProd014,Pagination - trang cuối,pagination,,,,,,page_last,Last page products displayed
+SeleniumProd015,Thay đổi số sản phẩm mỗi trang,pagination,,,,,,items_per_page_20,20 items per page

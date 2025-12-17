@@ -1,0 +1,29 @@
+testId,description,variantId,quantity,discountCode,expectedStatus,expectedMessage
+DataCart1,Thêm sản phẩm vào giỏ,UUID-VARIANT-1,2,,200,Item added to cart
+DataCart2,Tăng số lượng trong giỏ,UUID-VARIANT-1,1,,200,Quantity increased
+DataCart3,Thêm sản phẩm khác vào giỏ,UUID-VARIANT-2,1,,200,Item added to cart
+DataCart4,Thêm với số lượng 0,UUID-VARIANT-1,0,,400,Quantity must be positive
+DataCart5,Thêm với số lượng âm,UUID-VARIANT-1,-1,,400,Quantity must be positive
+DataCart6,Thêm vượt quá tồn kho,UUID-VARIANT-1,9999,,400,Exceeds stock
+DataCart7,Thêm variant không tồn tại,invalid-uuid-123,1,,404,Variant not found
+DataCart8,Cập nhật số lượng thành công,UUID-VARIANT-1,5,,200,Quantity updated
+DataCart9,Giảm số lượng trong giỏ,UUID-VARIANT-1,1,,200,Quantity updated
+DataCart10,Cập nhật số lượng = 0,UUID-VARIANT-1,0,,400,Quantity must be positive
+DataCart11,Cập nhật số lượng âm,UUID-VARIANT-1,-5,,400,Quantity must be positive
+DataCart12,Cập nhật vượt tồn kho,UUID-VARIANT-1,9999,,400,Exceeds stock
+DataCart13,Cập nhật item không có trong giỏ,UUID-VARIANT-NOT-IN-CART,2,,404,Item not in cart
+DataCart14,Xóa sản phẩm khỏi giỏ,UUID-VARIANT-1,,,200,Item removed
+DataCart15,Xóa item không tồn tại,UUID-NOT-IN-CART,,,404,Item not in cart
+DataCart16,Xóa toàn bộ giỏ hàng,,,200,Cart cleared
+DataCart17,Xem giỏ hàng,,,200,Cart cleared
+DataCart18,Áp dụng mã giảm giá hợp lệ,,SUMMER2024,200,Discount applied
+DataCart19,Áp dụng mã không tồn tại,,INVALIDCODE,400,Discount not found
+DataCart20,Áp dụng mã đã hết hạn,,EXPIREDCODE,400,Discount expired
+DataCart21,Áp dụng mã chưa đến ngày,,FUTUREDATE,400,Not yet active
+DataCart22,Áp dụng mã chưa đủ đơn tối thiểu,,MINORDER500K,400,Minimum not met
+DataCart23,Tạo đơn hàng từ giỏ,,,200,Order created
+DataCart24,Tạo đơn khi giỏ rỗng,,,400,Cart is empty
+DataCart25,Tạo đơn với mã giảm giá,,SUMMER2024,200,Order with discount created
+DataCart26,Thêm nhiều sản phẩm vào giỏ - Item 1,UUID-VARIANT-3,3,,200,Item added
+DataCart27,Thêm nhiều sản phẩm vào giỏ - Item 2,UUID-VARIANT-4,1,,200,Item added
+DataCart28,Thêm nhiều sản phẩm vào giỏ - Item 3,UUID-VARIANT-5,2,,200,Item added

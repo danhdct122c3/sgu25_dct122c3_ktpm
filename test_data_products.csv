@@ -1,0 +1,29 @@
+testId,description,name,price,fakePrice,gender,category,brandId,status,minPrice,maxPrice,searchKeyword,page,size,expectedStatus,expectedMessage
+DataProd1,Xem tất cả sản phẩm,,,,,,,,,,,0,10,200,Success
+DataProd2,Tìm kiếm theo keyword Nike,,,,,,,,,,Nike,0,10,200,Success
+DataProd3,Tìm kiếm không có kết quả,,,,,,,,,,XYZ123NotExist,0,10,200,Empty list
+DataProd4,Lọc theo khoảng giá 1M-3M,,,,,,,1000000,3000000,,0,10,200,Success
+DataProd5,Lọc giá tối thiểu 2M,,,,,,,2000000,,,0,10,200,Success
+DataProd6,Lọc giá tối đa 3M,,,,,,,,3000000,,0,10,200,Success
+DataProd7,Lọc theo giới tính MAN,,,,,MAN,,,,,,0,10,200,Success
+DataProd8,Lọc theo giới tính WOMAN,,,,,WOMAN,,,,,,0,10,200,Success
+DataProd9,Lọc theo giới tính UNISEX,,,,,UNISEX,,,,,,0,10,200,Success
+DataProd10,Lọc theo category RUNNING,,,,RUNNING,,,,,,,0,10,200,Success
+DataProd11,Lọc theo category CASUAL,,,,CASUAL,,,,,,,0,10,200,Success
+DataProd12,Lọc theo brand Nike,,,,,1,,,,,,0,10,200,Success
+DataProd13,Lọc theo brand không tồn tại,,,,,99999,,,,,,0,10,200,Empty list
+DataProd14,Phân trang với page âm,,,,,,,,,,,-1,10,400,Invalid page
+DataProd15,Phân trang với size = 0,,,,,,,,,,,0,0,400,Invalid size
+DataProd16,Tạo sản phẩm thành công,Nike Air Max 90,2299000,2999000,UNISEX,RUNNING,1,true,,,,,,,201,Product created
+DataProd17,Tạo sản phẩm thiếu tên,,2299000,2999000,UNISEX,RUNNING,1,true,,,,,,,400,Name is required
+DataProd18,Tạo sản phẩm giá âm,Test Shoe,-1000,2000,UNISEX,RUNNING,1,true,,,,,,,400,Price must be positive
+DataProd19,Tạo sản phẩm giá = 0,Test Shoe,0,2000,UNISEX,RUNNING,1,true,,,,,,,400,Price must be positive
+DataProd20,Tạo sản phẩm brand không tồn tại,Test Shoe,2000000,2500000,UNISEX,RUNNING,99999,true,,,,,,,404,Brand not found
+DataProd21,Tạo sản phẩm gender không hợp lệ,Test Shoe,2000000,2500000,INVALID,RUNNING,1,true,,,,,,,400,Invalid gender
+DataProd22,Tạo sản phẩm category không hợp lệ,Test Shoe,2000000,2500000,UNISEX,INVALID,1,true,,,,,,,400,Invalid category
+DataProd23,Cập nhật sản phẩm thành công,Nike Air Max 90 Updated,2499000,3299000,UNISEX,RUNNING,,true,,,,,,,200,Product updated
+DataProd24,Cập nhật sản phẩm giá âm,Updated Name,-1000,3000,UNISEX,RUNNING,,true,,,,,,,400,Price must be positive
+DataProd25,Tạo sản phẩm Adidas,Adidas Ultraboost 22,3499000,4299000,MAN,RUNNING,2,true,,,,,,,201,Product created
+DataProd26,Tạo sản phẩm Puma,Puma RS-X,1899000,2499000,WOMAN,CASUAL,3,true,,,,,,,201,Product created
+DataProd27,Tạo sản phẩm Nike React,Nike React Infinity,2799000,3499000,UNISEX,RUNNING,1,true,,,,,,,201,Product created
+DataProd28,Tạo sản phẩm Converse,Converse Chuck Taylor,1299000,1599000,UNISEX,CASUAL,4,true,,,,,,,201,Product created

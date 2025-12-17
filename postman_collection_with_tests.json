@@ -1,0 +1,669 @@
+{
+	"info": {
+		"_postman_id": "shoe-shop-api-with-tests",
+		"name": "Shoe Shop API - With Auto Tests",
+		"description": "Complete API collection with automated test scripts built-in. Just import and run!",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login (Get Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test(\"Response has token field\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result).to.have.property('token');",
+									"    pm.expect(jsonData.result.token).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"User is authenticated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.authenticated).to.be.true;",
+									"});",
+									"",
+									"// Auto-save token",
+									"if (pm.response.code === 200) {",
+									"    var token = pm.response.json().result.token;",
+									"    pm.environment.set(\"access_token\", token);",
+									"    console.log(\"✅ Token saved:\", token.substring(0, 20) + \"...\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/token",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "token"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Error message is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.code).to.eql(401);",
+									"    pm.expect(jsonData.message).to.eql(\"Unauthenticated\");",
+									"});",
+									"",
+									"pm.test(\"Flag is false\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.flag).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"wrongpassword\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/token",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "token"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Logout successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.flag).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{access_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "logout"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Brands",
+			"item": [
+				{
+					"name": "Get All Brands",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Brands array is not empty\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.length).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"Each brand has required fields\", function () {",
+									"    var brand = pm.response.json().result[0];",
+									"    pm.expect(brand).to.have.property('id');",
+									"    pm.expect(brand).to.have.property('name');",
+									"});",
+									"",
+									"// Save first brand ID",
+									"if (pm.response.code === 200) {",
+									"    var brands = pm.response.json().result;",
+									"    if (brands.length > 0) {",
+									"        pm.environment.set(\"brand_id\", brands[0].id);",
+									"        console.log(\"✅ Saved brand_id:\", brands[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands",
+							"host": ["{{base_url}}"],
+							"path": ["brands"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Brand",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Brand created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.flag).to.be.true;",
+									"    pm.expect(jsonData.result).to.have.property('id');",
+									"    pm.expect(jsonData.result).to.have.property('name');",
+									"});",
+									"",
+									"pm.test(\"Brand name matches request\", function () {",
+									"    var requestData = JSON.parse(pm.request.body.raw);",
+									"    var responseData = pm.response.json();",
+									"    pm.expect(responseData.result.name).to.eql(requestData.name);",
+									"});",
+									"",
+									"// Auto-save brand ID",
+									"if (pm.response.code === 200) {",
+									"    var brandId = pm.response.json().result.id;",
+									"    pm.environment.set(\"brand_id\", brandId);",
+									"    console.log(\"✅ Saved brand_id:\", brandId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Brand {{$timestamp}}\",\n    \"description\": \"Test brand created via automated test\",\n    \"logoUrl\": \"https://example.com/logo.png\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/brands",
+							"host": ["{{base_url}}"],
+							"path": ["brands"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Shoes",
+			"item": [
+				{
+					"name": "Get All Shoes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is paginated object\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result).to.have.property('content');",
+									"    pm.expect(jsonData.result.content).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Shoes array is not empty\", function () {",
+									"    var shoes = pm.response.json().result.content;",
+									"    pm.expect(shoes.length).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"Each shoe has required fields\", function () {",
+									"    var shoe = pm.response.json().result.content[0];",
+									"    pm.expect(shoe).to.have.property('id');",
+									"    pm.expect(shoe).to.have.property('name');",
+									"    pm.expect(shoe).to.have.property('price');",
+									"    pm.expect(shoe).to.have.property('brand');",
+									"});",
+									"",
+									"pm.test(\"Price is valid number\", function () {",
+									"    var shoe = pm.response.json().result.content[0];",
+									"    pm.expect(shoe.price).to.be.a('number');",
+									"    pm.expect(shoe.price).to.be.above(0);",
+									"});",
+									"",
+									"// Save first shoe ID",
+									"if (pm.response.code === 200) {",
+									"    var shoes = pm.response.json().result.content;",
+									"    if (shoes.length > 0) {",
+									"        pm.environment.set(\"shoe_id\", shoes[0].id);",
+									"        console.log(\"✅ Saved shoe_id:\", shoes[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["shoes"],
+							"query": [
+								{"key": "page", "value": "0"},
+								{"key": "size", "value": "20"}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Shoe by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Shoe has complete details\", function () {",
+									"    var shoe = pm.response.json().result;",
+									"    pm.expect(shoe).to.have.property('id');",
+									"    pm.expect(shoe).to.have.property('name');",
+									"    pm.expect(shoe).to.have.property('price');",
+									"    pm.expect(shoe).to.have.property('description');",
+									"    pm.expect(shoe).to.have.property('brand');",
+									"});",
+									"",
+									"pm.test(\"Shoe ID matches requested ID\", function () {",
+									"    var requestedId = pm.environment.get(\"shoe_id\");",
+									"    var responseId = pm.response.json().result.id;",
+									"    pm.expect(responseId.toString()).to.eql(requestedId.toString());",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shoes/{{shoe_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["shoes", "{{shoe_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Shoe",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Shoe created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.flag).to.be.true;",
+									"    pm.expect(jsonData.result).to.have.property('id');",
+									"});",
+									"",
+									"pm.test(\"Shoe name matches request\", function () {",
+									"    var requestData = JSON.parse(pm.request.body.raw);",
+									"    var responseData = pm.response.json();",
+									"    pm.expect(responseData.result.name).to.eql(requestData.name);",
+									"});",
+									"",
+									"// Auto-save shoe ID",
+									"if (pm.response.code === 200) {",
+									"    var shoeId = pm.response.json().result.id;",
+									"    pm.environment.set(\"shoe_id\", shoeId);",
+									"    console.log(\"✅ Saved shoe_id:\", shoeId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Shoe {{$timestamp}}\",\n    \"price\": 150.00,\n    \"fakePrice\": 200.00,\n    \"description\": \"Automated test shoe\",\n    \"gender\": \"UNISEX\",\n    \"category\": \"RUNNING\",\n    \"brandId\": {{brand_id}},\n    \"status\": \"AVAILABLE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/shoes",
+							"host": ["{{base_url}}"],
+							"path": ["shoes"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Shopping Cart",
+			"item": [
+				{
+					"name": "Get My Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Cart has items array\", function () {",
+									"    var cart = pm.response.json().result;",
+									"    pm.expect(cart).to.have.property('items');",
+									"    pm.expect(cart.items).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/carts",
+							"host": ["{{base_url}}"],
+							"path": ["carts"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add to Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Item added to cart\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.flag).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"Cart updated\", function () {",
+									"    var result = pm.response.json().result;",
+									"    pm.expect(result).to.have.property('variantId');",
+									"    pm.expect(result).to.have.property('quantity');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variantId\": \"{{variant_id}}\",\n    \"quantity\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/carts/add",
+							"host": ["{{base_url}}"],
+							"path": ["carts", "add"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Order created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.flag).to.be.true;",
+									"    pm.expect(jsonData.result).to.have.property('orderId');",
+									"});",
+									"",
+									"pm.test(\"Order status is CREATED\", function () {",
+									"    var order = pm.response.json().result;",
+									"    pm.expect(order.orderStatus).to.eql(\"CREATED\");",
+									"});",
+									"",
+									"pm.test(\"Order total is valid\", function () {",
+									"    var order = pm.response.json().result;",
+									"    pm.expect(order.finalTotal).to.be.a('number');",
+									"    pm.expect(order.finalTotal).to.be.above(0);",
+									"});",
+									"",
+									"// Auto-save order ID",
+									"if (pm.response.code === 200) {",
+									"    var orderId = pm.response.json().result.orderId;",
+									"    pm.environment.set(\"order_id\", orderId);",
+									"    console.log(\"✅ Saved order_id:\", orderId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/create",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "create"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Order has complete details\", function () {",
+									"    var order = pm.response.json().result;",
+									"    pm.expect(order).to.have.property('orderId');",
+									"    pm.expect(order).to.have.property('orderStatus');",
+									"    pm.expect(order).to.have.property('finalTotal');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{order_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "shoe_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "brand_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "variant_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

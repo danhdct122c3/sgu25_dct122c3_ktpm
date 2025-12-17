@@ -1,0 +1,41 @@
+testCase,description,role,username,password,targetUrl,targetAction,expectedResult,expectedRedirect
+AC_001,Customer access home page,customer,customer1,password123,/,view,success,/
+AC_002,Customer access product page,customer,customer1,password123,/products,view,success,/products
+AC_003,Customer access cart,customer,customer1,password123,/cart,view,success,/cart
+AC_004,Customer access checkout,customer,customer1,password123,/checkout,view,success,/checkout
+AC_005,Customer access profile,customer,customer1,password123,/profile,view,success,/profile
+AC_006,Customer try to access admin dashboard,customer,customer1,password123,/admin,view,unauthorized,/
+AC_007,Customer try to access user management,customer,customer1,password123,/admin/users,view,unauthorized,/
+AC_008,Customer try to access discount management,customer,customer1,password123,/admin/discounts,view,unauthorized,/
+AC_009,Customer try to access order management,customer,customer1,password123,/admin/orders,view,unauthorized,/
+AC_010,Staff access profile,staff,staff1,password123,/profile,view,success,/profile
+AC_011,Staff try to access user management,staff,staff1,password123,/admin/users,view,unauthorized,/
+AC_012,Staff try to access discount management,staff,staff1,password123,/admin/discounts,view,unauthorized,/
+AC_013,Staff access order management,staff,staff1,password123,/admin/orders,view,success,/admin/orders
+AC_014,Staff try to update user status,staff,staff1,password123,/admin/users,update_user_status,unauthorized,/admin/users
+AC_015,Staff try to create discount,staff,staff1,password123,/admin/discounts,create_discount,unauthorized,/admin/discounts
+AC_016,Manager access profile,manager,manager1,password123,/profile,view,success,/profile
+AC_017,Manager access user management,manager,manager1,password123,/admin/users,view,success,/admin/users
+AC_018,Manager access discount management,manager,manager1,password123,/admin/discounts,view,success,/admin/discounts
+AC_019,Manager update staff status,manager,manager1,password123,/admin/users,update_staff_status,success,/admin/users
+AC_020,Manager try to update manager status,manager,manager1,password123,/admin/users,update_manager_status,unauthorized,/admin/users
+AC_021,Manager try to update admin status,manager,manager1,password123,/admin/users,update_admin_status,unauthorized,/admin/users
+AC_022,Manager create discount,manager,manager1,password123,/admin/discounts,create_discount,success,/admin/discounts
+AC_023,Manager update discount,manager,manager1,password123,/admin/discounts,update_discount,success,/admin/discounts
+AC_024,Manager delete discount,manager,manager1,password123,/admin/discounts,delete_discount,success,/admin/discounts
+AC_025,Admin access all pages,admin,admin1,password123,/admin,view,success,/admin
+AC_026,Admin access user management,admin,admin1,password123,/admin/users,view,success,/admin/users
+AC_027,Admin access discount management,admin,admin1,password123,/admin/discounts,view,success,/admin/discounts
+AC_028,Admin update staff status,admin,admin1,password123,/admin/users,update_staff_status,success,/admin/users
+AC_029,Admin update manager status,admin,admin1,password123,/admin/users,update_manager_status,success,/admin/users
+AC_030,Admin update all user statuses,admin,admin1,password123,/admin/users,update_any_status,success,/admin/users
+AC_031,Guest user access home page,guest,,/,view,success,/
+AC_032,Guest user access product page,guest,,/products,view,success,/products
+AC_033,Guest user try to access cart,guest,,/cart,view,unauthorized,/login
+AC_034,Guest user try to access checkout,guest,,/checkout,view,unauthorized,/login
+AC_035,Guest user try to access profile,guest,,/profile,view,unauthorized,/login
+AC_036,Guest user try to access admin,guest,,/admin,view,unauthorized,/login
+AC_037,Customer add product to cart,customer,customer1,password123,/products,add_to_cart,success,/cart
+AC_038,Customer update cart quantity,customer,customer1,password123,/cart,update_quantity,success,/cart
+AC_039,Customer remove from cart,customer,customer1,password123,/cart,remove_item,success,/cart
+AC_040,Customer apply discount code,customer,customer1,password123,/cart,apply_discount,success,/cart

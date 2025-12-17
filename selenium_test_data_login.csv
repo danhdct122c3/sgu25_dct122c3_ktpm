@@ -1,0 +1,11 @@
+testId,description,username,password,expectedResult,expectedUrl,expectedMessage
+SeleniumLogin001,Đăng nhập thành công với Admin,admin,admin123,success,http://localhost:3000/,Login successful
+SeleniumLogin002,Đăng nhập thành công với Customer,customer1,customer123,success,http://localhost:3000/,Login successful
+SeleniumLogin003,Đăng nhập thành công với Manager,manager1,manager123,success,http://localhost:3000/admin/dashboard,Login successful
+SeleniumLogin004,Đăng nhập thành công với Staff,staff1,staff123,success,http://localhost:3000/admin/orders,Login successful
+SeleniumLogin005,Đăng nhập thất bại - Username trống,,password123,fail,http://localhost:3000/login,Username is required
+SeleniumLogin006,Đăng nhập thất bại - Password trống,admin,,fail,http://localhost:3000/login,Password is required
+SeleniumLogin007,Đăng nhập thất bại - Cả hai trống,,,fail,http://localhost:3000/login,Username and password are required
+SeleniumLogin008,Đăng nhập thất bại - Username không tồn tại,nonexistuser,password123,fail,http://localhost:3000/login,Invalid username or password
+SeleniumLogin009,Đăng nhập thất bại - Sai password,admin,wrongpassword,fail,http://localhost:3000/login,Invalid username or password
+SeleniumLogin010,Đăng nhập thất bại - Username có ký tự đặc biệt,admin@#$,password123,fail,http://localhost:3000/login,Invalid username format

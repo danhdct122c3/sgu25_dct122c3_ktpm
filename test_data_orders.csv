@@ -1,0 +1,30 @@
+testId,description,orderId,newStatus,orderStatus,searchKeyword,page,size,discountCode,expectedStatus,expectedMessage
+DataOrder1,Tạo đơn hàng thành công,,,,,,,200,Order created
+DataOrder2,Tạo đơn hàng với mã giảm giá,,,,,,SUMMER2024,200,Order with discount created
+DataOrder3,Tạo đơn khi giỏ rỗng,,,,,,,400,Cart is empty
+DataOrder4,Xem chi tiết đơn hàng,ORDER-UUID-1,,,,,,,,200,Order details returned
+DataOrder5,Xem đơn hàng không tồn tại,invalid-uuid,,,,,,,,404,Order not found
+DataOrder6,Cập nhật trạng thái CONFIRMED,ORDER-UUID-1,CONFIRMED,,,,,,,200,Status updated to CONFIRMED
+DataOrder7,Cập nhật trạng thái PREPARING,ORDER-UUID-1,PREPARING,,,,,,,200,Status updated to PREPARING
+DataOrder8,Cập nhật trạng thái READY_FOR_DELIVERY,ORDER-UUID-1,READY_FOR_DELIVERY,,,,,,,200,Status updated to READY_FOR_DELIVERY
+DataOrder9,Cập nhật trạng thái OUT_FOR_DELIVERY,ORDER-UUID-1,OUT_FOR_DELIVERY,,,,,,,200,Status updated to OUT_FOR_DELIVERY
+DataOrder10,Cập nhật trạng thái DELIVERED,ORDER-UUID-1,DELIVERED,,,,,,,200,Status updated to DELIVERED
+DataOrder11,Hủy đơn hàng - Status CREATED,ORDER-UUID-CREATED,,,,,,,,200,Order cancelled
+DataOrder12,Hủy đơn hàng - Status CONFIRMED,ORDER-UUID-CONFIRMED,,,,,,,,400,Cannot cancel
+DataOrder13,Hủy đơn hàng - Status DELIVERED,ORDER-UUID-DELIVERED,,,,,,,,400,Cannot cancel
+DataOrder14,Cập nhật với status không hợp lệ,ORDER-UUID-1,INVALID_STATUS,,,,,,,400,Invalid status
+DataOrder15,Cập nhật transition không hợp lệ,ORDER-UUID-1,DELIVERED,,,,,,,400,Invalid transition
+DataOrder16,Lọc đơn hàng theo status CREATED,,CREATED,,0,10,,,200,Orders with status CREATED
+DataOrder17,Lọc đơn hàng theo status CONFIRMED,,CONFIRMED,,0,10,,,200,Orders with status CONFIRMED
+DataOrder18,Lọc đơn hàng theo status PREPARING,,PREPARING,,0,10,,,200,Orders with status PREPARING
+DataOrder19,Lọc đơn hàng theo status READY_FOR_DELIVERY,,READY_FOR_DELIVERY,,0,10,,,200,Orders with status READY_FOR_DELIVERY
+DataOrder20,Lọc đơn hàng theo status OUT_FOR_DELIVERY,,OUT_FOR_DELIVERY,,0,10,,,200,Orders with status OUT_FOR_DELIVERY
+DataOrder21,Lọc đơn hàng theo status DELIVERED,,DELIVERED,,0,10,,,200,Orders with status DELIVERED
+DataOrder22,Lọc đơn hàng theo status CANCELLED,,CANCELLED,,0,10,,,200,Orders with status CANCELLED
+DataOrder23,Tìm kiếm đơn hàng theo customer,,,customer01,0,10,,,200,Orders for customer01
+DataOrder24,Tìm kiếm đơn hàng theo order ID,,,ORD-123,0,10,,,200,Orders matching ORD-123
+DataOrder25,Xem trang đầu tiên của đơn hàng,,,,,0,10,,,200,Page 1 of orders
+DataOrder26,Xem trang thứ hai của đơn hàng,,,,,1,10,,,200,Page 2 of orders
+DataOrder27,Tạo payment URL cho đơn hàng,ORDER-UUID-1,,,,,,,,200,Payment URL created
+DataOrder28,Tạo payment cho đơn không tồn tại,INVALID-ORDER,,,,,,,,404,Order not found
+DataOrder29,Tạo payment cho đơn đã thanh toán,PAID-ORDER,,,,,,,,400,Already paid
