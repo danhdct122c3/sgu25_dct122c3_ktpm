@@ -153,8 +153,6 @@ docker compose up -d
 
 
 
-
-
 ### 1.3. Thiết kế phần mềm
 
 
