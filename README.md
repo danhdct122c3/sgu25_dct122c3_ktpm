@@ -57,99 +57,39 @@ docker compose up -d
 | Deployment     | Vercel deploy Frontend ,render Backend                        |
 
 <!-- html -->
-<style>
-  .tech-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    justify-content: flex-start;
-    align-items: center;
-    margin: 12px 0;
-  }
+<table>
+  <tr>
+    <td align="center" width="140">
+      <img src="docs/images/springboot.jfif" alt="Spring Boot" width="48" height="48" />
+      <div style="font-size:12px;color:#444;margin-top:6px">Backend</div>
+    </td>
 
-  .tech-item {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: center;
-    min-width: 220px;
-    font-size: 13px;
-    color: #444;
-  }
+    <td align="center" width="140">
+      <!-- React explicitly constrained to 48x48 to avoid oversized SVG whitespace -->
+      <img src="docs/images/React-icon.svg.png" alt="React" width="48" height="48" />
+      <div style="font-size:12px;color:#444;margin-top:6px">Frontend</div>
+    </td>
 
-  /* square frame constrains any image (prevents oversized SVGs) */
-  .icon-frame {
-    --icon-size: 48px;
-    width: var(--icon-size);
-    height: var(--icon-size);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-  }
+    <td align="center" width="140">
+      <img src="docs/images/gitaction.png" alt="GitHub Actions" width="40" height="40" />
+      <div style="font-size:12px;color:#444;margin-top:6px">CI / Git</div>
+    </td>
 
-  .icon-frame img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    display: block;
-  }
+    <td align="center" width="180">
+      <img src="docs/images/render.jfif" alt="Render" width="36" height="36" style="margin-right:6px" />
+      <img src="docs/images/vercel.png" alt="Vercel" width="36" height="36" />
+      <div style="font-size:12px;color:#444;margin-top:6px">Deploy</div>
+    </td>
 
-  .tech-group {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
+    <td align="center" width="200">
+      <img src="docs/images/junit5.png" alt="JUnit 5" width="32" height="32" style="margin-right:6px" />
+      <img src="docs/images/k6.png" alt="k6" width="32" height="32" style="margin-right:6px" />
+      <img src="docs/images/mockito.jfif" alt="Mockito" width="32" height="32" />
+      <div style="font-size:12px;color:#444;margin-top:6px">Test</div>
+    </td>
+  </tr>
+</table>
 
-  /* smaller icons for grouped items (test / deploy) */
-  .icon-frame.small { --icon-size: 36px; }
-
-  @media (max-width: 640px) {
-    .tech-item { min-width: 160px; font-size: 12px; }
-    .icon-frame { --icon-size: 40px; }
-    .icon-frame.small { --icon-size: 28px; }
-  }
-</style>
-
-<div class="tech-row">
-  <div class="tech-item">
-    <div class="icon-frame" aria-hidden="true">
-      <img src="docs/images/springboot.jfif" alt="Spring Boot" />
-    </div>
-    <div>Backend</div>
-  </div>
-
-  <div class="tech-item">
-    <div class="icon-frame" aria-hidden="true">
-      <img src="docs/images/React-icon.svg.png" alt="React" />
-    </div>
-    <div>Frontend</div>
-  </div>
-
-  <div class="tech-item">
-    <div class="icon-frame small" aria-hidden="true">
-      <img src="docs/images/gitaction.png" alt="GitHub Actions" />
-    </div>
-    <div>CI / Git</div>
-  </div>
-
-  <div class="tech-item">
-    <div class="tech-group" aria-hidden="true">
-      <div class="icon-frame small"><img src="docs/images/render.jfif" alt="Render" /></div>
-      <div class="icon-frame small"><img src="docs/images/vercel.png" alt="Vercel" /></div>
-    </div>
-    <div>Deploy</div>
-  </div>
-
-  <div class="tech-item">
-    <div class="tech-group" aria-hidden="true">
-      <div class="icon-frame small"><img src="docs/images/junit5.png" alt="JUnit 5" /></div>
-      <div class="icon-frame small"><img src="docs/images/k6.png" alt="k6" /></div>
-      <div class="icon-frame small"><img src="docs/images/mockito.jfif" alt="Mockito" /></div>
-    </div>
-    <div>Test</div>
-  </div>
-</div>
 
 
 
