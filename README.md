@@ -56,87 +56,101 @@ docker compose up -d
 | CI/CD          | GitHub Actions                                              |
 | Deployment     | Vercel deploy Frontend ,render Backend                        |
 
-<!-- HTML -->
+<!-- html -->
 <style>
   .tech-row {
     display: flex;
     flex-wrap: wrap;
     gap: 18px;
-    justify-content: center;
-    align-items: flex-start;
+    justify-content: flex-start;
+    align-items: center;
     margin: 12px 0;
   }
 
   .tech-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 12px;
     align-items: center;
-    width: 110px;
-    min-width: 90px;
-    text-align: center;
-    font-size: 12px;
+    min-width: 220px;
+    font-size: 13px;
     color: #444;
   }
 
-  .tech-icon {
-    --icon-size: 64px;
+  /* square frame constrains any image (prevents oversized SVGs) */
+  .icon-frame {
+    --icon-size: 48px;
     width: var(--icon-size);
     height: var(--icon-size);
-    display: block;
-    object-fit: contain;
-    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
   }
 
-  /* group for multiple small icons (like test tools) */
+  .icon-frame img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
   .tech-group {
     display: flex;
     gap: 8px;
     align-items: center;
-    justify-content: center;
-    flex-wrap: nowrap;
-    margin-bottom: 6px;
   }
 
-  /* Responsive tuning */
+  /* smaller icons for grouped items (test / deploy) */
+  .icon-frame.small { --icon-size: 36px; }
+
   @media (max-width: 640px) {
-    .tech-item { width: 80px; font-size: 11px; }
-    .tech-icon { --icon-size: 48px; }
+    .tech-item { min-width: 160px; font-size: 12px; }
+    .icon-frame { --icon-size: 40px; }
+    .icon-frame.small { --icon-size: 28px; }
   }
 </style>
 
 <div class="tech-row">
   <div class="tech-item">
-    <img src="docs/images/springboot.jfif" alt="Spring Boot" class="tech-icon" />
+    <div class="icon-frame" aria-hidden="true">
+      <img src="docs/images/springboot.jfif" alt="Spring Boot" />
+    </div>
     <div>Backend</div>
   </div>
 
   <div class="tech-item">
-    <img src="docs/images/React-icon.svg.png" alt="React" class="tech-icon" />
+    <div class="icon-frame" aria-hidden="true">
+      <img src="docs/images/React-icon.svg.png" alt="React" />
+    </div>
     <div>Frontend</div>
   </div>
 
   <div class="tech-item">
-    <div class="tech-group" aria-hidden="true">
-      <img src="docs/images/junit5.png" alt="JUnit 5" class="tech-icon" style="--icon-size:52px" />
-      <img src="docs/images/k6.png" alt="k6" class="tech-icon" style="--icon-size:52px" />
-      <img src="docs/images/mockito.jfif" alt="Mockito" class="tech-icon" style="--icon-size:52px" />
+    <div class="icon-frame small" aria-hidden="true">
+      <img src="docs/images/gitaction.png" alt="GitHub Actions" />
     </div>
-    <div>Test</div>
-  </div>
-
-  <div class="tech-item">
-    <img src="docs/images/gitaction.png" alt="GitHub Actions" class="tech-icon" />
     <div>CI / Git</div>
   </div>
 
   <div class="tech-item">
     <div class="tech-group" aria-hidden="true">
-      <img src="docs/images/vercel.png" alt="Vercel" class="tech-icon" style="--icon-size:52px" />
-      <img src="docs/images/render.jfif" alt="Render" class="tech-icon" style="--icon-size:52px" />
+      <div class="icon-frame small"><img src="docs/images/render.jfif" alt="Render" /></div>
+      <div class="icon-frame small"><img src="docs/images/vercel.png" alt="Vercel" /></div>
     </div>
     <div>Deploy</div>
   </div>
+
+  <div class="tech-item">
+    <div class="tech-group" aria-hidden="true">
+      <div class="icon-frame small"><img src="docs/images/junit5.png" alt="JUnit 5" /></div>
+      <div class="icon-frame small"><img src="docs/images/k6.png" alt="k6" /></div>
+      <div class="icon-frame small"><img src="docs/images/mockito.jfif" alt="Mockito" /></div>
+    </div>
+    <div>Test</div>
+  </div>
 </div>
+
 
 
 
