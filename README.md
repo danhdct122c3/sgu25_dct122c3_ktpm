@@ -1,4 +1,17 @@
-# Website fullstack Fahasa
+# BÁO CÁO ĐỒ ÁN KIỂM THỬ PHẦN MỀM
+
+## KIỂM THỬ WEBSITE THƯƠNG MẠI ĐIỆN TỬ - SHOESHOP
+
+### Thành viên
+
+| MSSV | Họ và tên |
+| --- | --- |
+| 3122411189 | Đỗ Phú Thành |
+| 3122411088 | Huỳnh Duy Khang |
+| 3122411024 | Võ Thành Danh |
+| 3122411167 | Huỳnh Minh Quân |
+
+**Giảng viên hướng dẫn:** TS. Đỗ Như Tài
 
 ## Cài đặt môi trường
 
@@ -8,35 +21,23 @@
 git clone https://github.com/danhdct122c3/sgu25_dct122c3_ktpm
 ```
 
-**2. Chạy website bằng Docker**
+**2. Chạy website bằng Docker **
 
+```cmd
+
+docker compose build backend frontend
+
+
+docker compose build
+
+
+docker compose up -d
 ```
-docker compose up --build
-```
 
-## Mục lục
 
-[1. Giới thiệu phần mềm](#1-giới-thiệu-phần-mềm)
 
-&nbsp;&nbsp;[1.1. Tổng quan dự án](#11-tổng-quan-dự-án)
 
-&nbsp;&nbsp;[1.2. Công nghệ sử dụng](#12-công-nghệ-sử-dụng)
-
-&nbsp;&nbsp;[1.3. Thiết kế phần mềm](#13-thiết-kế-phần-mềm)
-
-&nbsp;&nbsp;[1.4. Thiết kế kiến trúc](#3-thiết-kế-kiến-trúc)
-
-[2. Kế hoạch kiểm thử](#2-kế-hoạch-kiểm-thử)
-
-&nbsp;&nbsp;[2.1. Hạng mục được kiểm thử](#21-hạng-mục-được-kiểm-thử)
-
-&nbsp;&nbsp;[2.2. Chiến lược kiểm thử](#22-chiến-lược-kiểm-thử)
-
-[3. Thiết kế kiểm thử](#3-thiết-kế-kiểm-thử)
-
-[4. Báo cáo kiểm thử](#4-báo-cáo-kiểm-thử)
-
-## 1. Giới thiệu phần mềm
+### 1. Giới thiệu phần mềm
 
 ### 1.1. Tổng quan dự án
 
@@ -45,15 +46,47 @@ docker compose up --build
 
 ### 1.2. Công nghệ sử dụng
 
-| Danh mục       | Tools / Frameworks                                           |
-| -------------- | ------------------------------------------------------------ |
-| Frontend       | Vite, ReactJS, TypeScript                                    |
-| Backend        | Spring Boot, Maven                                           |
-| Database       | MySQL                                                        |
-| Authentication | Spring Security, JWT                                         |
-| Testing        | JUnit, Mockito, Spring Boot Test, MockMvc, H2, Selenium, K6  |
-| CI/CD          | GitHub Actions                                               |
-| Deployment     | Vercel deploy Frontend ,Railway Backend  |
+| Danh mục       | Tools / Frameworks                                          |
+| -------------- |-------------------------------------------------------------|
+| Frontend       | Vite, ReactJS, TypeScript                                   |
+| Backend        | Spring Boot, Maven                                          |
+| Database       | MySQL                                                       |
+| Authentication | Spring Security, JWT                                        |
+| Testing        | JUnit, Mockito, Spring Boot Test, MockMvc, H2, Selenium, K6 |
+| CI/CD          | GitHub Actions                                              |
+| Deployment     | Vercel deploy Frontend ,render Backend                        |
+
+<!-- replaced vertical image block with a compact horizontal grouped layout (now a single horizontal row, not a table) -->
+<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin:8px 0;">
+  <div style="text-align:center; min-width:80px">
+    <img src="docs/images/springboot.jfif" alt="Spring Boot" width="64" />
+    <div style="font-size:12px; color:#555">Backend</div>
+  </div>
+
+  <div style="text-align:center; min-width:80px">
+    <img src="docs/images/React-icon.svg.png" alt="React" width="64" />
+    <div style="font-size:12px; color:#555">Frontend</div>
+  </div>
+
+  <div style="text-align:center; min-width:120px">
+    <img src="docs/images/junit5.png" alt="JUnit 5" width="52" style="margin-right:6px;" />
+    <img src="docs/images/k6.png" alt="k6" width="52" style="margin-right:6px;" />
+    <img src="docs/images/mockito.jfif" alt="Mockito" width="52" />
+    <div style="font-size:12px; color:#555; margin-top:6px">Test</div>
+  </div>
+
+  <div style="text-align:center; min-width:100px">
+    <img src="docs/images/gitaction.png" alt="GitHub Actions" width="64" />
+    <div style="font-size:12px; color:#555">CI / Git</div>
+  </div>
+
+  <div style="text-align:center; min-width:120px">
+    <img src="docs/images/vercel.png" alt="Vercel" width="64" style="margin-right:8px" />
+    <img src="docs/images/render.jfif" alt="Render" width="64" />
+    <div style="font-size:12px; color:#555; margin-top:6px">Deploy</div>
+  </div>
+</div>
+
 
 
 ### 1.3. Thiết kế phần mềm
@@ -107,7 +140,7 @@ docker compose up --build
 
 **Mô hình thực thể kết hợp mức khái niệm**
 
-![](docs/images/erd1.png)
+![](docs/images/erd-logic.png)
 
 **Mô hình thực thể kết hợp mức logic**
 
@@ -297,13 +330,4 @@ Bên cạnh đó, dự án áp dụng kiểm thử tự động thông qua quy t
 | Kiểm thử hệ thống  | Kiểm tra các luồng nghiệp vụ và giao diện       | Hộp đen   | Kiểm thử thủ công cho các Test Case và kiểm thử tự động bằng Selenium ở môi trường Production |
 | Kiểm thử chấp nhận | Kiểm tra và nghiệm thu sản phẩm                 | Hộp đen   | Kiểm thử thủ công ở môi trường Production                                                     |
 
-| Loại                      | Kiểm thử đơn vị | Kiểm thử tích hợp | Kiểm thử hệ thống | Kiểm thử chấp nhận |
-| ------------------------- | --------------- | ----------------- | ----------------- | ------------------ |
-| Kiểm thử chức năng        | x               | x                 | x                 | x                  |
-| Kiểm giao diện            |                 |                   | x                 | x                  |
-| Kiểm thử tương thích      |                 |                   | x                 | x                  |
-| Kiểm thử hiệu năng        |                 |                   | x                 |                    |
-| Kiểm thử khả năng sử dụng |                 |                   | x                 | x                  |
-| Kiểm thử đám đông         |                 |                   | x                 | x                  |
-| Kiểm thử hồi quy          | x               | x                 | x                 |                    |
-| Kiểm thử API              | x               | x                 |                   |                    |
+
