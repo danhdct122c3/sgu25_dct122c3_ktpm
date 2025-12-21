@@ -56,36 +56,88 @@ docker compose up -d
 | CI/CD          | GitHub Actions                                              |
 | Deployment     | Vercel deploy Frontend ,render Backend                        |
 
-<!-- replaced vertical image block with a compact horizontal grouped layout (now a single horizontal row, not a table) -->
-<div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin:8px 0;">
-  <div style="text-align:center; min-width:80px">
-    <img src="docs/images/springboot.jfif" alt="Spring Boot" width="64" />
-    <div style="font-size:12px; color:#555">Backend</div>
+<!-- HTML -->
+<style>
+  .tech-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+    align-items: flex-start;
+    margin: 12px 0;
+  }
+
+  .tech-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 110px;
+    min-width: 90px;
+    text-align: center;
+    font-size: 12px;
+    color: #444;
+  }
+
+  .tech-icon {
+    --icon-size: 64px;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    display: block;
+    object-fit: contain;
+    margin-bottom: 8px;
+  }
+
+  /* group for multiple small icons (like test tools) */
+  .tech-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    margin-bottom: 6px;
+  }
+
+  /* Responsive tuning */
+  @media (max-width: 640px) {
+    .tech-item { width: 80px; font-size: 11px; }
+    .tech-icon { --icon-size: 48px; }
+  }
+</style>
+
+<div class="tech-row">
+  <div class="tech-item">
+    <img src="docs/images/springboot.jfif" alt="Spring Boot" class="tech-icon" />
+    <div>Backend</div>
   </div>
 
-  <div style="text-align:center; min-width:80px">
-    <img src="docs/images/React-icon.svg.png" alt="React" width="64" />
-    <div style="font-size:12px; color:#555">Frontend</div>
+  <div class="tech-item">
+    <img src="docs/images/React-icon.svg.png" alt="React" class="tech-icon" />
+    <div>Frontend</div>
   </div>
 
-  <div style="text-align:center; min-width:120px">
-    <img src="docs/images/junit5.png" alt="JUnit 5" width="52" style="margin-right:6px;" />
-    <img src="docs/images/k6.png" alt="k6" width="52" style="margin-right:6px;" />
-    <img src="docs/images/mockito.jfif" alt="Mockito" width="52" />
-    <div style="font-size:12px; color:#555; margin-top:6px">Test</div>
+  <div class="tech-item">
+    <div class="tech-group" aria-hidden="true">
+      <img src="docs/images/junit5.png" alt="JUnit 5" class="tech-icon" style="--icon-size:52px" />
+      <img src="docs/images/k6.png" alt="k6" class="tech-icon" style="--icon-size:52px" />
+      <img src="docs/images/mockito.jfif" alt="Mockito" class="tech-icon" style="--icon-size:52px" />
+    </div>
+    <div>Test</div>
   </div>
 
-  <div style="text-align:center; min-width:100px">
-    <img src="docs/images/gitaction.png" alt="GitHub Actions" width="64" />
-    <div style="font-size:12px; color:#555">CI / Git</div>
+  <div class="tech-item">
+    <img src="docs/images/gitaction.png" alt="GitHub Actions" class="tech-icon" />
+    <div>CI / Git</div>
   </div>
 
-  <div style="text-align:center; min-width:120px">
-    <img src="docs/images/vercel.png" alt="Vercel" width="64" style="margin-right:8px" />
-    <img src="docs/images/render.jfif" alt="Render" width="64" />
-    <div style="font-size:12px; color:#555; margin-top:6px">Deploy</div>
+  <div class="tech-item">
+    <div class="tech-group" aria-hidden="true">
+      <img src="docs/images/vercel.png" alt="Vercel" class="tech-icon" style="--icon-size:52px" />
+      <img src="docs/images/render.jfif" alt="Render" class="tech-icon" style="--icon-size:52px" />
+    </div>
+    <div>Deploy</div>
   </div>
 </div>
+
 
 
 
